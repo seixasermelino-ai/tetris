@@ -12,67 +12,86 @@
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
             --accent-color: #384ddb;
-            /* Safe Areas for Notch/Gestures */
-            --safe-top: env(safe-area-inset-top, 0px);
-            --safe-bottom: env(safe-area-inset-bottom, 0px);
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            /* Disable user selection/copying, especially important for mobile */
             user-select: none;
             -webkit-user-select: none;
             -webkit-touch-callout: none;
-            touch-action: none; /* Crucial: stops browser handling scroll/pinch */
+            touch-action: none;
         }
 
         body {
             background-color: var(--bg-color);
             color: var(--text-main);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            min-height: 100vh;
-            /* Mobile-centric layout using flex */
+            height: 100vh;
+            height: -webkit-fill-available;
             display: flex;
             flex-direction: column;
-            padding-top: var(--safe-top);
-            padding-bottom: var(--safe-bottom);
-            overflow: hidden; /* Lock the page scroll */
+            overflow: hidden;
+            position: relative;
         }
 
-        /* --- Header --- */
         header {
             text-align: center;
-            padding: 10px 0;
+            padding: 8px 0 2px 0;
+            flex-shrink: 0;
         }
 
         header h1 {
-            font-size: 1.8rem;
-            letter-spacing: 2px;
+            font-size: 1.4rem;
+            letter-spacing: 1px;
             text-transform: uppercase;
             background: linear-gradient(45deg, #384ddb, #06b6d4);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
-        /* --- Game Area --- */
+        .hud-bar {
+            display: flex;
+            justify-content: space-around;
+            background-color: var(--container-bg);
+            padding: 6px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.8rem;
+            flex-shrink: 0;
+        }
+
+        .hud-item {
+            text-align: center;
+        }
+
+        .hud-label {
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-size: 0.65rem;
+            letter-spacing: 1px;
+        }
+
+        .hud-value {
+            font-size: 1rem;
+            font-weight: bold;
+            color: #38bdf8;
+        }
+
         .game-area {
-            flex: 1; /* Occupy remaining vertical space */
+            flex: 1;
             display: flex;
             justify-content: center;
             align-items: center;
-            position: relative;
             padding: 10px;
+            min-height: 0;
         }
 
         .main-board-wrapper {
             position: relative;
-            aspect-ratio: 10 / 20; /* Keep the aspect ratio fixed */
-            width: auto;
-            height: auto;
-            max-width: 100%;
-            max-height: 100%; /* Important: restrict height so it fits above controls */
+            height: 100%;
+            aspect-ratio: 10 / 20;
+            max-height: 100%;
         }
 
         canvas {
@@ -84,7 +103,6 @@
             height: 100%;
         }
 
-        /* --- Mobile Overlay Screens --- */
         .overlay {
             position: absolute;
             top: 0;
@@ -110,121 +128,84 @@
         }
 
         .overlay h2 {
-            font-size: 2.2rem;
+            font-size: 1.8rem;
             color: #ef4444;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             text-transform: uppercase;
         }
 
         .overlay p {
             color: var(--text-muted);
-            margin-bottom: 30px;
-            font-size: 1.2rem;
+            margin-bottom: 20px;
+            font-size: 1rem;
         }
 
-        /* --- Score & HUD (Mobile Top Bar) --- */
-        .hud-bar {
+        .system-buttons {
             display: flex;
-            justify-content: space-around;
-            background-color: var(--container-bg);
-            padding: 10px;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-            font-size: 0.9rem;
+            justify-content: center;
+            gap: 10px;
+            padding: 8px;
+            background-color: var(--bg-color);
+            flex-shrink: 0;
         }
 
-        .hud-item {
-            text-align: center;
-        }
-
-        .hud-label {
-            color: var(--text-muted);
-            text-transform: uppercase;
-            font-size: 0.7rem;
-            letter-spacing: 1px;
-        }
-
-        .hud-value {
-            font-size: 1.1rem;
-            font-weight: bold;
-            color: #38bdf8;
-        }
-
-        /* --- Mobile Controls --- */
         .mobile-controls {
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            padding: 15px;
+            gap: 8px;
+            padding: 12px 16px env(safe-area-inset-bottom, 12px) 16px;
             background-color: var(--container-bg);
-            border-top: 2px solid #334155;
+            border-top: 1px solid #334155;
+            flex-shrink: 0;
         }
 
         .control-row {
             display: flex;
-            justify-content: space-around;
-            gap: 10px;
+            justify-content: space-center;
+            gap: 20px;
+            justify-content: center;
         }
 
         .mobile-btn {
             background-color: #334155;
             color: white;
             border: none;
-            border-radius: 50%; /* Circle buttons */
-            width: 60px;
-            height: 60px;
-            font-size: 24px;
+            border-radius: 12px;
+            width: 65px;
+            height: 50px;
+            font-size: 20px;
             display: flex;
             justify-content: center;
             align-items: center;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
-            transition: background 0.1s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
         }
 
         .mobile-btn:active {
             background-color: var(--accent-color);
-            transform: translateY(2px);
-            box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.3);
         }
 
         .mobile-btn.rotate {
-            width: 70px;
-            height: 70px;
+            width: 75px;
             background-color: var(--accent-color);
-            font-size: 28px;
         }
 
         .mobile-btn.hard-drop {
-            flex: 1; /* Stretch wide button */
-            border-radius: 8px;
-            height: 50px;
-            text-transform: uppercase;
-            font-weight: bold;
-            font-size: 0.9rem;
+            width: 75px;
             background-color: #ef4444;
-        }
-
-        .system-buttons {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            padding: 10px 0;
-            background-color: var(--bg-color);
+            font-weight: bold;
+            font-size: 0.8rem;
         }
 
         .btn {
-            padding: 10px 20px;
+            padding: 8px 16px;
             background-color: var(--accent-color);
             border: none;
             border-radius: 6px;
             color: white;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            font-weight: bold;
         }
-        
-        /* Utility */
-        .hidden { display: none !important; }
-
     </style>
 </head>
 <body>
@@ -233,33 +214,20 @@
         <h1>Tetris Mobile</h1>
     </header>
 
-    <!-- The HUD is above the game now for mobile -->
     <div class="hud-bar">
-        <div class="hud-item">
-            <div class="hud-label">Pontos</div>
-            <div id="score" class="hud-value">0</div>
-        </div>
-        <div class="hud-item">
-            <div class="hud-label">Nível</div>
-            <div id="level" class="hud-value">1</div>
-        </div>
-        <div class="hud-item">
-            <div class="hud-label">Linhas</div>
-            <div id="lines" class="hud-value">0</div>
-        </div>
+        <div class="hud-item"><div class="hud-label">Pontos</div><div id="score" class="hud-value">0</div></div>
+        <div class="hud-item"><div class="hud-label">Nível</div><div id="level" class="hud-value">1</div></div>
+        <div class="hud-item"><div class="hud-label">Linhas</div><div id="lines" class="hud-value">0</div></div>
     </div>
 
     <div class="game-area">
         <div class="main-board-wrapper">
-            <!-- Internal resolution fixed, CSS handles scaling -->
             <canvas id="board" width="240" height="480"></canvas>
-            
             <div id="game-over-screen" class="overlay">
                 <h2>GAME OVER</h2>
                 <p>Pontos: <span id="final-score">0</span></p>
-                <button class="btn" onclick="resetGame()">Jogar Novamente</button>
+                <button class="btn" onclick="resetGame()">Jogar de Novo</button>
             </div>
-            
             <div id="pause-screen" class="overlay">
                 <h2 style="color: #38bdf8;">Pausado</h2>
                 <button class="btn" onclick="togglePause()">Continuar</button>
@@ -267,17 +235,15 @@
         </div>
     </div>
 
-    <!-- System Controls below Game Area -->
     <div class="system-buttons">
         <button id="start-btn" class="btn" onclick="togglePause()">Pausar</button>
         <button id="reset-btn" class="btn" style="background-color: #334155;" onclick="resetGame()">Reiniciar</button>
     </div>
 
-    <!-- Dedicated Mobile Touch Controls Row -->
     <div class="mobile-controls">
         <div class="control-row">
             <button class="mobile-btn" id="btn-left">←</button>
-            <button class="mobile-btn rotate" id="btn-rotate">↻</button>
+            <button class="mobile-btn rotate" id="btn-rotate">ROT</button>
             <button class="mobile-btn" id="btn-right">→</button>
         </div>
         <div class="control-row">
@@ -289,48 +255,29 @@
     <script>
         const canvas = document.getElementById('board');
         const ctx = canvas.getContext('2d');
-
-        const COLS = 10;
-        const ROWS = 20;
-        const BLOCK_SIZE = 24; // Internal logical block size, canvas scales this.
+        const COLS = 10; const ROWS = 20; const BLOCK_SIZE = 24;
 
         const COLORS = [
-            null,
-            '#00f0f0', // I - Cyan
-            '#0000f0', // J - Blue
-            '#f0a000', // L - Orange
-            '#f0f000', // O - Yellow
-            '#00f000', // S - Green
-            '#a000f0', // T - Purple
-            '#f00000'  // Z - Red
+            null, '#00f0f0', '#0000f0', '#f0a000', '#f0f000', '#00f000', '#a000f0', '#f00000'
         ];
 
         const SHAPES = [
             [],
-            [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]], // I
-            [[2,0,0],[2,2,2],[0,0,0]],                 // J
-            [[0,0,3],[3,3,3],[0,0,0]],                 // L
-            [[4,4],[4,4]],                             // O
-            [[0,5,5],[5,5,0],[0,0,0]],                 // S
-            [[0,6,0],[6,6,6],[0,0,0]],                 // T
-            [[7,7,0],[0,7,7],[0,0,0]]                  // Z
+            [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]],
+            [[2,0,0],[2,2,2],[0,0,0]],
+            [[0,0,3],[3,3,3],[0,0,0]],
+            [[4,4],[4,4]],
+            [[0,5,5],[5,5,0],[0,0,0]],
+            [[0,6,0],[6,6,6],[0,0,0]],
+            [[7,7,0],[0,7,7],[0,0,0]]
         ];
 
         let board = createMatrix(COLS, ROWS);
-        let score = 0;
-        let lines = 0;
-        let level = 1;
-        let gameOver = false;
-        let isPaused = false;
+        let score = 0; let lines = 0; let level = 1;
+        let gameOver = false; let isPaused = false;
+        let dropCounter = 0; let dropInterval = 1000; let lastTime = 0;
 
-        let dropCounter = 0;
-        let dropInterval = 1000;
-        let lastTime = 0;
-
-        const player = {
-            pos: {x: 0, y: 0},
-            matrix: null,
-        };
+        const player = { pos: {x: 0, y: 0}, matrix: null };
 
         function createMatrix(w, h) {
             const matrix = [];
@@ -338,23 +285,17 @@
             return matrix;
         }
 
-        // --- Drawing ---
         function drawBlock(context, x, y, colorIndex) {
             context.fillStyle = COLORS[colorIndex];
             context.fillRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
-            
-            // Subtle 3D-ish border
             context.strokeStyle = 'rgba(255,255,255,0.15)';
             context.lineWidth = 0.5;
             context.strokeRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
         }
 
         function draw() {
-            // Background
             ctx.fillStyle = '#020617';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Subtle Grid
             ctx.strokeStyle = '#1e293b';
             ctx.lineWidth = 0.2;
             for(let i = 1; i < COLS; i++) {
@@ -363,7 +304,6 @@
             for(let j = 1; j < ROWS; j++) {
                 ctx.beginPath(); ctx.moveTo(0, j * BLOCK_SIZE); ctx.lineTo(canvas.width, j * BLOCK_SIZE); ctx.stroke();
             }
-
             drawMatrix(board, {x: 0, y: 0});
             if (player.matrix) drawMatrix(player.matrix, player.pos);
         }
@@ -376,7 +316,6 @@
             });
         }
 
-        // --- Core Logic ---
         function merge(board, player) {
             player.matrix.forEach((row, y) => {
                 row.forEach((value, x) => {
@@ -386,8 +325,7 @@
         }
 
         function collide(board, player) {
-            const m = player.matrix;
-            const o = player.pos;
+            const m = player.matrix; const o = player.pos;
             for (let y = 0; y < m.length; ++y) {
                 for (let x = 0; x < m[y].length; ++x) {
                     if (m[y][x] !== 0 &&
@@ -399,7 +337,6 @@
             return false;
         }
 
-        // --- Game Actions ---
         function playerDrop() {
             if (gameOver || isPaused) return;
             player.pos.y++;
@@ -438,14 +375,13 @@
 
         function playerRotate() {
             if (gameOver || isPaused) return;
-            const pos = player.pos.x;
-            let offset = 1;
+            const pos = player.pos.x; let offset = 1;
             rotate(player.matrix);
             while (collide(board, player)) {
                 player.pos.x += offset;
                 offset = -(offset + (offset > 0 ? 1 : -1));
                 if (offset > player.matrix[0].length) {
-                    rotate(player.matrix); // Undo rotate
+                    rotate(player.matrix);
                     player.pos.x = pos;
                     return;
                 }
@@ -461,7 +397,6 @@
             matrix.forEach(row => row.reverse());
         }
 
-        // --- Game State Management ---
         function playerReset() {
             const pieces = 'IJLOSTZ';
             player.matrix = SHAPES[pieces.indexOf(pieces[pieces.length * Math.random() | 0]) + 1];
@@ -477,19 +412,14 @@
 
         function arenaSweep() {
             let rowCount = 1;
-            outer: for (let y = board.length -1; y > 0; --y) {
+            outer: for (let y = board.length - 1; y > 0; --y) {
                 for (let x = 0; x < board[y].length; ++x) {
                     if (board[y][x] === 0) continue outer;
                 }
                 const row = board.splice(y, 1)[0].fill(0);
                 board.unshift(row);
                 ++y;
-
-                score += rowCount * 10;
-                lines++;
-                rowCount *= 2;
-
-                // Level progression
+                score += rowCount * 10; lines++; rowCount *= 2;
                 level = Math.floor(lines / 10) + 1;
                 dropInterval = Math.max(100, 1000 - (level - 1) * 90);
             }
@@ -506,10 +436,7 @@
             isPaused = !isPaused;
             document.getElementById('pause-screen').classList.toggle('active', isPaused);
             document.getElementById('start-btn').innerText = isPaused ? "Continuar" : "Pausar";
-            if (!isPaused) {
-                lastTime = performance.now();
-                update();
-            }
+            if (!isPaused) { lastTime = performance.now(); update(); }
         }
 
         function resetGame() {
@@ -519,33 +446,22 @@
             score = 0; lines = 0; level = 1; dropInterval = 1000;
             gameOver = false; isPaused = false;
             document.getElementById('start-btn').innerText = "Pausar";
-            playerReset();
-            updateScore();
-            lastTime = performance.now();
-            update();
+            playerReset(); updateScore();
+            lastTime = performance.now(); update();
         }
 
-        // --- Main Loop ---
         function update(time = 0) {
             if (gameOver || isPaused) return;
-            const deltaTime = time - lastTime;
-            lastTime = time;
+            const deltaTime = time - lastTime; lastTime = time;
             dropCounter += deltaTime;
             if (dropCounter > dropInterval) playerDrop();
             draw();
             requestAnimationFrame(update);
         }
 
-        // --- Mobile Touch Controls ---
-        // Setup listener for touch buttons
         function setupTouchButton(id, action) {
             const btn = document.getElementById(id);
-            // Handling touchstart to minimize lag
-            btn.addEventListener('touchstart', (e) => {
-                e.preventDefault(); // Prevents simulated mouse events
-                action();
-                draw(); // Redraw immediately for responsiveness
-            }, { passive: false });
+            btn.addEventListener('touchstart', (e) => { e.preventDefault(); action(); draw(); }, { passive: false });
         }
 
         setupTouchButton('btn-left', () => playerMove(-1));
@@ -554,14 +470,10 @@
         setupTouchButton('btn-rotate', () => playerRotate());
         setupTouchButton('btn-hard-drop', () => playerHardDrop());
 
-        // We can also add repeated movement while holding down, but start simple.
-
-        // --- Desktop Keyboard Fallback ---
         document.addEventListener('keydown', event => {
             if (gameOver) return;
             if (event.key === 'Escape') { togglePause(); return; }
             if (isPaused) return;
-
             switch (event.key) {
                 case 'ArrowLeft': playerMove(-1); break;
                 case 'ArrowRight': playerMove(1); break;
@@ -572,10 +484,7 @@
             draw();
         });
 
-        // Initialize
-        playerReset();
-        updateScore();
-        update();
+        playerReset(); updateScore(); update();
     </script>
 </body>
 </html>
