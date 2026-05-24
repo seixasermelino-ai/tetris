@@ -8,7 +8,7 @@
         :root {
             --bg-color: #fdf2f8; 
             --container-bg: #fff1f2; 
-            --border-color: #f43f5e; 
+            --border-color: #fbecdd; 
             --text-main: #4c0519; 
             --text-muted: #9f1239;
             --accent-color: #db2777; 
@@ -22,7 +22,7 @@
             user-select: none;
             -webkit-user-select: none;
             -webkit-touch-callout: none;
-            touch-action: none;
+            touch-action: manipulation;
         }
 
         body {
@@ -35,17 +35,18 @@
             flex-direction: column;
             overflow: hidden;
             position: relative;
-            transition: background-color 1s ease;
+            transition: background-color 0.8s ease, color 0.3s ease;
         }
 
         header {
             text-align: center;
-            padding: 6px 0 2px 0;
+            padding: 8px 0 4px 0;
             flex-shrink: 0;
+            position: relative;
         }
 
         header h1 {
-            font-size: 1.3rem;
+            font-size: 1.2rem;
             letter-spacing: 1px;
             text-transform: uppercase;
             background: linear-gradient(45deg, #e11d48, #db2777, #10b981);
@@ -53,17 +54,31 @@
             -webkit-text-fill-color: transparent;
         }
 
+        .menu-trigger-btn {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--container-bg);
+            border: 1px solid #fecdd3;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
         .game-layout {
             flex: 1;
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 10px;
-            padding: 5px 12px;
+            gap: 8px;
+            padding: 2px 10px;
             min-height: 0;
         }
 
-        /* Painéis Laterais Esquerdo e Direito para simetria e ergonomia */
         .side-panel {
             display: flex;
             flex-direction: column;
@@ -74,11 +89,12 @@
 
         .hud-card {
             background-color: var(--container-bg);
-            border: 1.5px solid #ffe4e6;
+            border: 1.5px solid rgba(254, 205, 211, 0.5);
             border-radius: 12px;
             padding: 5px 2px;
             text-align: center;
-            box-shadow: 0 2px 4px rgba(76, 5, 25, 0.03);
+            box-shadow: 0 2px 4px rgba(76, 5, 25, 0.02);
+            transition: background-color 0.3s, border-color 0.3s;
         }
 
         .hud-label {
@@ -97,10 +113,10 @@
 
         .side-canvas {
             display: block;
-            background-color: #fffafb;
+            background-color: rgba(255, 250, 251, 0.7);
             border-radius: 8px;
             margin: 4px auto 0 auto;
-            border: 1px solid #fecdd3;
+            border: 1px solid rgba(254, 205, 211, 0.5);
         }
 
         .main-board-wrapper {
@@ -113,12 +129,12 @@
 
         #board {
             display: block;
-            background-color: #fffafb; 
+            background-color: rgba(255, 250, 251, 0.8); 
             border-radius: 14px;
-            border: 3px solid #fecdd3;
+            border: 3px solid rgba(254, 205, 211, 0.8);
             width: 100%;
             height: 100%;
-            box-shadow: 0 6px 12px rgba(76, 5, 25, 0.05);
+            box-shadow: 0 6px 16px rgba(76, 5, 25, 0.04);
         }
 
         .overlay {
@@ -127,93 +143,98 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(253, 242, 248, 0.95);
-            backdrop-filter: blur(4px);
-            border-radius: 12px;
+            background-color: var(--bg-color);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 100;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-            z-index: 10;
+            padding: 20px;
+            text-align: center;
         }
 
         .overlay.active {
-            opacity: 1;
+            opacity: 0.98;
             pointer-events: auto;
         }
 
         .overlay h2 {
-            font-size: 1.5rem;
-            color: #e11d48;
-            margin-bottom: 8px;
+            font-size: 1.4rem;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .overlay p {
             color: var(--text-muted);
             margin-bottom: 15px;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
 
-        .system-buttons {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            padding: 4px;
-            background-color: transparent;
-            flex-shrink: 0;
-        }
-
-        /* --- Interface de Controles Remodelada --- */
+        /* --- Interface de Controles Remodelada (Chrome Mobile Safe) --- */
         .mobile-controls {
+            display: flex;
+            flex-direction: column;
+            background-color: var(--container-bg);
+            border-top: 1.5px solid rgba(254, 205, 211, 0.8);
+            padding: 10px 16px calc(15px + env(safe-area-inset-bottom, 12px)) 16px;
+            flex-shrink: 0;
+            gap: 10px;
+            min-height: 165px; /* Garante área segura de toque sem quebras */
+        }
+
+        .control-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 12px 20px calc(10px + env(safe-area-inset-bottom, 10px)) 20px;
-            background-color: var(--container-bg);
-            border-top: 1px solid #fecdd3;
-            flex-shrink: 0;
-            gap: 15px;
+            width: 100%;
         }
 
         .dpad-container {
             position: relative;
-            width: 124px;
-            height: 124px;
+            width: 115px;
+            height: 115px;
             flex-shrink: 0;
         }
 
         .dpad-btn {
             position: absolute;
-            background-color: #ffe4e6;
+            background-color: rgba(255, 255, 255, 0.8);
             color: var(--text-main);
-            border: 1.5px solid #fecdd3;
-            font-size: 20px;
+            border: 1.5px solid rgba(254, 205, 211, 0.8);
+            font-size: 18px;
             font-weight: bold;
             display: flex;
             justify-content: center;
             align-items: center;
-            box-shadow: 0 3px 5px rgba(76, 5, 25, 0.04);
-            border-radius: 14px;
+            box-shadow: 0 2px 4px rgba(76, 5, 25, 0.04);
+            border-radius: 12px;
+            width: 38px;
+            height: 38px;
         }
 
-        .dpad-btn:active {
-            background-color: #fbcfe8;
-            border-color: #f472b6;
-        }
-
-        #btn-left { top: 40px; left: 0; width: 44px; height: 44px; }
-        #btn-right { top: 40px; right: 0; width: 44px; height: 44px; }
-        #btn-down { bottom: 0; left: 40px; width: 44px; height: 44px; }
+        .dpad-btn:active { background-color: var(--accent-color); color: white; }
+        #btn-left { top: 38px; left: 0; }
+        #btn-right { top: 38px; right: 0; }
+        #btn-down { bottom: 0; left: 38px; }
 
         .action-container {
             display: flex;
-            flex-direction: column;
-            gap: 10px;
-            align-items: flex-end;
+            flex-direction: row;
+            gap: 8px;
+            align-items: center;
+            justify-content: flex-end;
             flex: 1;
+        }
+
+        .utility-container {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            width: 75px;
         }
 
         .action-btn {
@@ -223,51 +244,104 @@
             align-items: center;
             color: white;
             font-weight: bold;
-            box-shadow: 0 4px 6px rgba(225, 29, 72, 0.12);
-        }
-
-        .action-btn:active {
-            transform: scale(0.96);
-            opacity: 0.9;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            cursor: pointer;
         }
 
         #btn-rotate {
-            width: 72px;
-            height: 72px;
+            width: 76px;
+            height: 76px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #db2777, #e11d48);
-            font-size: 13px;
+            background: linear-gradient(135deg, var(--accent-color), #e11d48);
+            font-size: 11px;
             letter-spacing: 0.5px;
-            border: 2px solid #fff;
+            border: 2px solid white;
+        }
+
+        #btn-hold-action, #btn-hard-drop {
+            width: 100%;
+            height: 35px;
+            border-radius: 10px;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        #btn-hold-action {
+            background-color: #64748b;
         }
 
         #btn-hard-drop {
-            width: 100%;
-            max-width: 110px;
-            height: 36px;
-            border-radius: 18px;
             background-color: var(--accent-secondary);
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
         }
 
         .btn {
             padding: 6px 14px;
-            background-color: #f43f5e;
+            background-color: var(--accent-color);
             border: none;
             border-radius: 18px;
             color: white;
             font-size: 0.75rem;
             text-transform: uppercase;
             font-weight: bold;
+            cursor: pointer;
+            margin-top: 5px;
         }
+
+        /* --- Estilos do Menu de Temas e Recordes --- */
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            width: 100%;
+            max-width: 240px;
+            margin-bottom: 15px;
+        }
+
+        .theme-opt {
+            padding: 8px;
+            border-radius: 8px;
+            border: 1.5px solid #cbd5e1;
+            font-size: 0.75rem;
+            font-weight: bold;
+            background: white;
+            cursor: pointer;
+        }
+
+        .theme-opt.selected {
+            border-color: var(--accent-color);
+            background-color: var(--container-bg);
+            color: var(--text-main);
+        }
+
+        .scores-list {
+            width: 100%;
+            max-width: 220px;
+            max-height: 120px;
+            overflow-y: auto;
+            margin: 10px 0;
+            background: rgba(255,255,255,0.5);
+            border-radius: 8px;
+            padding: 6px;
+        }
+
+        .score-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            padding: 4px 6px;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .score-item:last-child { border: none; }
+        .score-item.top { font-weight: bold; color: var(--accent-color); }
     </style>
 </head>
 <body>
 
     <header>
         <h1>Tulip Tetris Premium</h1>
+        <button class="menu-trigger-btn" onclick="openMenu()">Menu</button>
     </header>
 
     <div class="game-layout">
@@ -276,8 +350,8 @@
                 <div class="hud-label">Guardar</div>
                 <canvas id="hold-canvas" class="side-canvas" width="56" height="56"></canvas>
             </div>
-            <div class="hud-card">
-                <div class="hud-label">Recorde</div>
+            <div class="hud-card" onclick="openScores()" style="cursor:pointer;">
+                <div class="hud-label">Recorde 🏆</div>
                 <div id="highscore" class="hud-value">0</div>
             </div>
             <div class="hud-card">
@@ -291,13 +365,36 @@
             
             <div id="game-over-screen" class="overlay">
                 <h2>Fim de Jogo 🌷</h2>
-                <p>Pontos: <span id="final-score">0</span></p>
+                <p>Pontos Feitos: <span id="final-score">0</span></p>
                 <button class="btn" onclick="resetGame()">Jogar de Novo</button>
+                <button class="btn" style="background:#64748b;" onclick="openScores()">Ver Placar</button>
             </div>
             
             <div id="pause-screen" class="overlay">
                 <h2 style="color: var(--accent-color);">Pausado</h2>
                 <button class="btn" onclick="togglePause()">Continuar</button>
+                <button class="btn" style="background:#9f1239; margin-top:8px;" onclick="resetGame()">Reiniciar</button>
+            </div>
+
+            <div id="menu-screen" class="overlay">
+                <h2>Temas & Cores</h2>
+                <p>Escolha a identidade visual:</p>
+                <div class="settings-grid">
+                    <button class="theme-opt selected" id="theme-tulip" onclick="setTheme('tulip')">Tulipa Rosa</button>
+                    <button class="theme-opt" id="theme-sunflower" onclick="setTheme('sunflower')">Girassol Ouro</button>
+                    <button class="theme-opt" id="theme-lavender" onclick="setTheme('lavender')">Lavanda Roxa</button>
+                    <button class="theme-opt" id="theme-forest" onclick="setTheme('forest')">Floresta Nativa</button>
+                </div>
+                <button class="btn" onclick="closeMenu()">Voltar ao Jogo</button>
+            </div>
+
+            <div id="scores-screen" class="overlay">
+                <h2>Histórico de Recordes</h2>
+                <div class="scores-list" id="scores-container">
+                    </div>
+                <button class="btn" style="background:#9f1239; font-size:0.6rem; padding:4px 8px;" onclick="clearScores()">Limpar Histórico</button>
+                <br>
+                <button class="btn" onclick="closeScores()">Fechar</button>
             </div>
         </div>
 
@@ -317,21 +414,21 @@
         </div>
     </div>
 
-    <div class="system-buttons">
-        <button id="start-btn" class="btn" onclick="togglePause()">Pausar</button>
-        <button id="reset-btn" class="btn" style="background-color: #9f1239;" onclick="resetGame()">Reiniciar</button>
-    </div>
-
     <div class="mobile-controls">
-        <div class="dpad-container">
-            <button class="dpad-btn" id="btn-left">←</button>
-            <button class="dpad-btn" id="btn-right">→</button>
-            <button class="dpad-btn" id="btn-down">↓</button>
-        </div>
+        <div class="control-row">
+            <div class="dpad-container">
+                <button class="dpad-btn" id="btn-left">←</button>
+                <button class="dpad-btn" id="btn-right">→</button>
+                <button class="dpad-btn" id="btn-down">↓</button>
+            </div>
 
-        <div class="action-container">
-            <button class="action-btn" id="btn-rotate">GIRAR</button>
-            <button class="action-btn" id="btn-hard-drop">DROP</button>
+            <div class="action-container">
+                <div class="utility-container">
+                    <button class="action-btn" id="btn-hold-action">HOLD</button>
+                    <button class="action-btn" id="btn-hard-drop">DROP</button>
+                </div>
+                <button class="action-btn" id="btn-rotate">GIRAR</button>
+            </div>
         </div>
     </div>
 
@@ -347,16 +444,32 @@
         const BLOCK_SIZE = 24;      
         const SIDE_BLOCK_SIZE = 12; 
 
-        const COLORS = [
-            null,
-            '#f43f5e', // Rosa Tulipa
-            '#fb7185', // Rosa Coral
-            '#f472b6', // Blossom
-            '#fbbf24', // Dourada
-            '#34d399', // Verde Folha
-            '#a78bfa', // Lavanda
-            '#f87171'  // Vermelho Pétala
-        ];
+        // Configurações de Temas Completos
+        const THEMES = {
+            tulip: {
+                mainBg: ["#fdf2f8", "#fdf4ff", "#f0fdf4", "#fff7ed", "#f0f9ff"], // transição por nível
+                container: "#fff1f2", text: "#4c0519", muted: "#9f1239", accent: "#db2777", secondary: "#10b981",
+                colors: [null, '#f43f5e', '#fb7185', '#f472b6', '#fbbf24', '#34d399', '#a78bfa', '#f87171']
+            },
+            sunflower: {
+                mainBg: ["#fefce8", "#fffbeb", "#fef3c7", "#fde68a", "#fcd34d"],
+                container: "#fef9c3", text: "#451a03", muted: "#78350f", accent: "#d97706", secondary: "#059669",
+                colors: [null, '#eab308', '#f59e0b', '#b45309', '#facc15', '#10b981', '#f97316', '#ca8a04']
+            },
+            lavender: {
+                mainBg: ["#faf5ff", "#f3e8ff", "#e9d5ff", "#d8b4fe", "#c084fc"],
+                container: "#f3e8ff", text: "#3b0764", muted: "#6b21a8", accent: "#9333ea", secondary: "#06b6d4",
+                colors: [null, '#a855f7', '#c084fc', '#e879f9', '#6366f1', '#2dd4bf', '#a78bfa', '#818cf8']
+            },
+            forest: {
+                mainBg: ["#f0fdf4", "#dcfce7", "#bbf7d0", "#86efac", "#4ade80"],
+                container: "#e8f5e9", text: "#052e16", muted: "#14532d", accent: "#16a34a", secondary: "#ea580c",
+                colors: [null, '#22c55e', '#16a34a', '#15803d', '#84cc16', '#0d9488', '#eab308', '#10b981']
+            }
+        };
+
+        let currentThemeKey = 'tulip';
+        let currentTheme = THEMES.tulip;
 
         const SHAPES = [
             [],
@@ -371,9 +484,10 @@
 
         let board = createMatrix(COLS, ROWS);
         let score = 0; let lines = 0; let level = 1; let highscore = 0;
-        let gameOver = false; let isPaused = false;
+        let gameOver = false; let isPaused = false; let isMenuOpen = false; let isScoresOpen = false;
         let dropCounter = 0; let dropInterval = 1000; let lastTime = 0;
-        let hasHeld = false; // Bloqueia múltiplas trocas na mesma jogada
+        let hasHeld = false;
+        let lineFlashFrames = []; // Efeito visual de quebra
 
         const player = { pos: {x: 0, y: 0}, matrix: null, nextMatrix: null, holdMatrix: null };
 
@@ -383,15 +497,41 @@
             return matrix;
         }
 
-        // Suporte a feedback tátil nativo
         function triggerVibrate(ms) {
-            if (navigator.vibrate) {
-                navigator.vibrate(ms);
-            }
+            if (navigator.vibrate) navigator.vibrate(ms);
+        }
+
+        function applyThemeStyles() {
+            const r = document.documentElement.style;
+            r.setProperty('--container-bg', currentTheme.container);
+            r.setProperty('--text-main', currentTheme.text);
+            r.setProperty('--text-muted', currentTheme.muted);
+            r.setProperty('--accent-color', currentTheme.accent);
+            r.setProperty('--accent-secondary', currentTheme.secondary);
+            updateBackgroundProgress();
+        }
+
+        function setTheme(key) {
+            currentThemeKey = key;
+            currentTheme = THEMES[key];
+            document.querySelectorAll('.theme-opt').forEach(b => b.classList.remove('selected'));
+            document.getElementById(`theme-${key}`).classList.add('selected');
+            applyThemeStyles();
+            draw();
+        }
+
+        function updateBackgroundProgress() {
+            const backgrounds = currentTheme.mainBg;
+            const bgIndex = Math.min(backgrounds.length - 1, Math.floor((level - 1) / 2));
+            document.body.style.backgroundColor = backgrounds[bgIndex];
         }
 
         function drawBlock(context, x, y, colorIndex, size, isGhost = false) {
-            context.fillStyle = isGhost ? 'rgba(244, 63, 94, 0.08)' : COLORS[colorIndex];
+            if (lineFlashFrames.includes(y) && context === ctx) {
+                context.fillStyle = '#ffffff'; // Pisca branco na explosão da linha
+            } else {
+                context.fillStyle = isGhost ? 'rgba(0, 0, 0, 0.04)' : currentTheme.colors[colorIndex];
+            }
             
             const radius = size * 0.25;
             const bx = x * size;
@@ -411,16 +551,17 @@
             context.fill();
 
             if (isGhost) {
-                context.strokeStyle = 'rgba(244, 63, 94, 0.3)';
-                context.lineWidth = 1;
+                context.strokeStyle = currentTheme.accent;
+                context.lineWidth = 0.8;
+                context.setLineDash([2, 2]);
                 context.stroke();
+                context.setLineDash([]);
             } else {
-                context.fillStyle = 'rgba(255,255,255,0.18)';
+                context.fillStyle = 'rgba(255,255,255,0.2)';
                 context.fillRect(bx + 2, by + 2, size - 4, 1.5);
             }
         }
 
-        // Calcula a posição exata de pouso da peça fantasma
         function getGhostPosition() {
             const ghostPos = { x: player.pos.x, y: player.pos.y };
             while (!collide(board, { pos: ghostPos, matrix: player.matrix })) {
@@ -431,11 +572,11 @@
         }
 
         function draw() {
-            ctx.fillStyle = '#fffafb';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            ctx.strokeStyle = '#ffe4e6';
-            ctx.lineWidth = 0.4;
+            // Grade sutil de fundo
+            ctx.strokeStyle = 'rgba(0,0,0,0.03)';
+            ctx.lineWidth = 0.5;
             for(let i = 1; i < COLS; i++) {
                 ctx.beginPath(); ctx.moveTo(i * BLOCK_SIZE, 0); ctx.lineTo(i * BLOCK_SIZE, canvas.height); ctx.stroke();
             }
@@ -445,23 +586,22 @@
 
             drawMatrix(board, {x: 0, y: 0}, ctx, BLOCK_SIZE, false);
             
-            // Desenha Fantasma primeiro (atrás)
-            if (player.matrix && !gameOver && !isPaused) {
+            if (player.matrix && !gameOver && !isPaused && !isMenuOpen) {
                 const ghostPos = getGhostPosition();
                 drawMatrix(player.matrix, ghostPos, ctx, BLOCK_SIZE, true);
                 drawMatrix(player.matrix, player.pos, ctx, BLOCK_SIZE, false);
             }
 
-            // Next Piece Canvas
-            nextCtx.fillStyle = '#fffafb'; nextCtx.fillRect(0, 0, nextCanvas.width, nextCanvas.height);
+            // Next Panel
+            nextCtx.clearRect(0, 0, nextCanvas.width, nextCanvas.height);
             if (player.nextMatrix) {
                 const offsetX = (4 - player.nextMatrix[0].length) / 2;
                 const offsetY = (4 - player.nextMatrix.length) / 2;
                 drawMatrix(player.nextMatrix, {x: offsetX, y: offsetY}, nextCtx, SIDE_BLOCK_SIZE, false);
             }
 
-            // Hold Piece Canvas
-            holdCtx.fillStyle = '#fffafb'; holdCtx.fillRect(0, 0, holdCanvas.width, holdCanvas.height);
+            // Hold Panel
+            holdCtx.clearRect(0, 0, holdCanvas.width, holdCanvas.height);
             if (player.holdMatrix) {
                 const offsetX = (4 - player.holdMatrix[0].length) / 2;
                 const offsetY = (4 - player.holdMatrix.length) / 2;
@@ -473,14 +613,6 @@
             matrix.forEach((row, y) => {
                 row.forEach((value, x) => {
                     if (value !== 0) drawBlock(context, x + offset.x, y + offset.y, value, size, isGhost);
-                });
-            });
-        }
-
-        function merge(board, player) {
-            player.matrix.forEach((row, y) => {
-                row.forEach((value, x) => {
-                    if (value !== 0) board[y + player.pos.y][x + player.pos.x] = value;
                 });
             });
         }
@@ -498,8 +630,16 @@
             return false;
         }
 
+        function merge(board, player) {
+            player.matrix.forEach((row, y) => {
+                row.forEach((value, x) => {
+                    if (value !== 0) board[y + player.pos.y][x + player.pos.x] = value;
+                });
+            });
+        }
+
         function playerDrop() {
-            if (gameOver || isPaused) return;
+            if (gameOver || isPaused || isMenuOpen) return;
             player.pos.y++;
             if (collide(board, player)) {
                 player.pos.y--;
@@ -507,13 +647,13 @@
                 playerReset();
                 arenaSweep();
                 updateScore();
-                triggerVibrate(15);
+                triggerVibrate(12);
             }
             dropCounter = 0;
         }
 
         function playerHardDrop() {
-            if (gameOver || isPaused) return;
+            if (gameOver || isPaused || isMenuOpen) return;
             let dropped = false;
             while (!collide(board, player)) {
                 player.pos.y++;
@@ -525,23 +665,21 @@
                 playerReset();
                 arenaSweep();
                 updateScore();
-                triggerVibrate(35); // Vibração mais forte no impacto total
+                triggerVibrate(30); 
             }
             dropCounter = 0;
         }
 
         function playerMove(dir) {
-            if (gameOver || isPaused) return;
+            if (gameOver || isPaused || isMenuOpen) return;
             player.pos.x += dir;
             if (collide(board, player)) player.pos.x -= dir;
         }
 
         function playerHold() {
-            if (gameOver || isPaused || hasHeld) return;
-            
-            triggerVibrate(20);
+            if (gameOver || isPaused || isMenuOpen || hasHeld) return;
+            triggerVibrate(15);
             const currentMatrix = player.matrix;
-            
             if (!player.holdMatrix) {
                 player.holdMatrix = currentMatrix;
                 playerReset();
@@ -555,33 +693,67 @@
             draw();
         }
 
+        // Sistema de Rotação Avançado (Basic SRS Wall Kick)
         function playerRotate() {
-            if (gameOver || isPaused) return;
-            const pos = player.pos.x; let offset = 1;
+            if (gameOver || isPaused || isMenuOpen) return;
+            const originalX = player.pos.x;
+            const originalY = player.pos.y;
             rotate(player.matrix);
-            while (collide(board, player)) {
-                player.pos.x += offset;
-                offset = -(offset + (offset > 0 ? 1 : -1));
-                if (offset > player.matrix[0].length) {
-                    rotate(player.matrix);
-                    player.pos.x = pos;
-                    return;
+
+            // Testes de recuo (Kicks) para não travar nas bordas ou blocos
+            const kicks = [0, -1, 1, -2, 2];
+            let success = false;
+
+            for (let kick of kicks) {
+                player.pos.x = originalX + kick;
+                if (!collide(board, player)) {
+                    success = true;
+                    break;
                 }
+            }
+
+            if (!success) { // Testa um kick rápido para cima se falhar na horizontal
+                player.pos.x = originalX;
+                player.pos.y = originalY - 1;
+                if (!collide(board, player)) {
+                    success = true;
+                }
+            }
+
+            if (!success) { // Reverte tudo se colidir irremediavelmente
+                rotate(player.matrix, -1);
+                player.pos.x = originalX;
+                player.pos.y = originalY;
+            } else {
+                triggerVibrate(8);
             }
         }
 
-        function rotate(matrix) {
+        function rotate(matrix, dir = 1) {
             for (let y = 0; y < matrix.length; ++y) {
                 for (let x = 0; x < y; ++x) {
                     [matrix[x][y], matrix[y][x]] = [matrix[y][x], matrix[x][y]];
                 }
             }
-            matrix.forEach(row => row.reverse());
+            if (dir > 0) matrix.forEach(row => row.reverse());
+            else matrix.reverse();
         }
 
         function getRandomPiece() {
             const pieces = 'IJLOSTZ';
             return SHAPES[pieces.indexOf(pieces[pieces.length * Math.random() | 0]) + 1];
+        }
+
+        function saveScoreToHistory(finalScore) {
+            let history = JSON.parse(localStorage.getItem('tetris_scores_history')) || [];
+            history.push({ score: finalScore, date: new Date().toLocaleDateString('pt-BR') });
+            history.sort((a, b) => b.score - a.score);
+            history = history.slice(0, 10); // Mantém top 10
+            localStorage.setItem('tetris_scores_history', JSON.stringify(history));
+            if (history[0] && history[0].score > highscore) {
+                highscore = history[0].score;
+                localStorage.setItem('tulip_tetris_highscore', highscore);
+            }
         }
 
         function playerReset() {
@@ -599,10 +771,7 @@
 
             if (collide(board, player)) {
                 gameOver = true;
-                if(score > highscore) {
-                    highscore = score;
-                    localStorage.setItem('tulip_tetris_highscore', highscore);
-                }
+                saveScoreToHistory(score);
                 document.getElementById('final-score').innerText = score;
                 document.getElementById('game-over-screen').classList.add('active');
             }
@@ -610,33 +779,35 @@
 
         function arenaSweep() {
             let rowCount = 1;
-            let clearedLines = 0;
+            let clearedLines = [];
+            
             outer: for (let y = board.length - 1; y > 0; --y) {
                 for (let x = 0; x < board[y].length; ++x) {
                     if (board[y][x] === 0) continue outer;
                 }
-                const row = board.splice(y, 1)[0].fill(0);
-                board.unshift(row);
-                ++y;
-                score += rowCount * 10; lines++; rowCount *= 2;
-                clearedLines++;
+                clearedLines.push(y);
             }
 
-            if(clearedLines > 0) {
-                // Vibração diferenciada baseada no combo de linhas destruídas
-                triggerVibrate(clearedLines === 4 ? [40, 40, 40, 40] : 60);
+            if(clearedLines.length > 0) {
+                lineFlashFrames = [...clearedLines];
+                triggerVibrate(clearedLines.length === 4 ? [40, 30, 40, 30] : 50);
                 
-                level = Math.floor(lines / 10) + 1;
-                dropInterval = Math.max(100, 1000 - (level - 1) * 90);
-                
-                // Evolução Visual do Fundo conforme o Nível avança (Aura botânica verdejante)
-                if (level >= 5) {
-                    document.body.style.backgroundColor = "#f0fdf4"; // Verde jardim suave
-                } else if (level >= 3) {
-                    document.body.style.backgroundColor = "#fdf4ff"; // Lavanda suave
-                } else {
-                    document.body.style.backgroundColor = "#fdf2f8";
-                }
+                // Pequena pausa para animação flash do impacto antes de descer as peças
+                setTimeout(() => {
+                    lineFlashFrames = [];
+                    clearedLines.forEach(y => {
+                        const row = board.splice(y, 1)[0].fill(0);
+                        board.unshift(row);
+                    });
+
+                    lines += clearedLines.length;
+                    score += clearedLines.length * rowCount * 15;
+                    level = Math.floor(lines / 8) + 1;
+                    dropInterval = Math.max(80, 1000 - (level - 1) * 95);
+                    
+                    updateBackgroundProgress();
+                    updateScore();
+                }, 80);
             }
         }
 
@@ -647,39 +818,85 @@
             document.getElementById('highscore').innerText = highscore;
         }
 
+        /* --- Telas, Menus e Overlays --- */
         function togglePause() {
-            if (gameOver) return;
+            if (gameOver || isMenuOpen || isScoresOpen) return;
             isPaused = !isPaused;
             document.getElementById('pause-screen').classList.toggle('active', isPaused);
-            document.getElementById('start-btn').innerText = isPaused ? "Continuar" : "Pausar";
             if (!isPaused) { lastTime = performance.now(); update(); }
+        }
+
+        function openMenu() {
+            isMenuOpen = true;
+            document.getElementById('menu-screen').classList.add('active');
+        }
+        function closeMenu() {
+            isMenuOpen = false;
+            document.getElementById('menu-screen').classList.remove('active');
+            lastTime = performance.now();
+            update();
+        }
+
+        function openScores() {
+            isScoresOpen = true;
+            const container = document.getElementById('scores-container');
+            container.innerHTML = '';
+            let history = JSON.parse(localStorage.getItem('tetris_scores_history')) || [];
+            
+            if (history.length === 0) {
+                container.innerHTML = '<div style="font-size:0.75rem; color:gray; padding:10px;">Nenhum recorde ainda!</div>';
+            } else {
+                history.forEach((h, idx) => {
+                    const item = document.createElement('div');
+                    item.className = `score-item ${idx === 0 ? 'top' : ''}`;
+                    item.innerHTML = `<span>#${idx+1} - ${h.date}</span> <span>${h.score} pts</span>`;
+                    container.appendChild(item);
+                });
+            }
+            document.getElementById('scores-screen').classList.add('active');
+        }
+
+        function closeScores() {
+            isScoresOpen = false;
+            document.getElementById('scores-screen').classList.remove('active');
+            lastTime = performance.now();
+            update();
+        }
+
+        function clearScores() {
+            if(confirm("Deseja apagar todo o histórico de pontos?")) {
+                localStorage.removeItem('tetris_scores_history');
+                localStorage.removeItem('tulip_tetris_highscore');
+                highscore = 0;
+                updateScore();
+                openScores();
+            }
         }
 
         function loadHighScore() {
             const saved = localStorage.getItem('tulip_tetris_highscore');
-            if(saved) {
-                highscore = parseInt(saved, 10);
-            }
+            if(saved) highscore = parseInt(saved, 10);
             document.getElementById('highscore').innerText = highscore;
         }
 
         function resetGame() {
             document.getElementById('game-over-screen').classList.remove('active');
             document.getElementById('pause-screen').classList.remove('active');
-            document.body.style.backgroundColor = "#fdf2f8";
             board = createMatrix(COLS, ROWS);
             score = 0; lines = 0; level = 1; dropInterval = 1000;
-            gameOver = false; isPaused = false;
-            document.getElementById('start-btn').innerText = "Pausar";
+            gameOver = false; isPaused = false; isMenuOpen = false; isScoresOpen = false;
             player.nextMatrix = null;
             player.holdMatrix = null;
             loadHighScore();
-            playerReset(); updateScore();
-            lastTime = performance.now(); update();
+            applyThemeStyles();
+            playerReset(); 
+            updateScore();
+            lastTime = performance.now(); 
+            update();
         }
 
         function update(time = 0) {
-            if (gameOver || isPaused) return;
+            if (gameOver || isPaused || isMenuOpen || isScoresOpen) return;
             const deltaTime = time - lastTime; lastTime = time;
             dropCounter += deltaTime;
             if (dropCounter > dropInterval) playerDrop();
@@ -689,7 +906,11 @@
 
         function setupTouchButton(id, action) {
             const btn = document.getElementById(id);
-            btn.addEventListener('touchstart', (e) => { e.preventDefault(); action(); draw(); }, { passive: false });
+            btn.addEventListener('touchstart', (e) => { 
+                e.preventDefault(); 
+                action(); 
+                draw(); 
+            }, { passive: false });
         }
 
         setupTouchButton('btn-left', () => playerMove(-1));
@@ -697,8 +918,9 @@
         setupTouchButton('btn-down', () => playerDrop());
         setupTouchButton('btn-rotate', () => playerRotate());
         setupTouchButton('btn-hard-drop', () => playerHardDrop());
+        setupTouchButton('btn-hold-action', () => playerHold());
         
-        // Área do HUD de guardar responde ao toque para ativar a mecânica de Hold
+        // Mantém hold na área do HUD também por conveniência
         document.getElementById('hold-card').addEventListener('touchstart', (e) => {
             e.preventDefault(); playerHold();
         }, { passive: false });
@@ -706,20 +928,24 @@
         document.addEventListener('keydown', event => {
             if (gameOver) return;
             if (event.key === 'Escape') { togglePause(); return; }
-            if (isPaused) return;
+            if (isPaused || isMenuOpen || isScoresOpen) return;
             switch (event.key) {
                 case 'ArrowLeft': playerMove(-1); break;
                 case 'ArrowRight': playerMove(1); break;
                 case 'ArrowDown': playerDrop(); break;
                 case 'ArrowUp': playerRotate(); break;
-                case 'c': case 'C': playerHold(); break; // Atalho clássico de teclado para Hold
+                case 'c': case 'C': playerHold(); break; 
                 case ' ': playerHardDrop(); event.preventDefault(); break;
             }
             draw();
         });
 
+        // Inicialização
         loadHighScore();
-        playerReset(); updateScore(); update();
+        applyThemeStyles();
+        playerReset(); 
+        updateScore(); 
+        update();
     </script>
 </body>
 </html>
