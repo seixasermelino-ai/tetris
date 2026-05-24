@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Tulip Tetris</title>
+    <title>Tulip Tetris Premium</title>
     <style>
         :root {
-            --bg-color: #fdf2f8; /* Rosa tulipa bem claro */
-            --container-bg: #fff1f2; /* Fundo dos painéis */
-            --border-color: #f43f5e; /* Rosa choque/botão de tulipa */
-            --text-main: #4c0519; /* Vinho profundo para contraste */
+            --bg-color: #fdf2f8; 
+            --container-bg: #fff1f2; 
+            --border-color: #f43f5e; 
+            --text-main: #4c0519; 
             --text-muted: #9f1239;
-            --accent-color: #db2777; /* Rosa vibrante */
-            --accent-secondary: #10b981; /* Verde folha para detalhes */
+            --accent-color: #db2777; 
+            --accent-secondary: #10b981; 
         }
 
         * {
@@ -35,39 +35,40 @@
             flex-direction: column;
             overflow: hidden;
             position: relative;
+            transition: background-color 1s ease;
         }
 
         header {
             text-align: center;
-            padding: 8px 0 2px 0;
+            padding: 6px 0 2px 0;
             flex-shrink: 0;
         }
 
         header h1 {
-            font-size: 1.4rem;
+            font-size: 1.3rem;
             letter-spacing: 1px;
             text-transform: uppercase;
-            background: linear-gradient(45deg, #e11d48, #f43f5e, #10b981);
+            background: linear-gradient(45deg, #e11d48, #db2777, #10b981);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
-        /* --- HUD Lateral Integrado --- */
         .game-layout {
             flex: 1;
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 12px;
-            padding: 10px 16px;
+            gap: 10px;
+            padding: 5px 12px;
             min-height: 0;
         }
 
+        /* Painéis Laterais Esquerdo e Direito para simetria e ergonomia */
         .side-panel {
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            width: 75px;
+            gap: 6px;
+            width: 72px;
             flex-shrink: 0;
         }
 
@@ -75,26 +76,26 @@
             background-color: var(--container-bg);
             border: 1.5px solid #ffe4e6;
             border-radius: 12px;
-            padding: 6px 4px;
+            padding: 5px 2px;
             text-align: center;
-            box-shadow: 0 2px 4px rgba(76, 5, 25, 0.05);
+            box-shadow: 0 2px 4px rgba(76, 5, 25, 0.03);
         }
 
         .hud-label {
             color: var(--text-muted);
             text-transform: uppercase;
-            font-size: 0.6rem;
+            font-size: 0.55rem;
             font-weight: bold;
             letter-spacing: 0.5px;
         }
 
         .hud-value {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             font-weight: bold;
             color: var(--text-main);
         }
 
-        #next-canvas {
+        .side-canvas {
             display: block;
             background-color: #fffafb;
             border-radius: 8px;
@@ -102,26 +103,24 @@
             border: 1px solid #fecdd3;
         }
 
-        /* --- Tabuleiro --- */
         .main-board-wrapper {
             position: relative;
             height: 100%;
             aspect-ratio: 10 / 20;
             max-height: 100%;
-            flex-grow: 0;
+            flex-shrink: 0;
         }
 
         #board {
             display: block;
-            background-color: #fffafb; /* Fundo do tabuleiro claro e limpo */
+            background-color: #fffafb; 
             border-radius: 14px;
             border: 3px solid #fecdd3;
             width: 100%;
             height: 100%;
-            box-shadow: 0 8px 16px rgba(76, 5, 25, 0.06);
+            box-shadow: 0 6px 12px rgba(76, 5, 25, 0.05);
         }
 
-        /* --- Overlays --- */
         .overlay {
             position: absolute;
             top: 0;
@@ -147,44 +146,42 @@
         }
 
         .overlay h2 {
-            font-size: 1.6rem;
+            font-size: 1.5rem;
             color: #e11d48;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
         .overlay p {
             color: var(--text-muted);
-            margin-bottom: 20px;
-            font-size: 1rem;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
         }
 
-        /* --- Botões de Menu --- */
         .system-buttons {
             display: flex;
             justify-content: center;
             gap: 10px;
-            padding: 4px 8px;
-            background-color: var(--bg-color);
+            padding: 4px;
+            background-color: transparent;
             flex-shrink: 0;
         }
 
-        /* --- Revamp Ergonômico dos Controles (Layout D-Pad + Ação Separada) --- */
+        /* --- Interface de Controles Remodelada --- */
         .mobile-controls {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 16px 24px calc(12px + env(safe-area-inset-bottom, 12px)) 24px;
+            padding: 12px 20px calc(10px + env(safe-area-inset-bottom, 10px)) 20px;
             background-color: var(--container-bg);
             border-top: 1px solid #fecdd3;
             flex-shrink: 0;
-            gap: 20px;
+            gap: 15px;
         }
 
-        /* D-PAD Clássico na esquerda (Dedão Esquerdo) */
         .dpad-container {
             position: relative;
-            width: 130px;
-            height: 130px;
+            width: 124px;
+            height: 124px;
             flex-shrink: 0;
         }
 
@@ -193,12 +190,12 @@
             background-color: #ffe4e6;
             color: var(--text-main);
             border: 1.5px solid #fecdd3;
-            font-size: 22px;
+            font-size: 20px;
             font-weight: bold;
             display: flex;
             justify-content: center;
             align-items: center;
-            box-shadow: 0 4px 6px rgba(76, 5, 25, 0.05);
+            box-shadow: 0 3px 5px rgba(76, 5, 25, 0.04);
             border-radius: 14px;
         }
 
@@ -207,26 +204,14 @@
             border-color: #f472b6;
         }
 
-        #btn-left {
-            top: 42px; left: 0;
-            width: 46px; height: 46px;
-        }
+        #btn-left { top: 40px; left: 0; width: 44px; height: 44px; }
+        #btn-right { top: 40px; right: 0; width: 44px; height: 44px; }
+        #btn-down { bottom: 0; left: 40px; width: 44px; height: 44px; }
 
-        #btn-right {
-            top: 42px; right: 0;
-            width: 46px; height: 46px;
-        }
-
-        #btn-down {
-            bottom: 0; left: 42px;
-            width: 46px; height: 46px;
-        }
-
-        /* Botões de Ação na direita (Dedão Direito) */
         .action-container {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
             align-items: flex-end;
             flex: 1;
         }
@@ -238,56 +223,69 @@
             align-items: center;
             color: white;
             font-weight: bold;
-            box-shadow: 0 4px 8px rgba(225, 29, 72, 0.15);
+            box-shadow: 0 4px 6px rgba(225, 29, 72, 0.12);
         }
 
         .action-btn:active {
-            transform: scale(0.95);
+            transform: scale(0.96);
             opacity: 0.9;
         }
 
         #btn-rotate {
-            width: 76px;
-            height: 76px;
+            width: 72px;
+            height: 72px;
             border-radius: 50%;
             background: linear-gradient(135deg, #db2777, #e11d48);
-            font-size: 14px;
+            font-size: 13px;
             letter-spacing: 0.5px;
             border: 2px solid #fff;
         }
 
         #btn-hard-drop {
             width: 100%;
-            max-width: 120px;
-            height: 38px;
-            border-radius: 20px;
+            max-width: 110px;
+            height: 36px;
+            border-radius: 18px;
             background-color: var(--accent-secondary);
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             text-transform: uppercase;
             letter-spacing: 1px;
-            box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);
         }
 
         .btn {
-            padding: 8px 16px;
+            padding: 6px 14px;
             background-color: #f43f5e;
             border: none;
-            border-radius: 20px;
+            border-radius: 18px;
             color: white;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             text-transform: uppercase;
             font-weight: bold;
-            box-shadow: 0 2px 4px rgba(244, 63, 94, 0.2);
         }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>Tulip Tetris</h1>
+        <h1>Tulip Tetris Premium</h1>
     </header>
 
     <div class="game-layout">
+        <div class="side-panel">
+            <div class="hud-card" id="hold-card">
+                <div class="hud-label">Guardar</div>
+                <canvas id="hold-canvas" class="side-canvas" width="56" height="56"></canvas>
+            </div>
+            <div class="hud-card">
+                <div class="hud-label">Recorde</div>
+                <div id="highscore" class="hud-value">0</div>
+            </div>
+            <div class="hud-card">
+                <div class="hud-label">Nível</div>
+                <div id="level" class="hud-value">1</div>
+            </div>
+        </div>
+
         <div class="main-board-wrapper">
             <canvas id="board" width="240" height="480"></canvas>
             
@@ -306,15 +304,11 @@
         <div class="side-panel">
             <div class="hud-card">
                 <div class="hud-label">Próximo</div>
-                <canvas id="next-canvas" width="60" height="60"></canvas>
+                <canvas id="next-canvas" class="side-canvas" width="56" height="56"></canvas>
             </div>
             <div class="hud-card">
                 <div class="hud-label">Pontos</div>
                 <div id="score" class="hud-value">0</div>
-            </div>
-            <div class="hud-card">
-                <div class="hud-label">Nível</div>
-                <div id="level" class="hud-value">1</div>
             </div>
             <div class="hud-card">
                 <div class="hud-label">Linhas</div>
@@ -346,40 +340,42 @@
         const ctx = canvas.getContext('2d');
         const nextCanvas = document.getElementById('next-canvas');
         const nextCtx = nextCanvas.getContext('2d');
+        const holdCanvas = document.getElementById('hold-canvas');
+        const holdCtx = holdCanvas.getContext('2d');
 
         const COLS = 10; const ROWS = 20; 
-        const BLOCK_SIZE = 24;      // Tabuleiro principal
-        const NEXT_BLOCK_SIZE = 14; // Tamanho reduzido para caber no HUD lateral
+        const BLOCK_SIZE = 24;      
+        const SIDE_BLOCK_SIZE = 12; 
 
-        // Paleta Temática de Tulipas e Botânica (Suave e elegante)
         const COLORS = [
             null,
-            '#f43f5e', // Rosa Tulipa Imperial
-            '#fb7185', // Rosa Claro Coral
-            '#f472b6', // Rosa Choque Blossom
-            '#fbbf24', // Amarelo Tulipa Dourada
-            '#34d399', // Verde Folha Macia
-            '#a78bfa', // Lavanda do Campo
+            '#f43f5e', // Rosa Tulipa
+            '#fb7185', // Rosa Coral
+            '#f472b6', // Blossom
+            '#fbbf24', // Dourada
+            '#34d399', // Verde Folha
+            '#a78bfa', // Lavanda
             '#f87171'  // Vermelho Pétala
         ];
 
         const SHAPES = [
             [],
-            [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]],
-            [[2,0,0],[2,2,2],[0,0,0]],
-            [[0,0,3],[3,3,3],[0,0,0]],
-            [[4,4],[4,4]],
-            [[0,5,5],[5,5,0],[0,0,0]],
-            [[0,6,0],[6,6,6],[0,0,0]],
-            [[7,7,0],[0,7,7],[0,0,0]]
+            [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]], // I
+            [[2,0,0],[2,2,2],[0,0,0]],                 // J
+            [[0,0,3],[3,3,3],[0,0,0]],                 // L
+            [[4,4],[4,4]],                             // O
+            [[0,5,5],[5,5,0],[0,0,0]],                 // S
+            [[0,6,0],[6,6,6],[0,0,0]],                 // T
+            [[7,7,0],[0,7,7],[0,0,0]]                  // Z
         ];
 
         let board = createMatrix(COLS, ROWS);
-        let score = 0; let lines = 0; let level = 1;
+        let score = 0; let lines = 0; let level = 1; let highscore = 0;
         let gameOver = false; let isPaused = false;
         let dropCounter = 0; let dropInterval = 1000; let lastTime = 0;
+        let hasHeld = false; // Bloqueia múltiplas trocas na mesma jogada
 
-        const player = { pos: {x: 0, y: 0}, matrix: null, nextMatrix: null };
+        const player = { pos: {x: 0, y: 0}, matrix: null, nextMatrix: null, holdMatrix: null };
 
         function createMatrix(w, h) {
             const matrix = [];
@@ -387,11 +383,16 @@
             return matrix;
         }
 
-        // Renderização dos blocos estilizados como pétalas arredondadas
-        function drawBlock(context, x, y, colorIndex, size) {
-            context.fillStyle = COLORS[colorIndex];
+        // Suporte a feedback tátil nativo
+        function triggerVibrate(ms) {
+            if (navigator.vibrate) {
+                navigator.vibrate(ms);
+            }
+        }
+
+        function drawBlock(context, x, y, colorIndex, size, isGhost = false) {
+            context.fillStyle = isGhost ? 'rgba(244, 63, 94, 0.08)' : COLORS[colorIndex];
             
-            // Design arredondado elegante (estilo pétala/tulipa moderna)
             const radius = size * 0.25;
             const bx = x * size;
             const by = y * size;
@@ -409,17 +410,30 @@
             context.closePath();
             context.fill();
 
-            // Brilho superior sutil nas pétalas
-            context.fillStyle = 'rgba(255,255,255,0.2)';
-            context.fillRect(bx + 2, by + 2, size - 4, 2);
+            if (isGhost) {
+                context.strokeStyle = 'rgba(244, 63, 94, 0.3)';
+                context.lineWidth = 1;
+                context.stroke();
+            } else {
+                context.fillStyle = 'rgba(255,255,255,0.18)';
+                context.fillRect(bx + 2, by + 2, size - 4, 1.5);
+            }
+        }
+
+        // Calcula a posição exata de pouso da peça fantasma
+        function getGhostPosition() {
+            const ghostPos = { x: player.pos.x, y: player.pos.y };
+            while (!collide(board, { pos: ghostPos, matrix: player.matrix })) {
+                ghostPos.y++;
+            }
+            ghostPos.y--;
+            return ghostPos;
         }
 
         function draw() {
-            // Limpa o Tabuleiro principal
             ctx.fillStyle = '#fffafb';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Grade bem sutil para guiar o jogador
             ctx.strokeStyle = '#ffe4e6';
             ctx.lineWidth = 0.4;
             for(let i = 1; i < COLS; i++) {
@@ -429,26 +443,36 @@
                 ctx.beginPath(); ctx.moveTo(0, j * BLOCK_SIZE); ctx.lineTo(canvas.width, j * BLOCK_SIZE); ctx.stroke();
             }
 
-            drawMatrix(board, {x: 0, y: 0}, ctx, BLOCK_SIZE);
-            if (player.matrix) drawMatrix(player.matrix, player.pos, ctx, BLOCK_SIZE);
+            drawMatrix(board, {x: 0, y: 0}, ctx, BLOCK_SIZE, false);
+            
+            // Desenha Fantasma primeiro (atrás)
+            if (player.matrix && !gameOver && !isPaused) {
+                const ghostPos = getGhostPosition();
+                drawMatrix(player.matrix, ghostPos, ctx, BLOCK_SIZE, true);
+                drawMatrix(player.matrix, player.pos, ctx, BLOCK_SIZE, false);
+            }
 
-            // Atualiza a prévia da próxima peça
-            nextCtx.fillStyle = '#fffafb';
-            nextCtx.fillRect(0, 0, nextCanvas.width, nextCanvas.height);
+            // Next Piece Canvas
+            nextCtx.fillStyle = '#fffafb'; nextCtx.fillRect(0, 0, nextCanvas.width, nextCanvas.height);
             if (player.nextMatrix) {
-                const nRows = player.nextMatrix.length;
-                const nCols = player.nextMatrix[0].length;
-                // Centralização precisa no mini-box lateral
-                const offsetX = (4 - nCols) / 2;
-                const offsetY = (4 - nRows) / 2;
-                drawMatrix(player.nextMatrix, {x: offsetX, y: offsetY}, nextCtx, NEXT_BLOCK_SIZE);
+                const offsetX = (4 - player.nextMatrix[0].length) / 2;
+                const offsetY = (4 - player.nextMatrix.length) / 2;
+                drawMatrix(player.nextMatrix, {x: offsetX, y: offsetY}, nextCtx, SIDE_BLOCK_SIZE, false);
+            }
+
+            // Hold Piece Canvas
+            holdCtx.fillStyle = '#fffafb'; holdCtx.fillRect(0, 0, holdCanvas.width, holdCanvas.height);
+            if (player.holdMatrix) {
+                const offsetX = (4 - player.holdMatrix[0].length) / 2;
+                const offsetY = (4 - player.holdMatrix.length) / 2;
+                drawMatrix(player.holdMatrix, {x: offsetX, y: offsetY}, holdCtx, SIDE_BLOCK_SIZE, false);
             }
         }
 
-        function drawMatrix(matrix, offset, context, size) {
+        function drawMatrix(matrix, offset, context, size, isGhost = false) {
             matrix.forEach((row, y) => {
                 row.forEach((value, x) => {
-                    if (value !== 0) drawBlock(context, x + offset.x, y + offset.y, value, size);
+                    if (value !== 0) drawBlock(context, x + offset.x, y + offset.y, value, size, isGhost);
                 });
             });
         }
@@ -461,8 +485,8 @@
             });
         }
 
-        function collide(board, player) {
-            const m = player.matrix; const o = player.pos;
+        function collide(board, target) {
+            const m = target.matrix; const o = target.pos;
             for (let y = 0; y < m.length; ++y) {
                 for (let x = 0; x < m[y].length; ++x) {
                     if (m[y][x] !== 0 &&
@@ -483,6 +507,7 @@
                 playerReset();
                 arenaSweep();
                 updateScore();
+                triggerVibrate(15);
             }
             dropCounter = 0;
         }
@@ -500,6 +525,7 @@
                 playerReset();
                 arenaSweep();
                 updateScore();
+                triggerVibrate(35); // Vibração mais forte no impacto total
             }
             dropCounter = 0;
         }
@@ -508,6 +534,25 @@
             if (gameOver || isPaused) return;
             player.pos.x += dir;
             if (collide(board, player)) player.pos.x -= dir;
+        }
+
+        function playerHold() {
+            if (gameOver || isPaused || hasHeld) return;
+            
+            triggerVibrate(20);
+            const currentMatrix = player.matrix;
+            
+            if (!player.holdMatrix) {
+                player.holdMatrix = currentMatrix;
+                playerReset();
+            } else {
+                player.matrix = player.holdMatrix;
+                player.holdMatrix = currentMatrix;
+                player.pos.y = 0;
+                player.pos.x = (board[0].length / 2 | 0) - (player.matrix[0].length / 2 | 0);
+            }
+            hasHeld = true;
+            draw();
         }
 
         function playerRotate() {
@@ -550,9 +595,14 @@
             
             player.pos.y = 0;
             player.pos.x = (board[0].length / 2 | 0) - (player.matrix[0].length / 2 | 0);
+            hasHeld = false;
 
             if (collide(board, player)) {
                 gameOver = true;
+                if(score > highscore) {
+                    highscore = score;
+                    localStorage.setItem('tulip_tetris_highscore', highscore);
+                }
                 document.getElementById('final-score').innerText = score;
                 document.getElementById('game-over-screen').classList.add('active');
             }
@@ -560,6 +610,7 @@
 
         function arenaSweep() {
             let rowCount = 1;
+            let clearedLines = 0;
             outer: for (let y = board.length - 1; y > 0; --y) {
                 for (let x = 0; x < board[y].length; ++x) {
                     if (board[y][x] === 0) continue outer;
@@ -568,8 +619,24 @@
                 board.unshift(row);
                 ++y;
                 score += rowCount * 10; lines++; rowCount *= 2;
+                clearedLines++;
+            }
+
+            if(clearedLines > 0) {
+                // Vibração diferenciada baseada no combo de linhas destruídas
+                triggerVibrate(clearedLines === 4 ? [40, 40, 40, 40] : 60);
+                
                 level = Math.floor(lines / 10) + 1;
                 dropInterval = Math.max(100, 1000 - (level - 1) * 90);
+                
+                // Evolução Visual do Fundo conforme o Nível avança (Aura botânica verdejante)
+                if (level >= 5) {
+                    document.body.style.backgroundColor = "#f0fdf4"; // Verde jardim suave
+                } else if (level >= 3) {
+                    document.body.style.backgroundColor = "#fdf4ff"; // Lavanda suave
+                } else {
+                    document.body.style.backgroundColor = "#fdf2f8";
+                }
             }
         }
 
@@ -577,6 +644,7 @@
             document.getElementById('score').innerText = score;
             document.getElementById('lines').innerText = lines;
             document.getElementById('level').innerText = level;
+            document.getElementById('highscore').innerText = highscore;
         }
 
         function togglePause() {
@@ -587,14 +655,25 @@
             if (!isPaused) { lastTime = performance.now(); update(); }
         }
 
+        function loadHighScore() {
+            const saved = localStorage.getItem('tulip_tetris_highscore');
+            if(saved) {
+                highscore = parseInt(saved, 10);
+            }
+            document.getElementById('highscore').innerText = highscore;
+        }
+
         function resetGame() {
             document.getElementById('game-over-screen').classList.remove('active');
             document.getElementById('pause-screen').classList.remove('active');
+            document.body.style.backgroundColor = "#fdf2f8";
             board = createMatrix(COLS, ROWS);
             score = 0; lines = 0; level = 1; dropInterval = 1000;
             gameOver = false; isPaused = false;
             document.getElementById('start-btn').innerText = "Pausar";
             player.nextMatrix = null;
+            player.holdMatrix = null;
+            loadHighScore();
             playerReset(); updateScore();
             lastTime = performance.now(); update();
         }
@@ -618,6 +697,11 @@
         setupTouchButton('btn-down', () => playerDrop());
         setupTouchButton('btn-rotate', () => playerRotate());
         setupTouchButton('btn-hard-drop', () => playerHardDrop());
+        
+        // Área do HUD de guardar responde ao toque para ativar a mecânica de Hold
+        document.getElementById('hold-card').addEventListener('touchstart', (e) => {
+            e.preventDefault(); playerHold();
+        }, { passive: false });
 
         document.addEventListener('keydown', event => {
             if (gameOver) return;
@@ -628,11 +712,13 @@
                 case 'ArrowRight': playerMove(1); break;
                 case 'ArrowDown': playerDrop(); break;
                 case 'ArrowUp': playerRotate(); break;
+                case 'c': case 'C': playerHold(); break; // Atalho clássico de teclado para Hold
                 case ' ': playerHardDrop(); event.preventDefault(); break;
             }
             draw();
         });
 
+        loadHighScore();
         playerReset(); updateScore(); update();
     </script>
 </body>
