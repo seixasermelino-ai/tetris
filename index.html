@@ -39,39 +39,52 @@
         }
 
         header {
-            text-align: center;
-            padding: 8px 0 4px 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 15px 6px 15px;
             flex-shrink: 0;
             position: relative;
+            min-height: 44px;
         }
 
         header h1 {
-            font-size: 1.2rem;
-            letter-spacing: 1px;
+            font-size: 1.1rem;
+            letter-spacing: 0.5px;
             text-transform: uppercase;
             background: linear-gradient(45deg, #e11d48, #db2777, #10b981);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            max-width: 55%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-align: left;
         }
 
         .header-actions {
-            position: absolute;
-            right: 15px;
-            top: 50%;
-            transform: translateY(-50%);
             display: flex;
             gap: 6px;
+            align-items: center;
         }
 
         .menu-trigger-btn {
             background: var(--container-bg);
             border: 1px solid #fecdd3;
-            padding: 4px 10px;
+            padding: 6px 12px;
             border-radius: 12px;
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             font-weight: bold;
             color: var(--text-muted);
             cursor: pointer;
+            box-shadow: 0 2px 4px rgba(76, 5, 25, 0.04);
+            white-space: nowrap;
+        }
+        
+        #btn-pause-ui {
+            border-color: var(--accent-color);
+            background-color: #ffe4e6;
+            color: var(--accent-color);
         }
 
         .game-layout {
@@ -184,10 +197,10 @@
             flex-direction: column;
             background-color: var(--container-bg);
             border-top: 1.5px solid rgba(254, 205, 211, 0.8);
-            padding: 10px 16px calc(15px + env(safe-area-inset-bottom, 12px)) 16px;
+            padding: 12px 16px calc(15px + env(safe-area-inset-bottom, 12px)) 16px;
             flex-shrink: 0;
             gap: 10px;
-            min-height: 165px;
+            min-height: 195px;
         }
 
         .control-row {
@@ -197,38 +210,40 @@
             width: 100%;
         }
 
+        /* DPad redimensionado para os novos botões */
         .dpad-container {
             position: relative;
-            width: 115px;
-            height: 115px;
+            width: 155px;
+            height: 155px;
             flex-shrink: 0;
         }
 
+        /* Botões direcionais gigantes para evitar erros de toque (56px) */
         .dpad-btn {
             position: absolute;
-            background-color: rgba(255, 255, 255, 0.8);
+            background-color: rgba(255, 255, 255, 0.9);
             color: var(--text-main);
-            border: 1.5px solid rgba(254, 205, 211, 0.8);
-            font-size: 18px;
+            border: 1.5px solid rgba(254, 205, 211, 0.9);
+            font-size: 24px;
             font-weight: bold;
             display: flex;
             justify-content: center;
             align-items: center;
-            box-shadow: 0 2px 4px rgba(76, 5, 25, 0.04);
-            border-radius: 12px;
-            width: 38px;
-            height: 38px;
+            box-shadow: 0 4px 8px rgba(76, 5, 25, 0.08);
+            border-radius: 16px;
+            width: 56px;
+            height: 56px;
         }
 
         .dpad-btn:active { background-color: var(--accent-color); color: white; }
-        #btn-left { top: 38px; left: 0; }
-        #btn-right { top: 38px; right: 0; }
-        #btn-down { bottom: 0; left: 38px; }
+        #btn-left { top: 49px; left: 0; }
+        #btn-right { top: 49px; right: 0; }
+        #btn-down { bottom: 0; left: 49px; }
 
         .action-container {
             display: flex;
             flex-direction: row;
-            gap: 8px;
+            gap: 12px;
             align-items: center;
             justify-content: flex-end;
             flex: 1;
@@ -237,8 +252,8 @@
         .utility-container {
             display: flex;
             flex-direction: column;
-            gap: 6px;
-            width: 75px;
+            gap: 8px;
+            width: 85px;
         }
 
         .action-btn {
@@ -253,20 +268,20 @@
         }
 
         #btn-rotate {
-            width: 76px;
-            height: 76px;
+            width: 88px;
+            height: 88px;
             border-radius: 50%;
             background: linear-gradient(135deg, var(--accent-color), #e11d48);
-            font-size: 11px;
+            font-size: 13px;
             letter-spacing: 0.5px;
             border: 2px solid white;
         }
 
         #btn-hold-action, #btn-hard-drop {
             width: 100%;
-            height: 35px;
+            height: 40px;
             border-radius: 10px;
-            font-size: 0.65rem;
+            font-size: 0.7rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
@@ -275,7 +290,7 @@
         #btn-hard-drop { background-color: var(--accent-secondary); }
 
         .btn {
-            padding: 6px 14px;
+            padding: 8px 18px;
             background-color: var(--accent-color);
             border: none;
             border-radius: 18px;
@@ -338,7 +353,7 @@
 <body>
 
     <header>
-        <h1>Tulip Tetris Premium</h1>
+        <h1>Tulip Tetris</h1>
         <div class="header-actions">
             <button class="menu-trigger-btn" id="btn-pause-ui" onclick="togglePause()">Pausar</button>
             <button class="menu-trigger-btn" onclick="openMenu()">Menu</button>
@@ -484,9 +499,15 @@
         let board = createMatrix(COLS, ROWS);
         let score = 0; let lines = 0; let level = 1; let highscore = 0;
         let gameOver = false; let isPaused = false; let isMenuOpen = false; let isScoresOpen = false;
-        let dropCounter = 0; let dropInterval = 1000; let lastTime = 0;
+        let dropCounter = 0; 
+        let dropInterval = 1000; 
+        let lastTime = 0;
         let hasHeld = false;
         let lineFlashFrames = [];
+
+        const DAS_DELAY = 200; 
+        const DAS_INTERVAL = 60; 
+        let holdTimers = {};
 
         const player = { pos: {x: 0, y: 0}, matrix: null, nextMatrix: null, holdMatrix: null };
 
@@ -733,9 +754,11 @@
             else matrix.reverse();
         }
 
+        // CORREÇÃO ESSENCIAL: Garante que os números gerados batam estritamente com os índices válidos do array de cores (1 a 7)
         function getRandomPiece() {
             const pieces = 'IJLOSTZ';
-            return SHAPES[pieces.indexOf(pieces[pieces.length * Math.random() | 0]) + 1];
+            const pieceType = pieces[Math.floor(Math.random() * pieces.length)];
+            return SHAPES[pieces.indexOf(pieceType) + 1];
         }
 
         function saveScoreToHistory(finalScore) {
@@ -775,7 +798,8 @@
             let rowCount = 1;
             let clearedLines = [];
             
-            outer: for (let y = board.length - 1; y > 0; --y) {
+            // Correção total da varredura incluindo do topo até a base
+            outer: for (let y = board.length - 1; y >= 0; --y) {
                 for (let x = 0; x < board[y].length; ++x) {
                     if (board[y][x] === 0) continue outer;
                 }
@@ -788,15 +812,17 @@
                 
                 setTimeout(() => {
                     lineFlashFrames = [];
-                    clearedLines.forEach(y => {
-                        const row = board.splice(y, 1)[0].fill(0);
-                        board.unshift(row);
+                    // Processa as linhas removendo de forma estável sem corromper os índices do tabuleiro
+                    clearedLines.sort((a, b) => a - b).forEach(y => {
+                        board.splice(y, 1);
+                        board.unshift(new Array(COLS).fill(0));
                     });
 
                     lines += clearedLines.length;
                     score += clearedLines.length * rowCount * 15;
                     level = Math.floor(lines / 8) + 1;
-                    dropInterval = Math.max(80, 1000 - (level - 1) * 95);
+                    
+                    dropInterval = Math.max(80, 1000 - (level - 1) * 50);
                     
                     updateBackgroundProgress();
                     updateScore();
@@ -816,7 +842,6 @@
             if (gameOver || isMenuOpen || isScoresOpen) return;
             isPaused = !isPaused;
             
-            // Gerencia a interface visual do overlay e altera o texto do botão do topo
             document.getElementById('pause-screen').classList.toggle('active', isPaused);
             document.getElementById('btn-pause-ui').innerText = isPaused ? "Voltar" : "Pausar";
             
@@ -827,7 +852,6 @@
         }
 
         function openMenu() {
-            // Garante que o jogo pause caso abram o menu enquanto jogam
             if(!isPaused && !gameOver) togglePause();
             isMenuOpen = true;
             document.getElementById('menu-screen').classList.add('active');
@@ -909,6 +933,45 @@
             requestAnimationFrame(update);
         }
 
+        /* --- SISTEMA ADAPTATIVO PRESS AND HOLD (DAS) --- */
+        function setupHoldableButton(id, action) {
+            const btn = document.getElementById(id);
+
+            const startAction = (e) => {
+                e.preventDefault();
+                if (gameOver || isPaused || isMenuOpen || isScoresOpen) return;
+                
+                action();
+                draw();
+
+                cancelAction();
+
+                holdTimers[id] = setTimeout(() => {
+                    holdTimers[id + '_repeat'] = setInterval(() => {
+                        action();
+                        draw();
+                    }, DAS_INTERVAL);
+                }, DAS_DELAY);
+            };
+
+            const cancelAction = () => {
+                if (holdTimers[id]) clearTimeout(holdTimers[id]);
+                if (holdTimers[id + '_repeat']) clearInterval(holdTimers[id + '_repeat']);
+            };
+
+            btn.addEventListener('touchstart', startAction, { passive: false });
+            btn.addEventListener('touchend', cancelAction);
+            btn.addEventListener('touchcancel', cancelAction);
+        }
+
+        setupHoldableButton('btn-left', () => playerMove(-1));
+        setupHoldableButton('btn-right', () => playerMove(1));
+        setupHoldableButton('btn-down', () => playerDrop());
+
+        setupTouchButton('btn-rotate', () => playerRotate());
+        setupTouchButton('btn-hard-drop', () => playerHardDrop());
+        setupTouchButton('btn-hold-action', () => playerHold());
+        
         function setupTouchButton(id, action) {
             const btn = document.getElementById(id);
             btn.addEventListener('touchstart', (e) => { 
@@ -917,13 +980,6 @@
                 draw(); 
             }, { passive: false });
         }
-
-        setupTouchButton('btn-left', () => playerMove(-1));
-        setupTouchButton('btn-right', () => playerMove(1));
-        setupTouchButton('btn-down', () => playerDrop());
-        setupTouchButton('btn-rotate', () => playerRotate());
-        setupTouchButton('btn-hard-drop', () => playerHardDrop());
-        setupTouchButton('btn-hold-action', () => playerHold());
         
         document.getElementById('hold-card').addEventListener('touchstart', (e) => {
             e.preventDefault(); playerHold();
