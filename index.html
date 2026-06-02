@@ -105,6 +105,70 @@
             flex-shrink: 0;
         }
 
+        /* Painel ampliado de Speedrunning centralizado */
+        .speedrun-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            background-color: var(--container-bg);
+            border: 1.5px solid rgba(254, 205, 211, 0.6);
+            border-radius: 12px;
+            padding: 6px 4px;
+            box-shadow: 0 2px 4px rgba(76, 5, 25, 0.02);
+            width: 95px;
+            flex-shrink: 0;
+        }
+
+        .sr-title {
+            font-size: 0.55rem;
+            font-weight: bold;
+            text-align: center;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            border-bottom: 1px dashed rgba(254, 205, 211, 0.9);
+            padding-bottom: 2px;
+            margin-bottom: 2px;
+        }
+
+        .sr-timer {
+            font-size: 1rem;
+            font-weight: bold;
+            text-align: center;
+            color: var(--text-main);
+            font-family: monospace;
+            margin-bottom: 2px;
+        }
+
+        .sr-split {
+            display: flex;
+            flex-direction: column;
+            font-size: 0.52rem;
+            line-height: 1.1;
+            padding: 2px 3px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.4);
+            margin-bottom: 1px;
+        }
+
+        .sr-split-meta {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            color: var(--text-main);
+        }
+
+        .sr-split-pb {
+            display: flex;
+            justify-content: space-between;
+            color: var(--text-muted);
+            font-size: 0.48rem;
+        }
+
+        /* Cores de Pacing clássicas de Speedrun */
+        .split-ahead { background-color: rgba(16, 185, 129, 0.2) !important; } /* Verde - À frente */
+        .split-behind { background-color: rgba(239, 68, 68, 0.2) !important; }  /* Vermelho - Atrás */
+        .split-done { background-color: rgba(100, 116, 139, 0.15); }
+
         .hud-card {
             background-color: var(--container-bg);
             border: 1.5px solid rgba(254, 205, 211, 0.5);
@@ -210,7 +274,6 @@
             width: 100%;
         }
 
-        /* DPad redimensionado para os novos botões */
         .dpad-container {
             position: relative;
             width: 155px;
@@ -218,7 +281,6 @@
             flex-shrink: 0;
         }
 
-        /* Botões direcionais gigantes para evitar erros de toque (56px) */
         .dpad-btn {
             position: absolute;
             background-color: rgba(255, 255, 255, 0.9);
@@ -363,7 +425,7 @@
     <div class="game-layout">
         <div class="side-panel">
             <div class="hud-card" id="hold-card">
-                <div class="hud-label">Guardar</div>
+                <div class="hud-label">Guardar (H)</div>
                 <canvas id="hold-canvas" class="side-canvas" width="56" height="56"></canvas>
             </div>
             <div class="hud-card" onclick="openScores()" style="cursor:pointer;">
@@ -413,18 +475,38 @@
             </div>
         </div>
 
-        <div class="side-panel">
-            <div class="hud-card">
-                <div class="hud-label">Próximo</div>
+        <div class="speedrun-panel">
+            <div class="sr-title">Speedrun</div>
+            <div class="sr-timer" id="sr-timer">00:00.0</div>
+            
+            <div class="sr-split" id="split-500">
+                <div class="sr-split-meta"><span>500 pts</span><span class="curr-split">-:--.-</span></div>
+                <div class="sr-split-pb"><span>PB (Recorde):</span><span class="pb-split">--:--.-</span></div>
+            </div>
+            <div class="sr-split" id="split-1000">
+                <div class="sr-split-meta"><span>1000 pts</span><span class="curr-split">-:--.-</span></div>
+                <div class="sr-split-pb"><span>PB (Recorde):</span><span class="pb-split">--:--.-</span></div>
+            </div>
+            <div class="sr-split" id="split-1500">
+                <div class="sr-split-meta"><span>1500 pts</span><span class="curr-split">-:--.-</span></div>
+                <div class="sr-split-pb"><span>PB (Recorde):</span><span class="pb-split">--:--.-</span></div>
+            </div>
+            <div class="sr-split" id="split-2000">
+                <div class="sr-split-meta"><span>2000 pts</span><span class="curr-split">-:--.-</span></div>
+                <div class="sr-split-pb"><span>PB (Recorde):</span><span class="pb-split">--:--.-</span></div>
+            </div>
+
+            <div class="hud-card" style="margin-top: 4px; padding: 2px;">
+                <div class="hud-label" style="font-size:0.5rem">Próximo</div>
                 <canvas id="next-canvas" class="side-canvas" width="56" height="56"></canvas>
             </div>
-            <div class="hud-card">
-                <div class="hud-label">Pontos</div>
-                <div id="score" class="hud-value">0</div>
+            <div class="hud-card" style="padding: 2px;">
+                <div class="hud-label" style="font-size:0.5rem">Pontos</div>
+                <div id="score" class="hud-value" style="font-size:0.75rem">0</div>
             </div>
-            <div class="hud-card">
-                <div class="hud-label">Linhas</div>
-                <div id="lines" class="hud-value">0</div>
+            <div class="hud-card" style="padding: 2px;">
+                <div class="hud-label" style="font-size:0.5rem">Linhas</div>
+                <div id="lines" class="hud-value" style="font-size:0.75rem">0</div>
             </div>
         </div>
     </div>
@@ -505,6 +587,13 @@
         let hasHeld = false;
         let lineFlashFrames = [];
 
+        // Variáveis de Speedrun
+        let startTime = null;
+        let elapsedGameTime = 0;
+        const TARGETS = [500, 1000, 1500, 2000];
+        let runSplits = { 500: null, 1000: null, 1500: null, 2000: null };
+        let pbSplits = { 500: null, 1000: null, 1500: null, 2000: null };
+
         const DAS_DELAY = 200; 
         const DAS_INTERVAL = 60; 
         let holdTimers = {};
@@ -544,6 +633,52 @@
             const backgrounds = currentTheme.mainBg;
             const bgIndex = Math.min(backgrounds.length - 1, Math.floor((level - 1) / 2));
             document.body.style.backgroundColor = backgrounds[bgIndex];
+        }
+
+        // Formata milissegundos em mm:ss.f para visualização ágil de speedrunning
+        function formatTime(ms) {
+            if (ms === null || ms === undefined) return "--:--.-";
+            const totalSeconds = ms / 1000;
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = Math.floor(totalSeconds % 60);
+            const tenths = Math.floor((ms % 1000) / 100);
+            return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${tenths}`;
+        }
+
+        function loadPbSplits() {
+            const stored = localStorage.getItem('tulip_tetris_pb_splits');
+            if (stored) {
+                pbSplits = JSON.parse(stored);
+            }
+            TARGETS.forEach(t => {
+                const card = document.getElementById(`split-${t}`);
+                card.querySelector('.pb-split').innerText = formatTime(pbSplits[t]);
+            });
+        }
+
+        function checkSpeedrunSplits() {
+            TARGETS.forEach(target => {
+                if (score >= target && !runSplits[target]) {
+                    runSplits[target] = elapsedGameTime;
+                    const card = document.getElementById(`split-${target}`);
+                    card.querySelector('.curr-split').innerText = formatTime(elapsedGameTime);
+                    card.classList.add('split-done');
+
+                    // Lógica de Pacing (Comparação em tempo real com o Recorde/PB)
+                    if (pbSplits[target]) {
+                        if (elapsedGameTime < pbSplits[target]) {
+                            card.classList.add('split-ahead'); // Verde
+                        } else {
+                            card.classList.add('split-behind'); // Vermelho
+                        }
+                    } else {
+                        // Se não existia recorde anterior para este split, vira verde automaticamente
+                        card.classList.add('split-ahead');
+                        pbSplits[target] = elapsedGameTime;
+                        localStorage.setItem('tulip_tetris_pb_splits', JSON.stringify(pbSplits));
+                    }
+                }
+            });
         }
 
         function drawBlock(context, x, y, colorIndex, size, isGhost = false) {
@@ -754,7 +889,6 @@
             else matrix.reverse();
         }
 
-        // CORREÇÃO ESSENCIAL: Garante que os números gerados batam estritamente com os índices válidos do array de cores (1 a 7)
         function getRandomPiece() {
             const pieces = 'IJLOSTZ';
             const pieceType = pieces[Math.floor(Math.random() * pieces.length)];
@@ -767,10 +901,21 @@
             history.sort((a, b) => b.score - a.score);
             history = history.slice(0, 10);
             localStorage.setItem('tetris_scores_history', JSON.stringify(history));
+            
             if (history[0] && history[0].score > highscore) {
                 highscore = history[0].score;
                 localStorage.setItem('tulip_tetris_highscore', highscore);
             }
+
+            // Atualização estruturada do quadro de Recordes Pessoais (PB) de Speedrun
+            TARGETS.forEach(t => {
+                if (runSplits[t]) {
+                    if (!pbSplits[t] || runSplits[t] < pbSplits[t]) {
+                        pbSplits[t] = runSplits[t];
+                    }
+                }
+            });
+            localStorage.setItem('tulip_tetris_pb_splits', JSON.stringify(pbSplits));
         }
 
         function playerReset() {
@@ -798,7 +943,6 @@
             let rowCount = 1;
             let clearedLines = [];
             
-            // Correção total da varredura incluindo do topo até a base
             outer: for (let y = board.length - 1; y >= 0; --y) {
                 for (let x = 0; x < board[y].length; ++x) {
                     if (board[y][x] === 0) continue outer;
@@ -812,7 +956,6 @@
                 
                 setTimeout(() => {
                     lineFlashFrames = [];
-                    // Processa as linhas removendo de forma estável sem corromper os índices do tabuleiro
                     clearedLines.sort((a, b) => a - b).forEach(y => {
                         board.splice(y, 1);
                         board.unshift(new Array(COLS).fill(0));
@@ -826,6 +969,7 @@
                     
                     updateBackgroundProgress();
                     updateScore();
+                    checkSpeedrunSplits();
                 }, 80);
             }
         }
@@ -837,7 +981,6 @@
             document.getElementById('highscore').innerText = highscore;
         }
 
-        /* --- Telas, Menus e Overlays --- */
         function togglePause() {
             if (gameOver || isMenuOpen || isScoresOpen) return;
             isPaused = !isPaused;
@@ -877,7 +1020,7 @@
                 history.forEach((h, idx) => {
                     const item = document.createElement('div');
                     item.className = `score-item ${idx === 0 ? 'top' : ''}`;
-                    item.innerHTML = `<span>#${idx+1} - ${h.date}</span> <span>${h.score} pts</span>`;
+                    item.innerHTML = `<span>#1 - ${h.date}</span> <span>${h.score} pts</span>`;
                     container.appendChild(item);
                 });
             }
@@ -892,119 +1035,128 @@
         }
 
         function clearScores() {
-            if(confirm("Deseja apagar todo o histórico de pontos?")) {
+            if(confirm("Deseja apagar todo o histórico de pontos e splits de speedrun?")) {
                 localStorage.removeItem('tetris_scores_history');
-                localStorage.removeItem('tulip_tetris_highscore');
+                localStorage.removeItem('tulip_tetris_pb_splits');
                 highscore = 0;
+                localStorage.setItem('tulip_tetris_highscore', 0);
+                pbSplits = { 500: null, 1000: null, 1500: null, 2000: null };
+                loadPbSplits();
                 updateScore();
                 openScores();
             }
         }
 
-        function loadHighScore() {
-            const saved = localStorage.getItem('tulip_tetris_highscore');
-            if(saved) highscore = parseInt(saved, 10);
-            document.getElementById('highscore').innerText = highscore;
-        }
-
         function resetGame() {
-            document.getElementById('game-over-screen').classList.remove('active');
-            document.getElementById('pause-screen').classList.remove('active');
-            document.getElementById('btn-pause-ui').innerText = "Pausar";
             board = createMatrix(COLS, ROWS);
-            score = 0; lines = 0; level = 1; dropInterval = 1000;
+            score = 0; lines = 0; level = 1;
             gameOver = false; isPaused = false; isMenuOpen = false; isScoresOpen = false;
-            player.nextMatrix = null;
+            dropCounter = 0; dropInterval = 1000;
             player.holdMatrix = null;
-            loadHighScore();
-            applyThemeStyles();
-            playerReset(); 
+            player.nextMatrix = null;
+            
+            // Reinicializa cronômetro e interface do Speedrun
+            elapsedGameTime = 0;
+            runSplits = { 500: null, 1000: null, 1500: null, 2000: null };
+            document.getElementById('sr-timer').innerText = "00:00.0";
+            TARGETS.forEach(t => {
+                const card = document.getElementById(`split-${t}`);
+                card.className = "sr-split";
+                card.querySelector('.curr-split').innerText = "-:--.-";
+            });
+            
+            document.querySelectorAll('.overlay').forEach(o => o.classList.remove('active'));
+            document.getElementById('btn-pause-ui').innerText = "Pausar";
+            
+            highscore = parseInt(localStorage.getItem('tulip_tetris_highscore')) || 0;
+            loadPbSplits();
+            playerReset();
             updateScore();
-            lastTime = performance.now(); 
+            
+            lastTime = performance.now();
             update();
         }
 
-        function update(time = 0) {
-            if (gameOver || isPaused || isMenuOpen || isScoresOpen) return;
-            const deltaTime = time - lastTime; lastTime = time;
-            dropCounter += deltaTime;
-            if (dropCounter > dropInterval) playerDrop();
-            draw();
-            requestAnimationFrame(update);
+        // Sistema DAS (Delayed Auto Shift) nativo para controles mobile macios e responsivos
+        function startDas(key, action) {
+            if (holdTimers[key]) return;
+            action();
+            holdTimers[key] = setTimeout(() => {
+                holdTimers[key] = setInterval(action, DAS_INTERVAL);
+            }, DAS_DELAY);
         }
 
-        /* --- SISTEMA ADAPTATIVO PRESS AND HOLD (DAS) --- */
-        function setupHoldableButton(id, action) {
+        function stopDas(key) {
+            clearTimeout(holdTimers[key]);
+            clearInterval(holdTimers[key]);
+            delete holdTimers[key];
+        }
+
+        // Eventos Mobile corrigidos por toque sem latência
+        const bindControl = (id, action, key) => {
             const btn = document.getElementById(id);
+            btn.addEventListener('touchstart', (e) => { e.preventDefault(); startDas(key, action); });
+            btn.addEventListener('touchend', (e) => { e.preventDefault(); stopDas(key); });
+            btn.addEventListener('touchcancel', (e) => { e.preventDefault(); stopDas(key); });
+        };
 
-            const startAction = (e) => {
-                e.preventDefault();
-                if (gameOver || isPaused || isMenuOpen || isScoresOpen) return;
-                
-                action();
-                draw();
+        bindControl('btn-left', () => playerMove(-1), 'left');
+        bindControl('btn-right', () => playerMove(1), 'right');
+        bindControl('btn-down', () => playerDrop(), 'down');
 
-                cancelAction();
+        document.getElementById('btn-rotate').addEventListener('touchstart', (e) => { e.preventDefault(); playerRotate(); });
+        document.getElementById('btn-hold-action').addEventListener('touchstart', (e) => { e.preventDefault(); playerHold(); });
+        document.getElementById('btn-hard-drop').addEventListener('touchstart', (e) => { e.preventDefault(); playerHardDrop(); });
 
-                holdTimers[id] = setTimeout(() => {
-                    holdTimers[id + '_repeat'] = setInterval(() => {
-                        action();
-                        draw();
-                    }, DAS_INTERVAL);
-                }, DAS_DELAY);
-            };
+        // Eventos de Teclado Desktop
+        window.addEventListener('keydown', event => {
+            if (isMenuOpen || isScoresOpen) return;
+            
+            if (event.key === 'p' || event.key === 'P' || event.key === 'Escape') {
+                togglePause();
+                return;
+            }
+            
+            if (isPaused || gameOver) return;
 
-            const cancelAction = () => {
-                if (holdTimers[id]) clearTimeout(holdTimers[id]);
-                if (holdTimers[id + '_repeat']) clearInterval(holdTimers[id + '_repeat']);
-            };
-
-            btn.addEventListener('touchstart', startAction, { passive: false });
-            btn.addEventListener('touchend', cancelAction);
-            btn.addEventListener('touchcancel', cancelAction);
-        }
-
-        setupHoldableButton('btn-left', () => playerMove(-1));
-        setupHoldableButton('btn-right', () => playerMove(1));
-        setupHoldableButton('btn-down', () => playerDrop());
-
-        setupTouchButton('btn-rotate', () => playerRotate());
-        setupTouchButton('btn-hard-drop', () => playerHardDrop());
-        setupTouchButton('btn-hold-action', () => playerHold());
-        
-        function setupTouchButton(id, action) {
-            const btn = document.getElementById(id);
-            btn.addEventListener('touchstart', (e) => { 
-                e.preventDefault(); 
-                action(); 
-                draw(); 
-            }, { passive: false });
-        }
-        
-        document.getElementById('hold-card').addEventListener('touchstart', (e) => {
-            e.preventDefault(); playerHold();
-        }, { passive: false });
-
-        document.addEventListener('keydown', event => {
-            if (gameOver) return;
-            if (event.key === 'Escape') { togglePause(); return; }
-            if (isPaused || isMenuOpen || isScoresOpen) return;
             switch (event.key) {
-                case 'ArrowLeft': playerMove(-1); break;
-                case 'ArrowRight': playerMove(1); break;
-                case 'ArrowDown': playerDrop(); break;
-                case 'ArrowUp': playerRotate(); break;
-                case 'c': case 'C': playerHold(); break; 
-                case ' ': playerHardDrop(); event.preventDefault(); break;
+                case 'ArrowLeft': case 'a': case 'A': playerMove(-1); break;
+                case 'ArrowRight': case 'd': case 'D': playerMove(1); break;
+                case 'ArrowDown': case 's': case 'S': playerDrop(); break;
+                case 'ArrowUp': case 'w': case 'W': playerRotate(); break;
+                case ' ': playerHardDrop(); break;
+                case 'h': case 'H': playerHold(); break; // ATALHO ADICIONADO PARA PC HOLD
             }
             draw();
         });
 
-        loadHighScore();
+        function update(time = 0) {
+            if (gameOver || isPaused || isMenuOpen || isScoresOpen) return;
+            
+            const deltaTime = time - lastTime;
+            lastTime = time;
+
+            // Incrementa o tempo real do jogo apenas se estiver ativo
+            elapsedGameTime += deltaTime;
+            document.getElementById('sr-timer').innerText = formatTime(elapsedGameTime);
+
+            dropCounter += deltaTime;
+            if (dropCounter > dropInterval) {
+                playerDrop();
+            }
+
+            draw();
+            requestAnimationFrame(update);
+        }
+
+        // Inicialização Global estável
+        highscore = parseInt(localStorage.getItem('tulip_tetris_highscore')) || 0;
         applyThemeStyles();
-        playerReset(); 
-        updateScore(); 
-        update();
+        loadPbSplits();
+        playerReset();
+        updateScore();
+        lastTime = performance.now();
+        requestAnimationFrame(update);
     </script>
 </body>
 </html>
