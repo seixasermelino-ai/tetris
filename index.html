@@ -165,8 +165,8 @@
         }
 
         /* Cores de Pacing clássicas de Speedrun */
-        .split-ahead { background-color: rgba(16, 185, 129, 0.2) !important; } /* Verde - À frente */
-        .split-behind { background-color: rgba(239, 68, 68, 0.2) !important; }  /* Vermelho - Atrás */
+        .split-ahead { background-color: rgba(16, 185, 129, 0.2) !important; } 
+        .split-behind { background-color: rgba(239, 68, 68, 0.2) !important; }  
         .split-done { background-color: rgba(100, 116, 139, 0.15); }
 
         .hud-card {
@@ -305,17 +305,23 @@
         .action-container {
             display: flex;
             flex-direction: row;
-            gap: 12px;
+            justify-content: space-between;
             align-items: center;
-            justify-content: flex-end;
             flex: 1;
+            padding-left: 10px;
         }
 
-        .utility-container {
+        .left-actions {
             display: flex;
-            flex-direction: column;
-            gap: 8px;
-            width: 85px;
+            align-items: center;
+        }
+
+        .right-actions {
+            display: flex;
+            flex-direction: row;
+            gap: 14px;
+            align-items: center;
+            justify-content: flex-end;
         }
 
         .action-btn {
@@ -330,26 +336,34 @@
         }
 
         #btn-rotate {
-            width: 88px;
-            height: 88px;
+            width: 80px;
+            height: 80px;
             border-radius: 50%;
             background: linear-gradient(135deg, var(--accent-color), #e11d48);
-            font-size: 13px;
+            font-size: 12px;
             letter-spacing: 0.5px;
             border: 2px solid white;
         }
 
-        #btn-hold-action, #btn-hard-drop {
-            width: 100%;
-            height: 40px;
-            border-radius: 10px;
+        #btn-hard-drop {
+            width: 76px;
+            height: 76px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-secondary), #059669);
+            font-size: 12px;
+            letter-spacing: 0.5px;
+            border: 2px solid white;
+        }
+
+        #btn-hold-action { 
+            background-color: #64748b; 
+            width: 65px;
+            height: 44px;
+            border-radius: 12px;
             font-size: 0.7rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-
-        #btn-hold-action { background-color: #64748b; }
-        #btn-hard-drop { background-color: var(--accent-secondary); }
 
         .btn {
             padding: 8px 18px;
@@ -424,7 +438,7 @@
 
     <div class="game-layout">
         <div class="side-panel">
-            <div class="hud-card" id="hold-card">
+            <div class="hud-card" id="hold-card" onclick="playerHold()" style="cursor: pointer;">
                 <div class="hud-label">Guardar (H)</div>
                 <canvas id="hold-canvas" class="side-canvas" width="56" height="56"></canvas>
             </div>
@@ -520,11 +534,13 @@
             </div>
 
             <div class="action-container">
-                <div class="utility-container">
+                <div class="left-actions">
                     <button class="action-btn" id="btn-hold-action">HOLD</button>
-                    <button class="action-btn" id="btn-hard-drop">DROP</button>
                 </div>
-                <button class="action-btn" id="btn-rotate">GIRAR</button>
+                <div class="right-actions">
+                    <button class="action-btn" id="btn-hard-drop">DROP</button>
+                    <button class="action-btn" id="btn-rotate">GIRAR</button>
+                </div>
             </div>
         </div>
     </div>
@@ -635,7 +651,6 @@
             document.body.style.backgroundColor = backgrounds[bgIndex];
         }
 
-        // Formata milissegundos em mm:ss.f para visualização ágil de speedrunning
         function formatTime(ms) {
             if (ms === null || ms === undefined) return "--:--.-";
             const totalSeconds = ms / 1000;
@@ -664,15 +679,13 @@
                     card.querySelector('.curr-split').innerText = formatTime(elapsedGameTime);
                     card.classList.add('split-done');
 
-                    // Lógica de Pacing (Comparação em tempo real com o Recorde/PB)
                     if (pbSplits[target]) {
                         if (elapsedGameTime < pbSplits[target]) {
-                            card.classList.add('split-ahead'); // Verde
+                            card.classList.add('split-ahead'); 
                         } else {
-                            card.classList.add('split-behind'); // Vermelho
+                            card.classList.add('split-behind'); 
                         }
                     } else {
-                        // Se não existia recorde anterior para este split, vira verde automaticamente
                         card.classList.add('split-ahead');
                         pbSplits[target] = elapsedGameTime;
                         localStorage.setItem('tulip_tetris_pb_splits', JSON.stringify(pbSplits));
@@ -907,7 +920,6 @@
                 localStorage.setItem('tulip_tetris_highscore', highscore);
             }
 
-            // Atualização estruturada do quadro de Recordes Pessoais (PB) de Speedrun
             TARGETS.forEach(t => {
                 if (runSplits[t]) {
                     if (!pbSplits[t] || runSplits[t] < pbSplits[t]) {
@@ -1055,7 +1067,6 @@
             player.holdMatrix = null;
             player.nextMatrix = null;
             
-            // Reinicializa cronômetro e interface do Speedrun
             elapsedGameTime = 0;
             runSplits = { 500: null, 1000: null, 1500: null, 2000: null };
             document.getElementById('sr-timer').innerText = "00:00.0";
@@ -1077,7 +1088,6 @@
             update();
         }
 
-        // Sistema DAS (Delayed Auto Shift) nativo para controles mobile macios e responsivos
         function startDas(key, action) {
             if (holdTimers[key]) return;
             action();
@@ -1092,7 +1102,6 @@
             delete holdTimers[key];
         }
 
-        // Eventos Mobile corrigidos por toque sem latência
         const bindControl = (id, action, key) => {
             const btn = document.getElementById(id);
             btn.addEventListener('touchstart', (e) => { e.preventDefault(); startDas(key, action); });
@@ -1108,7 +1117,6 @@
         document.getElementById('btn-hold-action').addEventListener('touchstart', (e) => { e.preventDefault(); playerHold(); });
         document.getElementById('btn-hard-drop').addEventListener('touchstart', (e) => { e.preventDefault(); playerHardDrop(); });
 
-        // Eventos de Teclado Desktop
         window.addEventListener('keydown', event => {
             if (isMenuOpen || isScoresOpen) return;
             
@@ -1125,7 +1133,7 @@
                 case 'ArrowDown': case 's': case 'S': playerDrop(); break;
                 case 'ArrowUp': case 'w': case 'W': playerRotate(); break;
                 case ' ': playerHardDrop(); break;
-                case 'h': case 'H': playerHold(); break; // ATALHO ADICIONADO PARA PC HOLD
+                case 'h': case 'H': playerHold(); break; 
             }
             draw();
         });
@@ -1136,7 +1144,6 @@
             const deltaTime = time - lastTime;
             lastTime = time;
 
-            // Incrementa o tempo real do jogo apenas se estiver ativo
             elapsedGameTime += deltaTime;
             document.getElementById('sr-timer').innerText = formatTime(elapsedGameTime);
 
@@ -1149,7 +1156,6 @@
             requestAnimationFrame(update);
         }
 
-        // Inicialização Global estável
         highscore = parseInt(localStorage.getItem('tulip_tetris_highscore')) || 0;
         applyThemeStyles();
         loadPbSplits();
