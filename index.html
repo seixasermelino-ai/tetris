@@ -55,7 +55,7 @@
             background: linear-gradient(45deg, #e11d48, #db2777, #10b981);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            max-width: 55%;
+            max-width: 40%;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -87,6 +87,15 @@
             color: var(--accent-color);
         }
 
+        #btn-rewind-ui {
+            border-color: #cbd5e1;
+            background-color: #f1f5f9;
+            color: #475569;
+        }
+        #btn-rewind-ui:active {
+            background-color: #e2e8f0;
+        }
+
         .game-layout {
             flex: 1;
             display: flex;
@@ -105,7 +114,6 @@
             flex-shrink: 0;
         }
 
-        /* Painel ampliado de Speedrunning centralizado */
         .speedrun-panel {
             display: flex;
             flex-direction: column;
@@ -164,7 +172,6 @@
             font-size: 0.48rem;
         }
 
-        /* Cores de Pacing clássicas de Speedrun */
         .split-ahead { background-color: rgba(16, 185, 129, 0.2) !important; } 
         .split-behind { background-color: rgba(239, 68, 68, 0.2) !important; }  
         .split-done { background-color: rgba(100, 116, 139, 0.15); }
@@ -431,6 +438,7 @@
     <header>
         <h1>Tulip Tetris</h1>
         <div class="header-actions">
+            <button class="menu-trigger-btn" id="btn-rewind-ui" onclick="rewindTime()">↩ 10s</button>
             <button class="menu-trigger-btn" id="btn-pause-ui" onclick="togglePause()">Pausar</button>
             <button class="menu-trigger-btn" onclick="openMenu()">Menu</button>
         </div>
@@ -602,6 +610,10 @@
         let lastTime = 0;
         let hasHeld = false;
         let lineFlashFrames = [];
+
+        // Estruturas de Time Travel
+        let timeHistory = [];
+        let historyTimer = 0;
 
         // Variáveis de Speedrun
         let startTime = null;
@@ -1059,6 +1071,54 @@
             }
         }
 
+        function rewindTime() {
+            if (timeHistory.length === 0) return;
+            
+            // Pega o estado de 10 segundos atrás (ou o mais antigo disponível)
+            const targetIndex = Math.max(0, timeHistory.length - 10);
+            const snapshot = timeHistory[targetIndex];
+            
+            // Restaura o estado completo do jogo
+            board = snapshot.board.map(row => [...row]);
+            score = snapshot.score;
+            lines = snapshot.lines;
+            level = snapshot.level;
+            dropInterval = snapshot.dropInterval;
+            hasHeld = snapshot.hasHeld;
+            elapsedGameTime = snapshot.elapsedGameTime;
+            
+            player.pos = { ...snapshot.playerPos };
+            player.matrix = snapshot.playerMatrix ? snapshot.playerMatrix.map(row => [...row]) : null;
+            player.nextMatrix = snapshot.playerNextMatrix ? snapshot.playerNextMatrix.map(row => [...row]) : null;
+            player.holdMatrix = snapshot.playerHoldMatrix ? snapshot.playerHoldMatrix.map(row => [...row]) : null;
+            
+            // Remove os estados futuros da linha do tempo retrocedida
+            timeHistory = timeHistory.slice(0, targetIndex + 1);
+            
+            // Se o jogo estivesse em GameOver, remove a tela
+            if (gameOver) {
+                gameOver = false;
+                document.getElementById('game-over-screen').classList.remove('active');
+                lastTime = performance.now();
+                update();
+            }
+
+            // Atualiza splits de speedrun de forma retroativa
+            TARGETS.forEach(t => {
+                if (score < t) {
+                    runSplits[t] = null;
+                    const card = document.getElementById(`split-${t}`);
+                    card.className = "sr-split";
+                    card.querySelector('.curr-split').innerText = "-:--.-";
+                }
+            });
+
+            triggerVibrate([40, 40]);
+            updateBackgroundProgress();
+            updateScore();
+            draw();
+        }
+
         function resetGame() {
             board = createMatrix(COLS, ROWS);
             score = 0; lines = 0; level = 1;
@@ -1066,6 +1126,8 @@
             dropCounter = 0; dropInterval = 1000;
             player.holdMatrix = null;
             player.nextMatrix = null;
+            timeHistory = [];
+            historyTimer = 0;
             
             elapsedGameTime = 0;
             runSplits = { 500: null, 1000: null, 1500: null, 2000: null };
@@ -1125,6 +1187,11 @@
                 return;
             }
             
+            if (event.key === 'Backspace') {
+                rewindTime();
+                return;
+            }
+            
             if (isPaused || gameOver) return;
 
             switch (event.key) {
@@ -1146,6 +1213,30 @@
 
             elapsedGameTime += deltaTime;
             document.getElementById('sr-timer').innerText = formatTime(elapsedGameTime);
+
+            // Grava um snapshot do estado atual a cada 1 segundo (1000ms)
+            historyTimer += deltaTime;
+            if (historyTimer >= 1000) {
+                historyTimer = 0;
+                timeHistory.push({
+                    board: board.map(row => [...row]),
+                    score: score,
+                    lines: lines,
+                    level: level,
+                    dropInterval: dropInterval,
+                    hasHeld: hasHeld,
+                    elapsedGameTime: elapsedGameTime,
+                    playerPos: { ...player.pos },
+                    playerMatrix: player.matrix ? player.matrix.map(row => [...row]) : null,
+                    playerNextMatrix: player.nextMatrix ? player.nextMatrix.map(row => [...row]) : null,
+                    playerHoldMatrix: player.holdMatrix ? player.holdMatrix.map(row => [...row]) : null
+                });
+                
+                // Limita o histórico para não acumular memória indefinidamente (guarda até 60s por segurança)
+                if (timeHistory.length > 60) {
+                    timeHistory.shift();
+                }
+            }
 
             dropCounter += deltaTime;
             if (dropCounter > dropInterval) {
