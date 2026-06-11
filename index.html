@@ -329,10 +329,10 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr><td>10 L</td><td id="pb-10l">-:-.-</td></tr>
-                        <tr><td>20 L</td><td id="pb-20l">-:-.-</td></tr>
-                        <tr><td>30 L</td><td id="pb-30l">-:-.-</td></tr>
-                        <tr><td>40 L</td><td id="pb-40l">-:-.-</td></tr>
+                        <tr><td>25 L</td><td id="pb-25l">-:-.-</td></tr>
+                        <tr><td>50 L</td><td id="pb-50l">-:-.-</td></tr>
+                        <tr><td>75 L</td><td id="pb-75l">-:-.-</td></tr>
+                        <tr><td>100 L</td><td id="pb-100l">-:-.-</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -383,7 +383,6 @@
         const canvasHold = document.getElementById('canvas-hold');
         const ctxHold = canvasHold.getContext('2d');
 
-        // Paleta de Cores dos Tetraminos Harmonizada
         const COLORS = {
             'I': '#40E0D0', 'O': '#FFD700', 'T': '#BA55D3',
             'S': '#9ACD32', 'Z': '#FF6347', 'J': '#4169E1', 'L': '#FFA500'
@@ -419,17 +418,27 @@
         let dropInterval = 1000;
         let lastTime = 0;
 
-        // Estrutura de Recordes
+        // Variáveis de controle para animação de quebra de linha
+        let lineClearAnimationActive = false;
+        let linesToClear = [];
+        let lineClearTimer = 0;
+        const LINE_CLEAR_DURATION = 200; // ms
+
+        // Estrutura de Recordes Atualizada (Metas de linhas: 25, 50, 75, 100)
         let pbs = {
             score: { 10000: null, 30000: null, 60000: null, 100000: null },
-            lines: { 10: null, 20: null, 30: null, 40: null },
+            lines: { 25: null, 50: null, 75: null, 100: null },
             maxScore: 0,
             maxLines: 0
         };
 
-        // Carregar do LocalStorage se existir
         if (localStorage.getItem('tulip_tetris_pbs')) {
-            pbs = JSON.parse(localStorage.getItem('tulip_tetris_pbs'));
+            const stored = JSON.parse(localStorage.getItem('tulip_tetris_pbs'));
+            // Migração/garantia de que a estrutura possui as novas chaves
+            if (stored.lines && (stored.lines[10] !== undefined || stored.lines[25] === undefined)) {
+                stored.lines = { 25: null, 50: null, 75: null, 100: null };
+            }
+            pbs = stored;
             updatePBDisplay();
         }
 
@@ -452,6 +461,8 @@
             holdPiece = null;
             hasHeld = false;
             dropInterval = 1000;
+            lineClearAnimationActive = false;
+            linesToClear = [];
             
             elapsedMs = 0;
             startTime = Date.now();
@@ -513,44 +524,60 @@
             });
         }
 
-        // Sistema de pontuação rebalanceado (Menor disparidade entre x1 e x4)
-        function clearLines() {
-            let cleared = 0;
-            for (let r = ROWS - 1; r >= 0; r--) {
+        // Detecta linhas cheias e inicia a animação de quebra
+        function checkLines() {
+            linesToClear = [];
+            for (let r = 0; r < ROWS; r++) {
                 if (grid[r].every(val => val !== 0)) {
-                    grid.splice(r, 1);
-                    grid.unshift(Array(COLS).fill(0));
-                    cleared++;
-                    r++; 
+                    linesToClear.push(r);
                 }
             }
 
-            if (cleared > 0) {
-                lines += cleared;
-                // Curva de pontuação suavizada para aproximar x1 de x4
-                const basePoints = [0, 200, 500, 900, 1500]; 
-                score += basePoints[cleared] * level;
-
-                level = Math.floor(lines / 10) + 1;
-                dropInterval = Math.max(100, 1000 - (level - 1) * 100);
-
-                checkSpeedrunMilestones();
-                updateUI();
+            if (linesToClear.length > 0) {
+                lineClearAnimationActive = true;
+                lineClearTimer = 0;
+            } else {
+                spawnPiece();
             }
+        }
+
+        // Executa a quebra real e consolidação das linhas após o término da animação
+        function executeClearLines() {
+            let cleared = linesToClear.length;
+            
+            // Remove as linhas de baixo para cima
+            linesToClear.sort((a, b) => b - a);
+            linesToClear.forEach(r => {
+                grid.splice(r, 1);
+                grid.unshift(Array(COLS).fill(0));
+            });
+
+            lines += cleared;
+            const basePoints = [0, 200, 500, 900, 1500]; 
+            score += basePoints[cleared] * level;
+
+            level = Math.floor(lines / 10) + 1;
+            dropInterval = Math.max(100, 1000 - (level - 1) * 100);
+
+            checkSpeedrunMilestones();
+            updateUI();
+
+            linesToClear = [];
+            lineClearAnimationActive = false;
+            spawnPiece();
         }
 
         function checkSpeedrunMilestones() {
             const timeStr = formatTime(elapsedMs);
             
-            // Checar metas de Pontos
             [10000, 30000, 60000, 100000].forEach(target => {
                 if (score >= target && !pbs.score[target]) {
                     pbs.score[target] = timeStr;
                 }
             });
 
-            // Checar metas de Linhas
-            [10, 20, 30, 40].forEach(target => {
+            // Metas ajustadas para 25, 50, 75, 100
+            [25, 50, 75, 100].forEach(target => {
                 if (lines >= target && !pbs.lines[target]) {
                     pbs.lines[target] = timeStr;
                 }
@@ -564,6 +591,7 @@
         }
 
         function move(dir) {
+            if (lineClearAnimationActive) return;
             currentPiece.x += dir;
             if (collide(grid, currentPiece)) {
                 currentPiece.x -= dir;
@@ -571,28 +599,29 @@
         }
 
         function playerDrop() {
+            if (lineClearAnimationActive) return;
             currentPiece.y++;
             if (collide(grid, currentPiece)) {
                 currentPiece.y--;
                 merge(grid, currentPiece);
-                clearLines();
-                spawnPiece();
+                checkLines();
             }
             dropCounter = 0;
         }
 
         function hardDrop() {
+            if (lineClearAnimationActive) return;
             while (!collide(grid, currentPiece)) {
                 currentPiece.y++;
             }
             currentPiece.y--;
             merge(grid, currentPiece);
-            clearLines();
-            spawnPiece();
+            checkLines();
             dropCounter = 0;
         }
 
         function rotate() {
+            if (lineClearAnimationActive) return;
             const matrix = currentPiece.matrix;
             const n = matrix.length;
             let temp = Array.from({length: n}, () => Array(n).fill(0));
@@ -606,13 +635,12 @@
             const originMatrix = currentPiece.matrix;
             currentPiece.matrix = temp;
             
-            // Ajuste lateral básico se colidir ao girar
             let offset = 1;
             const startX = currentPiece.x;
             while (collide(grid, currentPiece)) {
                 currentPiece.x += offset;
                 offset = -(offset + (offset > 0 ? 1 : -1));
-                if (Math.abs(offset) > m[0].length) {
+                if (Math.abs(offset) > matrix[0].length) {
                     currentPiece.matrix = originMatrix;
                     currentPiece.x = startX;
                     return;
@@ -621,7 +649,7 @@
         }
 
         function handleHold() {
-            if (hasHeld) return;
+            if (hasHeld || lineClearAnimationActive) return;
             
             const currentType = currentPiece.type;
             if (holdPiece === null) {
@@ -637,12 +665,35 @@
             drawPreview(ctxHold, holdPiece);
         }
 
-        // Renderização dos Gráficos
-        function drawBlock(context, x, y, type) {
-            context.fillStyle = COLORS[type] || '#FFF';
-            context.fillRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE - 1, BLOCK_SIZE - 1);
-            context.strokeStyle = 'rgba(255,255,255,0.3)';
-            context.strokeRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE - 1, BLOCK_SIZE - 1);
+        // Função para calcular a posição Y da peça fantasma (sombra)
+        function getGhostPosition() {
+            if (!currentPiece) return 0;
+            let ghostY = currentPiece.y;
+            // Cria um objeto temporário simulando a peça caindo
+            let tempPiece = {
+                matrix: currentPiece.matrix,
+                x: currentPiece.x,
+                y: ghostY
+            };
+            while (!collide(grid, tempPiece)) {
+                tempPiece.y++;
+            }
+            return tempPiece.y - 1;
+        }
+
+        function drawBlock(context, x, y, type, isGhost = false) {
+            if (isGhost) {
+                context.strokeStyle = COLORS[type];
+                context.lineWidth = 2;
+                context.setLineDash([4, 4]); // Efeito pontilhado/tracejado para a sombra
+                context.strokeRect(x * BLOCK_SIZE + 1, y * BLOCK_SIZE + 1, BLOCK_SIZE - 3, BLOCK_SIZE - 3);
+                context.setLineDash([]); // Reseta estilo de linha
+            } else {
+                context.fillStyle = COLORS[type] || '#FFF';
+                context.fillRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE - 1, BLOCK_SIZE - 1);
+                context.strokeStyle = 'rgba(255,255,255,0.3)';
+                context.strokeRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE - 1, BLOCK_SIZE - 1);
+            }
         }
 
         function draw() {
@@ -650,15 +701,40 @@
             
             // Renderizar Grid Consolidado
             grid.forEach((row, r) => {
-                row.forEach((value, c) => {
-                    if (value !== 0) {
-                        drawBlock(ctx, c, r, value);
+                if (lineClearAnimationActive && linesToClear.includes(r)) {
+                    // Efeito visual de quebra: Pisca a linha alternando para branco
+                    if (Math.floor(Date.now() / 50) % 2 === 0) {
+                        ctx.fillStyle = '#FFFFFF';
+                        ctx.fillRect(0, r * BLOCK_SIZE, canvas.width, BLOCK_SIZE - 1);
+                    } else {
+                        row.forEach((value, c) => {
+                            if (value !== 0) drawBlock(ctx, c, r, value);
+                        });
                     }
-                });
+                } else {
+                    row.forEach((value, c) => {
+                        if (value !== 0) {
+                            drawBlock(ctx, c, r, value);
+                        }
+                    });
+                }
             });
 
-            // Renderizar Peça Ativa
-            if (currentPiece) {
+            // Só desenha a peça ativa e sombra se não estiver no meio de uma animação de quebra
+            if (!lineClearAnimationActive && currentPiece) {
+                // Renderizar Peça Fantasma (Sombra)
+                const ghostY = getGhostPosition();
+                if (ghostY > currentPiece.y) {
+                    currentPiece.matrix.forEach((row, r) => {
+                        row.forEach((value, c) => {
+                            if (value !== 0 && r + ghostY >= 0) {
+                                drawBlock(ctx, c + currentPiece.x, r + ghostY, currentPiece.type, true);
+                            }
+                        });
+                    });
+                }
+
+                // Renderizar Peça Ativa
                 currentPiece.matrix.forEach((row, r) => {
                     row.forEach((value, c) => {
                         if (value !== 0 && r + currentPiece.y >= 0) {
@@ -688,25 +764,30 @@
             });
         }
 
-        // Loop de Atualização Mecânica
         function gameLoop(time = 0) {
             if (gameOver || isPaused) return;
 
             const deltaTime = time - lastTime;
             lastTime = time;
-            dropCounter += deltaTime;
 
-            if (dropCounter > dropInterval) {
-                playerDrop();
+            if (lineClearAnimationActive) {
+                lineClearTimer += deltaTime;
+                if (lineClearTimer >= LINE_CLEAR_DURATION) {
+                    executeClearLines();
+                }
+            } else {
+                dropCounter += deltaTime;
+                if (dropCounter > dropInterval) {
+                    playerDrop();
+                }
             }
 
             draw();
             requestAnimationFrame(gameLoop);
         }
 
-        // Relógio Cronômetro
         function updateTimer() {
-            if (isPaused || gameOver) return;
+            if (isPaused || gameOver || lineClearAnimationActive) return;
             elapsedMs = Date.now() - startTime;
             document.getElementById('game-timer').textContent = formatTime(elapsedMs);
         }
@@ -734,15 +815,15 @@
             document.getElementById('pb-60k').textContent = pbs.score[60000] || '-:-.-';
             document.getElementById('pb-100k').textContent = pbs.score[100000] || '-:-.-';
 
-            document.getElementById('pb-10l').textContent = pbs.lines[10] || '-:-.-';
-            document.getElementById('pb-20l').textContent = pbs.lines[20] || '-:-.-';
-            document.getElementById('pb-30l').textContent = pbs.lines[30] || '-:-.-';
-            document.getElementById('pb-40l').textContent = pbs.lines[40] || '-:-.-';
+            // Elementos atualizados para os novos limiares
+            document.getElementById('pb-25l').textContent = pbs.lines[25] || '-:-.-';
+            document.getElementById('pb-50l').textContent = pbs.lines[50] || '-:-.-';
+            document.getElementById('pb-75l').textContent = pbs.lines[75] || '-:-.-';
+            document.getElementById('pb-100l').textContent = pbs.lines[100] || '-:-.-';
         }
 
-        // Captura de Eventos do Teclado
         document.addEventListener('keydown', event => {
-            if (gameOver) return;
+            if (gameOver || lineClearAnimationActive) return;
             if (event.key === 'h' || event.key === 'H') handleHold();
             if (isPaused) return;
 
@@ -755,7 +836,6 @@
             }
         });
 
-        // Controles de Clique / Touchscreen
         document.getElementById('ctrl-left').addEventListener('click', () => !isPaused && move(-1));
         document.getElementById('ctrl-right').addEventListener('click', () => !isPaused && move(1));
         document.getElementById('ctrl-down').addEventListener('click', () => !isPaused && playerDrop());
@@ -764,8 +844,8 @@
         document.getElementById('ctrl-drop').addEventListener('click', () => !isPaused && hardDrop());
         document.getElementById('ctrl-hold').addEventListener('click', () => !isPaused && handleHold());
 
-        // Botões do Cabeçalho
         document.getElementById('btn-pause').addEventListener('click', () => {
+            if (lineClearAnimationActive) return;
             isPaused = !isPaused;
             document.getElementById('btn-pause').textContent = isPaused ? "Retomar" : "Pausar";
             if (!isPaused) {
@@ -779,7 +859,6 @@
             init();
         });
 
-        // Inicialização Automática ao Carregar
         window.onload = () => {
             init();
         };
