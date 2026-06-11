@@ -2,20 +2,20 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Qual é a Nota? - Word Puzzle</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tulip Tetris</title>
     <style>
         :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --text-color: #f8fafc;
-            --text-muted: #94a3b8;
-            --primary: #38bdf8;
-            --primary-hover: #0ea5e9;
-            --success: #22c55e;
-            --warning: #eab308;
-            --danger: #ef4444;
-            --border-radius: 12px;
+            --bg-color: #FFF0F2;
+            --panel-bg: #FFFDFD;
+            --border-color: #FFD2D7;
+            --text-dark: #331A1E;
+            --text-red: #D12B53;
+            --btn-blue: #5B6D86;
+            --btn-green: #00A877;
+            --btn-pink: #E02B5E;
+            --status-green: #25a244;
+            --status-red: #d12b53;
         }
 
         * {
@@ -23,519 +23,1009 @@
             margin: 0;
             padding: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            -webkit-tap-highlight-color: transparent;
+            user-select: none;
         }
 
         body {
             background-color: var(--bg-color);
-            color: var(--text-color);
+            color: var(--text-dark);
+            height: 100vh;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            padding: 10px;
-            overflow-x: hidden;
+            overflow: hidden;
+            transition: background-color 0.5s ease;
         }
 
+        /* Header */
         header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 40px;
             width: 100%;
-            max-width: 500px;
-            text-align: center;
-            margin-bottom: 15px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .logo span:nth-child(1) { color: var(--btn-pink); }
+        .logo span:nth-child(2) { color: var(--btn-green); }
+
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-small {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            padding: 6px 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .btn-small.action {
+            border-color: var(--btn-pink);
+            color: var(--btn-pink);
+        }
+
+        /* Main Game Area */
+        .game-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
             padding: 10px;
+            position: relative;
         }
 
-        h1 {
-            font-size: 1.8rem;
-            color: var(--primary);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 5px;
-        }
-
-        .subtitle {
-            font-size: 0.9rem;
-            color: var(--text-muted);
-        }
-
-        #game-container {
-            width: 100%;
-            max-width: 500px;
-            background: var(--card-bg);
-            border-radius: var(--border-radius);
-            padding: 15px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        .sidebar {
             display: flex;
             flex-direction: column;
             gap: 15px;
+            width: 140px;
         }
 
-        #stats-panel {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            background: rgba(15, 23, 42, 0.6);
+        .panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
             padding: 10px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+        }
+
+        .panel-title {
+            font-size: 11px;
+            font-weight: bold;
+            color: var(--text-red);
+            text-transform: uppercase;
+            margin-bottom: 5px;
+            letter-spacing: 0.5px;
+        }
+
+        .panel-value {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        /* Display de Peças */
+        .box-display {
+            width: 70px;
+            height: 70px;
+            margin: 5px auto 0;
+            background: #FFFBFB;
+            border: 1px dashed var(--border-color);
             border-radius: 8px;
+            position: relative;
+        }
+
+        /* Tabuleiro Principal */
+        .board-wrapper {
+            background: #FFFFFF;
+            border: 2px solid var(--border-color);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(255, 210, 215, 0.4);
+        }
+
+        canvas {
+            display: block;
+            background: #FFFDFD;
+        }
+
+        /* Painel Speedrun customizado */
+        .speedrun-panel {
+            width: 210px;
+        }
+
+        .timer {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .toggle-mode {
+            background: #FFF0F2;
+            border: 1px solid var(--border-color);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-bottom: 12px;
+            display: inline-block;
+            text-transform: uppercase;
+        }
+
+        .pb-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            text-align: left;
+        }
+
+        .pb-table th {
+            color: var(--text-dark);
+            font-size: 11px;
+            font-weight: bold;
+            padding-bottom: 6px;
+            text-transform: uppercase;
+        }
+
+        .pb-table th:nth-child(2), .pb-table td:nth-child(2) {
             text-align: center;
         }
 
-        .stat-box {
+        .pb-table th:last-child, .pb-table td:last-child {
+            text-align: right;
+        }
+
+        .pb-table td {
+            padding: 5px 0;
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .pb-table td:first-child {
+            color: var(--text-dark);
+        }
+
+        .pb-table td:nth-child(2) {
+            color: #554044;
+        }
+
+        /* Classes de Status da Run Atual */
+        .run-ahead {
+            color: var(--status-red) !important;
+        }
+        
+        .run-behind {
+            color: var(--status-red) !important;
+        }
+
+        .run-completed-better {
+            color: var(--status-green) !important;
+        }
+
+        .run-completed-worse {
+            color: var(--status-red) !important;
+        }
+
+        /* Controles Mobile */
+        .controls-container {
+            width: 100%;
+            padding: 15px 40px 25px;
             display: flex;
-            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        .stat-label {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-        }
-
-        .stat-value {
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: var(--text-color);
-        }
-
-        #level-progress-bar {
-            grid-column: span 3;
-            height: 6px;
-            background: #334155;
-            border-radius: 3px;
-            margin-top: 5px;
-            overflow: hidden;
-        }
-
-        #level-progress-fill {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, var(--primary), var(--success));
-            transition: width 0.3s ease;
-        }
-
-        #board {
+        .control-group-left {
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
+            grid-template-areas: 
+                ". up ."
+                "left down right"
+                "hold hold hold";
             gap: 8px;
-            margin: 10px 0;
         }
 
-        .cell {
-            aspect-ratio: 1;
-            border: 2px solid #334155;
-            border-radius: 8px;
+        .control-group-right {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.8rem;
-            font-weight: bold;
-            text-transform: uppercase;
-            background: rgba(30, 41, 59, 0.5);
-            transition: all 0.2s ease;
-            user-select: none;
+            gap: 15px;
         }
 
-        .cell.active {
-            border-color: var(--primary);
-            box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
-        }
-
-        .cell.correct {
-            background-color: var(--success);
-            border-color: var(--success);
-            color: white;
-        }
-
-        .cell.present {
-            background-color: var(--warning);
-            border-color: var(--warning);
-            color: white;
-        }
-
-        .cell.absent {
-            background-color: #334155;
-            border-color: #334155;
-            color: var(--text-muted);
-        }
-
-        #keyboard {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            width: 100%;
-            margin-top: 5px;
-        }
-
-        .keyboard-row {
-            display: flex;
-            justify-content: center;
-            gap: 4px;
-            width: 100%;
-        }
-
-        .key {
-            flex: 1;
+        .btn-ctrl {
+            background: #FFFFFF;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            width: 54px;
             height: 48px;
-            border: none;
-            border-radius: 4px;
-            background: #334155;
-            color: var(--text-color);
-            font-size: 0.9rem;
+            font-size: 18px;
             font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             cursor: pointer;
-            user-select: none;
-            transition: background 0.1s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+        }
+
+        .btn-ctrl:active {
+            background: #F5E6E8;
+        }
+
+        .btn-ctrl.hold-btn {
+            grid-area: hold;
+            width: auto;
+            height: 40px;
+            background: var(--btn-blue);
+            color: white;
+            font-size: 12px;
             text-transform: uppercase;
         }
 
-        .key:active {
-            background: #475569;
-            transform: scale(0.95);
-        }
-
-        .key.wide {
-            flex: 1.5;
-            font-size: 0.8rem;
-        }
-
-        .key.correct { background-color: var(--success); }
-        .key.present { background-color: var(--warning); }
-        .key.absent { background-color: #1e293b; color: #475569; }
-
-        #message-overlay {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%) translateY(-100px);
-            background: var(--primary);
-            color: #0f172a;
-            padding: 12px 24px;
-            border-radius: 30px;
+        .btn-action-round {
+            width: 75px;
+            height: 75px;
+            border-radius: 50%;
+            border: none;
+            color: white;
+            font-size: 14px;
             font-weight: bold;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            pointer-events: none;
-            opacity: 0;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            z-index: 1000;
+            text-transform: uppercase;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
 
-        #message-overlay.show {
-            transform: translateX(-50%) translateY(0);
-            opacity: 1;
-        }
+        .btn-action-round.drop { background-color: var(--btn-green); }
+        .btn-action-round.rotate { background-color: var(--btn-pink); }
+        .btn-action-round:active { filter: brightness(0.9); }
 
-        @media (max-height: 700px) {
-            h1 { font-size: 1.4rem; }
-            #game-container { gap: 8px; padding: 10px; }
-            .cell { font-size: 1.4rem; }
-            .key { height: 40px; font-size: 0.8rem; }
+        .preview-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
         }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>Qual é a Nota?</h1>
-        <div class="subtitle">Evolua sua pontuação e destrua as linhas</div>
+        <div class="logo"><span>TULIP</span> <span>TETRIS</span></div>
+        <div class="header-buttons">
+            <button class="btn-small" id="btn-10s">↩ 10s</button>
+            <button class="btn-small action" id="btn-pause">Pausar</button>
+            <button class="btn-small" id="btn-menu">Reiniciar</button>
+        </div>
     </header>
 
-    <div id="message-overlay">Mensagem</div>
-
-    <div id="game-container">
-        <div id="stats-panel">
-            <div class="stat-box">
-                <span class="stat-label">Pontos</span>
-                <span id="score-val" class="stat-value">0</span>
+    <div class="game-container">
+        <div class="sidebar">
+            <div class="panel">
+                <div class="panel-title">Guardar (H)</div>
+                <div class="box-display">
+                    <canvas id="canvas-hold" class="preview-canvas" width="70" height="70"></canvas>
+                </div>
             </div>
-            <div class="stat-box">
-                <span class="stat-label">Linhas</span>
-                <span id="lines-val" class="stat-value">0</span>
+            <div class="panel">
+                <div class="panel-title">🏆 Recorde Pts</div>
+                <div class="panel-value" id="best-score">0</div>
+                <div class="panel-title" style="margin-top: 10px;">📊 Recorde Linhas</div>
+                <div class="panel-value" id="best-lines">0</div>
             </div>
-            <div class="stat-box">
-                <span class="stat-label">Nível</span>
-                <span id="level-val" class="stat-value">1</span>
-            </div>
-            <div id="level-progress-bar">
-                <div id="level-progress-fill"></div>
+            <div class="panel">
+                <div class="panel-title">Nível</div>
+                <div class="panel-value" id="game-level">1</div>
             </div>
         </div>
 
-        <div id="board"></div>
+        <div class="board-wrapper">
+            <canvas id="game-board" width="300" height="600"></canvas>
+        </div>
 
-        <div id="keyboard"></div>
+        <div class="sidebar speedrun-panel">
+            <div class="panel">
+                <div class="panel-title">Speedrun</div>
+                <div class="timer" id="game-timer">00:00.0</div>
+                <div class="toggle-mode" id="btn-mode">☀️ DIA</div>
+                
+                <table class="pb-table">
+                    <thead>
+                        <tr>
+                            <th>META</th>
+                            <th>PB</th>
+                            <th>ESTA RUN</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr id="row-75000"><td class="meta-label">75k</td><td id="pb-75k">00:00.0</td><td id="run-75000"></td></tr>
+                        <tr id="row-150000"><td class="meta-label">150k</td><td id="pb-150k">00:00.0</td><td id="run-150000"></td></tr>
+                        <tr id="row-225000"><td class="meta-label">225k</td><td id="pb-225k">00:00.0</td><td id="run-225000"></td></tr>
+                        <tr id="row-300000"><td class="meta-label">300k</td><td id="pb-300k">00:00.0</td><td id="run-300000"></td></tr>
+                    </tbody>
+                </table>
+
+                <table class="pb-table" style="margin-top: 12px; border-top: 1px dashed var(--border-color); padding-top: 8px;">
+                    <thead>
+                        <tr>
+                            <th>META</th>
+                            <th>PB</th>
+                            <th>ESTA RUN</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr id="row-35l"><td class="meta-label">35 L</td><td id="pb-35l">00:00.0</td><td id="run-35l"></td></tr>
+                        <tr id="row-70l"><td class="meta-label">70 L</td><td id="pb-70l">00:00.0</td><td id="run-70l"></td></tr>
+                        <tr id="row-105l"><td class="meta-label">105 L</td><td id="pb-105l">00:00.0</td><td id="run-105l"></td></tr>
+                        <tr id="row-140l"><td class="meta-label">140 L</td><td id="pb-140l">00:00.0</td><td id="run-140l"></td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">Próximo</div>
+                <div class="box-display">
+                    <canvas id="canvas-next" class="preview-canvas" width="70" height="70"></canvas>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">Pontos</div>
+                <div class="panel-value" id="current-score">0</div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">Linhas</div>
+                <div class="panel-value" id="current-lines">0</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls-container">
+        <div class="control-group-left">
+            <button class="btn-ctrl" style="grid-area: up;" id="ctrl-up">↻</button>
+            <button class="btn-ctrl" style="grid-area: left;" id="ctrl-left">←</button>
+            <button class="btn-ctrl" style="grid-area: down;" id="ctrl-down">↓</button>
+            <button class="btn-ctrl" style="grid-area: right;" id="ctrl-right">→</button>
+            <button class="btn-ctrl hold-btn" id="ctrl-hold">Hold</button>
+        </div>
+
+        <div class="control-group-right">
+            <button class="btn-action-round drop" id="ctrl-drop">Drop</button>
+            <button class="btn-action-round rotate" id="ctrl-rotate">Girar</button>
+        </div>
     </div>
 
     <script>
-        // Configurações do Jogo e Limites de Níveis Atualizados
-        const CONFIG = {
-            COLS: 5,
-            ROWS: 6,
-            LEVELS: [
-                { score: 0, lines: 0, name: "Iniciante" },
-                { score: 75000, lines: 35, name: "Bronze" },
-                { score: 150000, lines: 70, name: "Prata" },
-                { score: 225000, lines: 105, name: "Ouro" },
-                { score: 300000, lines: 140, name: "Mestre" }
-            ]
+        const COLS = 10;
+        const ROWS = 20;
+        const BLOCK_SIZE = 30;
+
+        const canvas = document.getElementById('game-board');
+        const ctx = canvas.getContext('2d');
+        const canvasNext = document.getElementById('canvas-next');
+        const ctxNext = canvasNext.getContext('2d');
+        const canvasHold = document.getElementById('canvas-hold');
+        const ctxHold = canvasHold.getContext('2d');
+
+        const COLORS = {
+            'I': '#40E0D0', 'O': '#FFD700', 'T': '#BA55D3',
+            'S': '#9ACD32', 'Z': '#FF6347', 'J': '#4169E1', 'L': '#FFA500'
         };
 
-        // Estado do Jogo
-        let gameState = {
-            score: 0,
-            lines: 0,
-            currentLevel: 1,
-            currentRow: 0,
-            currentCol: 0,
-            secretWord: "TERRA", 
-            boardState: [],
-            isGameOver: false
+        const SHAPES = {
+            'I': [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]],
+            'O': [[1,1],[1,1]],
+            'T': [[0,1,0],[1,1,1],[0,0,0]],
+            'S': [[0,1,1],[1,1,0],[0,0,0]],
+            'Z': [[1,1,0],[0,1,1],[0,0,0]],
+            'J': [[1,0,0],[1,1,1],[0,0,0]],
+            'L': [[0,0,1],[1,1,1],[0,0,0]]
         };
 
-        // Lista simulada de palavras para validação interna simples
-        const WORD_POOL = ["TERRA", "PUDIM", "CHAVE", "PORTA", "TREM", "FOGO", "ANEL", "LIVRO", "MAPA", "VERDE"];
+        const LEVEL_BACKGROUNDS = [
+            '#FFF0F2', '#E6F4F1', '#F9F0FA', '#F0F7E6', '#FFF9E6',
+            '#E6EBF5', '#F5E6EC', '#EAF5E6', '#F5F5E6', '#ECE6F5'
+        ];
 
-        // Inicialização
-        function initGame() {
-            gameState.boardState = Array(CONFIG.ROWS).fill().map(() => Array(CONFIG.COLS).fill(''));
-            gameState.secretWord = WORD_POOL[Math.floor(Math.random() * WORD_POOL.length)];
-            
-            buildBoard();
-            buildKeyboard();
-            updateUI();
+        let grid = Array.from({length: ROWS}, () => Array(COLS).fill(0));
+        let score = 0;
+        let lines = 0;
+        let level = 1;
+        let gameOver = false;
+        let isPaused = false;
+
+        let startTime = null;
+        let elapsedMs = 0;
+        let timerInterval = null;
+
+        let currentPiece = null;
+        let nextPiece = null;
+        let holdPiece = null;
+        let hasHeld = false;
+
+        let dropCounter = 0;
+        let dropInterval = 1000;
+        let lastTime = 0;
+
+        let particles = [];
+
+        let periodoAtivo = 'dia'; 
+        const sequenciaPeriodos = ['dia', 'semana', 'mes'];
+
+        let pbsPorPeriodo = {
+            dia: {
+                score: { 75000: null, 150000: null, 225000: null, 300000: null },
+                lines: { 35: null, 70: null, 105: null, 140: null },
+                rawTimes: {
+                    score: { 75000: null, 150000: null, 225000: null, 300000: null },
+                    lines: { 35: null, 70: null, 105: null, 140: null }
+                },
+                maxScore: 0,
+                maxLines: 0
+            },
+            semana: {
+                score: { 75000: null, 150000: null, 225000: null, 300000: null },
+                lines: { 35: null, 70: null, 105: null, 140: null },
+                rawTimes: {
+                    score: { 75000: null, 150000: null, 225000: null, 300000: null },
+                    lines: { 35: null, 70: null, 105: null, 140: null }
+                },
+                maxScore: 0,
+                maxLines: 0
+            },
+            mes: {
+                score: { 75000: null, 150000: null, 225000: null, 300000: null },
+                lines: { 35: null, 70: null, 105: null, 140: null },
+                rawTimes: {
+                    score: { 75000: null, 150000: null, 225000: null, 300000: null },
+                    lines: { 35: null, 70: null, 105: null, 140: null }
+                },
+                maxScore: 0,
+                maxLines: 0
+            }
+        };
+
+        let runConquistas = {
+            score: { 75000: null, 150000: null, 225000: null, 300000: null },
+            lines: { 35: null, 70: null, 105: null, 140: null }
+        };
+
+        if (localStorage.getItem('tulip_tetris_multiy_pbs')) {
+            pbsPorPeriodo = JSON.parse(localStorage.getItem('tulip_tetris_multiy_pbs'));
         }
 
-        function buildBoard() {
-            const board = document.getElementById('board');
-            board.innerHTML = '';
-            for (let r = 0; r < CONFIG.ROWS; r++) {
-                for (let c = 0; c < CONFIG.COLS; c++) {
-                    const cell = document.createElement('div');
-                    cell.className = 'cell';
-                    cell.id = `cell-${r}-${c}`;
-                    board.appendChild(cell);
+        class Piece {
+            constructor(type) {
+                this.type = type;
+                this.matrix = SHAPES[type];
+                this.x = Math.floor((COLS - this.matrix[0].length) / 2);
+                this.y = type === 'I' ? -1 : 0;
+            }
+        }
+
+        function formatTime(ms) {
+            if (ms === null || ms === undefined) return "00:00.0";
+            const totalSeconds = ms / 1000;
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = Math.floor(totalSeconds % 60);
+            const tenths = Math.floor((ms % 1000) / 100);
+            return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${tenths}`;
+        }
+
+        function init() {
+            grid = Array.from({length: ROWS}, () => Array(COLS).fill(0));
+            score = 0;
+            lines = 0;
+            level = 1;
+            gameOver = false;
+            isPaused = false;
+            holdPiece = null;
+            hasHeld = false;
+            dropInterval = 1000;
+            particles = [];
+            
+            runConquistas.score = { 75000: null, 150000: null, 225000: null, 300000: null };
+            runConquistas.lines = { 35: null, 70: null, 105: null, 140: null };
+            
+            elapsedMs = 0;
+            startTime = Date.now();
+            clearInterval(timerInterval);
+            timerInterval = setInterval(updateTimer, 100);
+
+            nextPiece = getRandomPiece();
+            spawnPiece();
+            
+            updateUI();
+            updatePBDisplay();
+            lastTime = performance.now();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function getRandomPiece() {
+            const types = ['I','O','T','S','Z','J','L'];
+            const randomType = types[Math.floor(Math.random() * types.length)];
+            return new Piece(randomType);
+        }
+
+        function spawnPiece() {
+            currentPiece = nextPiece;
+            nextPiece = getRandomPiece();
+            hasHeld = false;
+
+            if (collide(grid, currentPiece)) {
+                gameOver = true;
+                clearInterval(timerInterval);
+                alert("Game Over! Tente novamente.");
+            }
+            drawPreview(ctxNext, nextPiece);
+        }
+
+        function collide(grid, piece) {
+            const m = piece.matrix;
+            const o = piece;
+            for (let r = 0; r < m.length; ++r) {
+                for (let c = 0; c < m[r].length; ++c) {
+                    if (m[r][c] !== 0) {
+                        let nextX = c + o.x;
+                        let nextY = r + o.y;
+                        if (nextY >= ROWS || nextX < 0 || nextX >= COLS || (nextY >= 0 && grid[nextY][nextX])) {
+                            return true;
+                        }
+                    }
                 }
             }
-            highlightCurrentCell();
+            return false;
         }
 
-        function buildKeyboard() {
-            const keyboard = document.getElementById('keyboard');
-            keyboard.innerHTML = '';
-            
-            const rows = [
-                ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
-                ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'Ç'],
-                ['ENTER', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', 'BACKSPACE']
-            ];
-
-            rows.forEach(row => {
-                const rowEl = document.createElement('div');
-                rowEl.className = 'keyboard-row';
-                
-                row.forEach(key => {
-                    const button = document.createElement('button');
-                    button.textContent = key === 'BACKSPACE' ? '⌫' : key;
-                    button.className = 'key';
-                    if (key === 'ENTER' || key === 'BACKSPACE') {
-                        button.classList.add('wide');
+        function merge(grid, piece) {
+            piece.matrix.forEach((row, r) => {
+                row.forEach((value, c) => {
+                    if (value !== 0) {
+                        if (r + piece.y >= 0) {
+                            grid[r + piece.y][c + piece.x] = piece.type;
+                        }
                     }
-                    button.dataset.key = key;
-                    button.addEventListener('click', () => handleKeyPress(key));
-                    rowEl.appendChild(button);
                 });
-                
-                keyboard.appendChild(rowEl);
             });
         }
 
-        function handleKeyPress(key) {
-            if (gameState.isGameOver) return;
+        function clearLines() {
+            let cleared = 0;
+            let newGrid = [];
 
-            if (key === 'ENTER') {
-                submitRow();
-            } else if (key === 'BACKSPACE' || key === 'BACK') {
-                deleteLetter();
-            } else if (/^[A-ZÇ]$/i.test(key)) {
-                addLetter(key.toUpperCase());
-            }
-        }
-
-        function addLetter(letter) {
-            if (gameState.currentCol < CONFIG.COLS && gameState.currentRow < CONFIG.ROWS) {
-                gameState.boardState[gameState.currentRow][gameState.currentCol] = letter;
-                const cell = document.getElementById(`cell-${gameState.currentRow}-${gameState.currentCol}`);
-                cell.textContent = letter;
-                gameState.currentCol++;
-                highlightCurrentCell();
-            }
-        }
-
-        function deleteLetter() {
-            if (gameState.currentCol > 0) {
-                gameState.currentCol--;
-                gameState.boardState[gameState.currentRow][gameState.currentCol] = '';
-                const cell = document.getElementById(`cell-${gameState.currentRow}-${gameState.currentCol}`);
-                cell.textContent = '';
-                highlightCurrentCell();
-            }
-        }
-
-        function highlightCurrentCell() {
-            document.querySelectorAll('.cell').forEach(c => c.classList.remove('active'));
-            if (gameState.currentRow < CONFIG.ROWS && gameState.currentCol < CONFIG.COLS) {
-                const cell = document.getElementById(`cell-${gameState.currentRow}-${gameState.currentCol}`);
-                if (cell) cell.classList.add('active');
-            }
-        }
-
-        function submitRow() {
-            if (gameState.currentCol < CONFIG.COLS) {
-                showMessage("Palavra incompleta!");
-                return;
-            }
-
-            const row = gameState.currentRow;
-            const guess = gameState.boardState[row].join('');
-            const target = gameState.secretWord;
-
-            let targetLetters = target.split('');
-            let rowStatuses = Array(CONFIG.COLS).fill('absent');
-
-            // Primeiro passo: verificar acertos exatos (verdes)
-            for (let i = 0; i < CONFIG.COLS; i++) {
-                if (guess[i] === target[i]) {
-                    rowStatuses[i] = 'correct';
-                    targetLetters[i] = null; 
+            for (let r = ROWS - 1; r >= 0; r--) {
+                if (grid[r].every(val => val !== 0)) {
+                    for (let c = 0; c < COLS; c++) {
+                        createBlockParticles(c, r, grid[r][c]);
+                    }
+                    cleared++;
+                } else {
+                    newGrid.unshift([...grid[r]]);
                 }
             }
 
-            // Segundo passo: verificar letras presentes (amarelas)
-            for (let i = 0; i < CONFIG.COLS; i++) {
-                if (rowStatuses[i] === 'correct') continue;
-                
-                const idx = targetLetters.indexOf(guess[i]);
-                if (idx !== -1) {
-                    rowStatuses[i] = 'present';
-                    targetLetters[idx] = null;
-                }
+            while (newGrid.length < ROWS) {
+                newGrid.unshift(Array(COLS).fill(0));
             }
 
-            // Aplicar animações visuais na linha e no teclado
-            for (let i = 0; i < CONFIG.COLS; i++) {
-                const cell = document.getElementById(`cell-${row}-${i}`);
-                const status = rowStatuses[i];
-                cell.classList.add(status);
+            if (cleared > 0) {
+                grid = newGrid;
+                lines += cleared;
+                const basePoints = [0, 200, 500, 900, 1500]; 
+                score += basePoints[cleared] * level;
+
+                level = Math.floor(lines / 10) + 1;
+                dropInterval = Math.max(150, 1000 - (level - 1) * 50);
+
+                checkSpeedrunMilestones();
+                updateUI();
+            }
+        }
+
+        function createBlockParticles(gridX, gridY, type) {
+            const color = COLORS[type] || '#FFF';
+            const startX = gridX * BLOCK_SIZE + BLOCK_SIZE / 2;
+            const startY = gridY * BLOCK_SIZE + BLOCK_SIZE / 2;
+            
+            for (let i = 0; i < 4; i++) {
+                particles.push({
+                    x: startX,
+                    y: startY,
+                    size: Math.random() * 4 + 4,
+                    vx: (Math.random() - 0.5) * 6,
+                    vy: (Math.random() - 0.7) * 5 - 2,
+                    alpha: 1,
+                    color: color
+                });
+            }
+        }
+
+        function updateParticles(deltaTime) {
+            const gravity = 0.2;
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += gravity;
+                p.alpha -= 0.04;
                 
-                // Atualizar teclado de forma incremental
-                const keyBtn = document.querySelector(`.key[data-key="${guess[i]}"]`);
-                if (keyBtn) {
-                    if (status === 'correct') {
-                        keyBtn.className = 'key correct';
-                    } else if (status === 'present' && !keyBtn.classList.contains('correct')) {
-                        keyBtn.className = 'key present';
-                    } else if (status === 'absent' && !keyBtn.classList.contains('correct') && !keyBtn.classList.contains('present')) {
-                        keyBtn.className = 'key absent';
+                if (p.alpha <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+        }
+
+        function checkSpeedrunMilestones() {
+            const timeStr = formatTime(elapsedMs);
+            let pbChanged = false;
+            const pbAtual = pbsPorPeriodo[periodoAtivo];
+            
+            [75000, 150000, 225000, 300000].forEach(target => {
+                if (score >= target && !runConquistas.score[target]) {
+                    runConquistas.score[target] = elapsedMs;
+                    
+                    if (!pbAtual.rawTimes.score[target] || elapsedMs < pbAtual.rawTimes.score[target]) {
+                        pbAtual.score[target] = timeStr;
+                        pbAtual.rawTimes.score[target] = elapsedMs;
+                        pbChanged = true;
                     }
                 }
-            }
+            });
 
-            // Sistema de Pontuação e Linhas Eliminadas
-            gameState.lines++;
-            gameState.score += 2500; // Pontos base por tentativa aceita
+            [35, 70, 105, 140].forEach(target => {
+                if (lines >= target && !runConquistas.lines[target]) {
+                    runConquistas.lines[target] = elapsedMs;
+                    
+                    if (!pbAtual.rawTimes.lines[target] || elapsedMs < pbAtual.rawTimes.lines[target]) {
+                        pbAtual.lines[target] = timeStr;
+                        pbAtual.rawTimes.lines[target] = elapsedMs;
+                        pbChanged = true;
+                    }
+                }
+            });
 
-            if (guess === target) {
-                gameState.score += 10000; // Bônus de acerto
-                showMessage("Sensacional! +10k Pontos");
-                endTurn(true);
-                return;
-            }
+            if (score > pbAtual.maxScore) pbAtual.maxScore = score;
+            if (lines > pbAtual.maxLines) pbAtual.maxLines = lines;
 
-            gameState.currentRow++;
-            gameState.currentCol = 0;
-
-            if (gameState.currentRow >= CONFIG.ROWS) {
-                showMessage(`Fim da Linha! Palavra: ${target}`);
-                endTurn(false);
-            } else {
-                highlightCurrentCell();
-                updateProgressAndLevels();
+            if (pbChanged || score > pbAtual.maxScore || lines > pbAtual.maxLines) {
+                localStorage.setItem('tulip_tetris_multiy_pbs', JSON.stringify(pbsPorPeriodo));
+                updatePBDisplay();
             }
         }
 
-        function endTurn(isWin) {
-            updateProgressAndLevels();
-            setTimeout(() => {
-                // Prepara próxima rodada mantendo progresso global
-                gameState.currentRow = 0;
-                gameState.currentCol = 0;
-                gameState.secretWord = WORD_POOL[Math.floor(Math.random() * WORD_POOL.length)];
-                buildBoard();
-                buildKeyboard();
-            }, 2000);
+        function move(dir) {
+            currentPiece.x += dir;
+            if (collide(grid, currentPiece)) {
+                currentPiece.x -= dir;
+            }
         }
 
-        function updateProgressAndLevels() {
-            let targetLevel = 1;
+        function playerDrop() {
+            currentPiece.y++;
+            if (collide(grid, currentPiece)) {
+                currentPiece.y--;
+                merge(grid, currentPiece);
+                clearLines();
+                spawnPiece();
+            }
+            dropCounter = 0;
+        }
+
+        function hardDrop() {
+            while (!collide(grid, currentPiece)) {
+                currentPiece.y++;
+            }
+            currentPiece.y--;
+            merge(grid, currentPiece);
+            clearLines();
+            spawnPiece();
+            dropCounter = 0;
+        }
+
+        function rotate() {
+            const matrix = currentPiece.matrix;
+            const n = matrix.length;
+            let temp = Array.from({length: n}, () => Array(n).fill(0));
             
-            // Avalia o nível atual baseado nos novos limites estabelecidos
-            for (let i = 1; i < CONFIG.LEVELS.length; i++) {
-                if (gameState.score >= CONFIG.LEVELS[i].score || gameState.lines >= CONFIG.LEVELS[i].lines) {
-                    targetLevel = i + 1;
+            for (let r = 0; r < n; r++) {
+                for (let c = 0; c < n; c++) {
+                    temp[c][n - 1 - r] = matrix[r][c];
                 }
             }
 
-            if (targetLevel > gameState.currentLevel) {
-                gameState.currentLevel = targetLevel;
-                showMessage(`Subiu de Nível! Patamar: ${CONFIG.LEVELS[targetLevel-1].name}`);
+            const originMatrix = currentPiece.matrix;
+            currentPiece.matrix = temp;
+            
+            let offset = 1;
+            const startX = currentPiece.x;
+            while (collide(grid, currentPiece)) {
+                currentPiece.x += offset;
+                offset = -(offset + (offset > 0 ? 1 : -1));
+                if (Math.abs(offset) > matrix[0].length) {
+                    currentPiece.matrix = originMatrix;
+                    currentPiece.x = startX;
+                    return;
+                }
             }
+        }
 
-            // Cálculo da barra de progresso para o próximo marco
-            let progressPct = 0;
-            if (gameState.currentLevel < CONFIG.LEVELS.length) {
-                const currentMilestone = CONFIG.LEVELS[gameState.currentLevel - 1];
-                const nextMilestone = CONFIG.LEVELS[gameState.currentLevel];
-                
-                const scoreDiff = nextMilestone.score - currentMilestone.score;
-                const scoreProgress = scoreDiff > 0 ? ((gameState.score - currentMilestone.score) / scoreDiff) * 100 : 0;
-                
-                const linesDiff = nextMilestone.lines - currentMilestone.lines;
-                const linesProgress = linesDiff > 0 ? ((gameState.lines - currentMilestone.lines) / linesDiff) * 100 : 0;
-
-                // Usa o maior avanço entre pontos ou linhas para renderizar a barra
-                progressPct = Math.min(100, Math.max(scoreProgress, linesProgress));
+        function handleHold() {
+            if (hasHeld) return;
+            
+            const currentType = currentPiece.type;
+            if (holdPiece === null) {
+                holdPiece = new Piece(currentType);
+                spawnPiece();
             } else {
-                progressPct = 100; // Nível Máximo atingido
+                const temp = holdPiece.type;
+                holdPiece = new Piece(currentType);
+                currentPiece = new Piece(temp);
+            }
+            
+            hasHeld = true;
+            drawPreview(ctxHold, holdPiece);
+        }
+
+        function getGhostPosition() {
+            if (!currentPiece) return 0;
+            let ghostY = currentPiece.y;
+            let tempPiece = {
+                matrix: currentPiece.matrix,
+                x: currentPiece.x,
+                y: ghostY
+            };
+            while (!collide(grid, tempPiece)) {
+                tempPiece.y++;
+            }
+            return tempPiece.y - 1;
+        }
+
+        function drawBlock(context, x, y, type, isGhost = false) {
+            if (isGhost) {
+                context.strokeStyle = COLORS[type];
+                context.lineWidth = 2;
+                context.setLineDash([4, 4]);
+                context.strokeRect(x * BLOCK_SIZE + 1, y * BLOCK_SIZE + 1, BLOCK_SIZE - 3, BLOCK_SIZE - 3);
+                context.setLineDash([]);
+            } else {
+                context.fillStyle = COLORS[type] || '#FFF';
+                context.fillRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE - 1, BLOCK_SIZE - 1);
+                context.strokeStyle = 'rgba(255,255,255,0.3)';
+                context.strokeRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE - 1, BLOCK_SIZE - 1);
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            grid.forEach((row, r) => {
+                row.forEach((value, c) => {
+                    if (value !== 0) {
+                        drawBlock(ctx, c, r, value);
+                    }
+                });
+            });
+
+            if (currentPiece) {
+                const ghostY = getGhostPosition();
+                if (ghostY > currentPiece.y) {
+                    currentPiece.matrix.forEach((row, r) => {
+                        row.forEach((value, c) => {
+                            if (value !== 0 && r + ghostY >= 0) {
+                                drawBlock(ctx, c + currentPiece.x, r + ghostY, currentPiece.type, true);
+                            }
+                        });
+                    });
+                }
+
+                currentPiece.matrix.forEach((row, r) => {
+                    row.forEach((value, c) => {
+                        if (value !== 0 && r + currentPiece.y >= 0) {
+                            drawBlock(ctx, c + currentPiece.x, r + currentPiece.y, currentPiece.type);
+                        }
+                    });
+                });
             }
 
-            document.getElementById('level-progress-fill').style.width = `${progressPct}%`;
-            updateUI();
+            particles.forEach(p => {
+                ctx.save();
+                ctx.globalAlpha = p.alpha;
+                ctx.fillStyle = p.color;
+                ctx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
+                ctx.restore();
+            });
+        }
+
+        function drawPreview(context, piece) {
+            context.clearRect(0, 0, 70, 70);
+            if (!piece) return;
+            
+            const matrix = piece.matrix;
+            const size = 14; 
+            const offsetX = (70 - matrix[0].length * size) / 2;
+            const offsetY = (70 - matrix.length * size) / 2;
+
+            matrix.forEach((row, r) => {
+                row.forEach((value, c) => {
+                    if (value !== 0) {
+                        context.fillStyle = COLORS[piece.type];
+                        context.fillRect(offsetX + c * size, offsetY + r * size, size - 1, size - 1);
+                    }
+                });
+            });
+        }
+
+        function gameLoop(time = 0) {
+            if (gameOver || isPaused) return;
+
+            const deltaTime = time - lastTime;
+            lastTime = time;
+
+            dropCounter += deltaTime;
+            if (dropCounter > dropInterval) {
+                playerDrop();
+            }
+
+            updateParticles(deltaTime);
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function updateTimer() {
+            if (isPaused || gameOver) return;
+            elapsedMs = Date.now() - startTime;
+            document.getElementById('game-timer').textContent = formatTime(elapsedMs);
+
+            updateLiveRunColumn();
+        }
+
+        function updateLiveRunColumn() {
+            const pbAtual = pbsPorPeriodo[periodoAtivo];
+
+            // 1. Processamento de Pontos
+            [75000, 150000, 225000, 300000].forEach(target => {
+                const elRun = document.getElementById(`run-${target}`);
+                if (!elRun) return;
+
+                const tempoConquistado = runConquistas.score[target];
+                const tempoPB = pbAtual.rawTimes.score[target];
+
+                if (tempoConquistado !== null) {
+                    elRun.textContent = formatTime(tempoConquistado);
+                    if (tempoPB && tempoConquistado < tempoPB) {
+                        elRun.className = "run-completed-better";
+                    } else if (tempoPB && tempoConquistado >= tempoPB) {
+                        elRun.className = "run-completed-worse";
+                    } else {
+                        elRun.className = "run-completed-better";
+                    }
+                } else {
+                    elRun.textContent = "";
+                    elRun.className = "";
+                }
+            });
+
+            // 2. Processamento de Linhas
+            [35, 70, 105, 140].forEach(target => {
+                const elRun = document.getElementById(`run-${target}l`);
+                if (!elRun) return;
+
+                const tempoConquistado = runConquistas.lines[target];
+                const tempoPB = pbAtual.rawTimes.lines[target];
+
+                if (tempoConquistado !== null) {
+                    elRun.textContent = formatTime(tempoConquistado);
+                    if (tempoPB && tempoConquistado < tempoPB) {
+                        elRun.className = "run-completed-better";
+                    } else if (tempoPB && tempoConquistado >= tempoPB) {
+                        elRun.className = "run-completed-worse";
+                    } else {
+                        elRun.className = "run-completed-better";
+                    }
+                } else {
+                    elRun.textContent = "";
+                    elRun.className = "";
+                }
+            });
+        }
+
+        function updatePBDisplay() {
+            const pbAtual = pbsPorPeriodo[periodoAtivo];
+            
+            [75000, 150000, 225000, 300000].forEach(target => {
+                const el = document.getElementById(`pb-${target / 1000}k`);
+                if (el) el.textContent = pbAtual.score[target] || "00:00.0";
+            });
+
+            [35, 70, 105, 140].forEach(target => {
+                const el = document.getElementById(`pb-${target}l`);
+                if (el) el.textContent = pbAtual.lines[target] || "00:00.0";
+            });
+
+            document.getElementById('best-score').textContent = pbAtual.maxScore || 0;
+            document.getElementById('best-lines').textContent = pbAtual.maxLines || 0;
         }
 
         function updateUI() {
-            document.getElementById('score-val').textContent = gameState.score.toLocaleString('pt-BR');
-            document.getElementById('lines-val').textContent = gameState.lines;
-            document.getElementById('level-val').textContent = gameState.currentLevel;
+            document.getElementById('game-level').textContent = level;
+            document.getElementById('current-score').textContent = score;
+            document.getElementById('current-lines').textContent = lines;
+
+            const bgIndex = (level - 1) % LEVEL_BACKGROUNDS.length;
+            document.body.style.backgroundColor = LEVEL_BACKGROUNDS[bgIndex];
         }
 
-        function showMessage(text) {
-            const msg = document.getElementById('message-overlay');
-            msg.textContent = text;
-            msg.classList.add('show');
-            setTimeout(() => msg.classList.remove('show'), 2500);
-        }
-
-        // Captura de eventos via teclado físico
-        window.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') handleKeyPress('ENTER');
-            else if (e.key === 'Backspace') handleKeyPress('BACKSPACE');
-            else handleKeyPress(e.key.toUpperCase());
+        // Eventos e Controles por Teclado
+        document.addEventListener('keydown', event => {
+            if (gameOver || isPaused) return;
+            switch (event.keyCode) {
+                case 37: move(-1); break;
+                case 39: move(1); break;
+                case 40: playerDrop(); break;
+                case 38: rotate(); break;
+                case 32: hardDrop(); break;
+                case 72: handleHold(); break;
+            }
         });
 
-        // Inicializa o ciclo do jogo
-        initGame();
+        // Controles de Clique / Touchscreen Mobile
+        document.getElementById('ctrl-up').addEventListener('click', () => { if (!gameOver && !isPaused) rotate(); });
+        document.getElementById('ctrl-left').addEventListener('click', () => { if (!gameOver && !isPaused) move(-1); });
+        document.getElementById('ctrl-down').addEventListener('click', () => { if (!gameOver && !isPaused) playerDrop(); });
+        document.getElementById('ctrl-right').addEventListener('click', () => { if (!gameOver && !isPaused) move(1); });
+        document.getElementById('ctrl-hold').addEventListener('click', () => { if (!gameOver && !isPaused) handleHold(); });
+        document.getElementById('ctrl-drop').addEventListener('click', () => { if (!gameOver && !isPaused) hardDrop(); });
+        document.getElementById('ctrl-rotate').addEventListener('click', () => { if (!gameOver && !isPaused) rotate(); });
+
+        // Botões do Painel Superior / Menus
+        document.getElementById('btn-mode').addEventListener('click', () => {
+            const index = sequenciaPeriodos.indexOf(periodoAtivo);
+            const nextIndex = (index + 1) % sequenciaPeriodos.length;
+            periodoAtivo = sequenciaPeriodos[nextIndex];
+            document.getElementById('btn-mode').textContent = `☀️ ${periodoAtivo.toUpperCase()}`;
+            updatePBDisplay();
+            updateLiveRunColumn();
+        });
+
+        const btnPause = document.getElementById('btn-pause');
+        btnPause.addEventListener('click', () => {
+            isPaused = !isPaused;
+            if (isPaused) {
+                btnPause.textContent = "Continuar";
+                clearInterval(timerInterval);
+            } else {
+                btnPause.textContent = "Pausar";
+                startTime = Date.now() - elapsedMs;
+                timerInterval = setInterval(updateTimer, 100);
+                lastTime = performance.now();
+                requestAnimationFrame(gameLoop);
+            }
+        });
+
+        document.getElementById('btn-menu').addEventListener('click', () => {
+            init();
+        });
+
+        document.getElementById('btn-10s').addEventListener('click', () => {
+            if (!gameOver && !isPaused) {
+                startTime = Math.min(Date.now(), startTime + 10000);
+                elapsedMs = Date.now() - startTime;
+                document.getElementById('game-timer').textContent = formatTime(elapsedMs);
+            }
+        });
+
+        // Inicia o App automaticamente
+        init();
     </script>
 </body>
 </html>
