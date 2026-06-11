@@ -31,6 +31,7 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            transition: background-color 0.5s ease; /* Transição suave para a mudança de cor */
         }
 
         /* Header */
@@ -398,6 +399,20 @@
             'L': [[0,0,1],[1,1,1],[0,0,0]]
         };
 
+        // Cores pastéis para o fundo de cada nível (cicla se passar de 10)
+        const LEVEL_BACKGROUNDS = [
+            '#FFF0F2', // Nível 1
+            '#E6F4F1', // Nível 2
+            '#F9F0FA', // Nível 3
+            '#F0F7E6', // Nível 4
+            '#FFF9E6', // Nível 5
+            '#E6EBF5', // Nível 6
+            '#F5E6EC', // Nível 7
+            '#EAF5E6', // Nível 8
+            '#F5F5E6', // Nível 9
+            '#ECE6F5'  // Nível 10+
+        ];
+
         let grid = Array.from({length: ROWS}, () => Array(COLS).fill(0));
         let score = 0;
         let lines = 0;
@@ -517,38 +532,35 @@
             });
         }
 
-        // Correção definitiva do Bug de Linhas Sobressalentes
         function clearLines() {
             let cleared = 0;
             let newGrid = [];
 
-            // Varre de baixo para cima coletando apenas as linhas não preenchidas
             for (let r = ROWS - 1; r >= 0; r--) {
                 if (grid[r].every(val => val !== 0)) {
-                    // Gera as partículas para todos os blocos deletados da linha cheia
                     for (let c = 0; c < COLS; c++) {
                         createBlockParticles(c, r, grid[r][c]);
                     }
                     cleared++;
                 } else {
-                    // Preserva a linha intacta clonando-a para o novo tabuleiro
                     newGrid.unshift([...grid[r]]);
                 }
             }
 
-            // Preenche o topo restante com linhas vazias equivalentes às removidas
             while (newGrid.length < ROWS) {
                 newGrid.unshift(Array(COLS).fill(0));
             }
 
             if (cleared > 0) {
-                grid = newGrid; // Atualiza a matriz do tabuleiro instantaneamente
+                grid = newGrid;
                 lines += cleared;
                 const basePoints = [0, 200, 500, 900, 1500]; 
                 score += basePoints[cleared] * level;
 
                 level = Math.floor(lines / 10) + 1;
-                dropInterval = Math.max(100, 1000 - (level - 1) * 100);
+                
+                // Incremento reduzido para 50ms (antes era 100ms) e velocidade mínima em 150ms
+                dropInterval = Math.max(150, 1000 - (level - 1) * 50);
 
                 checkSpeedrunMilestones();
                 updateUI();
@@ -806,6 +818,10 @@
             document.getElementById('current-score').textContent = score;
             document.getElementById('current-lines').textContent = lines;
             document.getElementById('game-level').textContent = level;
+
+            // Altera a cor de fundo com base no nível usando a lista de cores pastéis
+            const bgIndex = (level - 1) % LEVEL_BACKGROUNDS.length;
+            document.documentElement.style.setProperty('--bg-color', LEVEL_BACKGROUNDS[bgIndex]);
         }
 
         function updatePBDisplay() {
