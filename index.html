@@ -2,1340 +2,273 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Tulip Tetris Premium</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speedrun Panel</title>
     <style>
         :root {
-            --bg-color: #fdf2f8; 
-            --container-bg: #fff1f2; 
-            --border-color: #fbecdd; 
-            --text-main: #4c0519; 
-            --text-muted: #9f1239;
-            --accent-color: #db2777; 
-            --accent-secondary: #10b981; 
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            user-select: none;
-            -webkit-user-select: none;
-            -webkit-touch-callout: none;
-            touch-action: manipulation;
+            --bg-color: #fff5f6;
+            --panel-bg: #fff0f2;
+            --border-color: #ffd2d7;
+            --text-dark: #5c0616;
+            --text-muted: #a34756;
+            --text-time: #2b0007;
+            --btn-bg: #ffe0e4;
+            --btn-hover: #ffcbd3;
         }
 
         body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            height: 100vh;
-            height: -webkit-fill-available;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            position: relative;
-            transition: background-color 0.8s ease, color 0.3s ease;
-        }
-
-        header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 10px 15px 6px 15px;
-            flex-shrink: 0;
-            position: relative;
-            min-height: 44px;
-        }
-
-        header h1 {
-            font-size: 1.1rem;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-            background: linear-gradient(45deg, #e11d48, #db2777, #10b981);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            max-width: 40%;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            text-align: left;
-        }
-
-        .header-actions {
-            display: flex;
-            gap: 6px;
-            align-items: center;
-        }
-
-        .menu-trigger-btn {
-            background: var(--container-bg);
-            border: 1px solid #fecdd3;
-            padding: 6px 12px;
-            border-radius: 12px;
-            font-size: 0.75rem;
-            font-weight: bold;
-            color: var(--text-muted);
-            cursor: pointer;
-            box-shadow: 0 2px 4px rgba(76, 5, 25, 0.04);
-            white-space: nowrap;
-        }
-        
-        #btn-pause-ui {
-            border-color: var(--accent-color);
-            background-color: #ffe4e6;
-            color: var(--accent-color);
-        }
-
-        #btn-rewind-ui {
-            border-color: #cbd5e1;
-            background-color: #f1f5f9;
-            color: #475569;
-        }
-        #btn-rewind-ui:active {
-            background-color: #e2e8f0;
-        }
-
-        .game-layout {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 8px;
-            padding: 2px 10px;
-            min-height: 0;
-        }
-
-        .side-panel {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            width: 72px;
-            flex-shrink: 0;
-        }
-
-        .speedrun-panel {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            background-color: var(--container-bg);
-            border: 1.5px solid rgba(254, 205, 211, 0.6);
-            border-radius: 12px;
-            padding: 6px 4px;
-            box-shadow: 0 2px 4px rgba(76, 5, 25, 0.02);
-            width: 95px;
-            flex-shrink: 0;
-        }
-
-        .sr-title {
-            font-size: 0.55rem;
-            font-weight: bold;
-            text-align: center;
-            text-transform: uppercase;
-            color: var(--text-muted);
-            border-bottom: 1px dashed rgba(254, 205, 211, 0.9);
-            padding-bottom: 2px;
-            margin-bottom: 2px;
-        }
-
-        .sr-timer {
-            font-size: 1rem;
-            font-weight: bold;
-            text-align: center;
-            color: var(--text-main);
-            font-family: monospace;
-            margin-bottom: 2px;
-        }
-
-        .sr-split {
-            display: flex;
-            flex-direction: column;
-            font-size: 0.52rem;
-            line-height: 1.1;
-            padding: 2px 3px;
-            border-radius: 4px;
-            background: rgba(255, 255, 255, 0.4);
-            margin-bottom: 1px;
-        }
-
-        .sr-split-meta {
-            display: flex;
-            justify-content: space-between;
-            font-weight: bold;
-            color: var(--text-main);
-        }
-
-        .sr-split-pb {
-            display: flex;
-            justify-content: space-between;
-            color: var(--text-muted);
-            font-size: 0.48rem;
-        }
-
-        .split-ahead { background-color: rgba(16, 185, 129, 0.2) !important; } 
-        .split-behind { background-color: rgba(239, 68, 68, 0.2) !important; }  
-        .split-done { background-color: rgba(100, 116, 139, 0.15); }
-
-        .hud-card {
-            background-color: var(--container-bg);
-            border: 1.5px solid rgba(254, 205, 211, 0.5);
-            border-radius: 12px;
-            padding: 5px 2px;
-            text-align: center;
-            box-shadow: 0 2px 4px rgba(76, 5, 25, 0.02);
-            transition: background-color 0.3s, border-color 0.3s;
-        }
-
-        .hud-label {
-            color: var(--text-muted);
-            text-transform: uppercase;
-            font-size: 0.55rem;
-            font-weight: bold;
-            letter-spacing: 0.5px;
-        }
-
-        .hud-value {
-            font-size: 0.85rem;
-            font-weight: bold;
-            color: var(--text-main);
-        }
-
-        .side-canvas {
-            display: block;
-            background-color: rgba(255, 250, 251, 0.7);
-            border-radius: 8px;
-            margin: 4px auto 0 auto;
-            border: 1px solid rgba(254, 205, 211, 0.5);
-        }
-
-        .main-board-wrapper {
-            position: relative;
-            height: 100%;
-            aspect-ratio: 10 / 20;
-            max-height: 100%;
-            flex-shrink: 0;
-        }
-
-        #board {
-            display: block;
-            background-color: rgba(255, 250, 251, 0.8); 
-            border-radius: 14px;
-            border: 3px solid rgba(254, 205, 211, 0.8);
-            width: 100%;
-            height: 100%;
-            box-shadow: 0 6px 16px rgba(76, 5, 25, 0.04);
-        }
-
-        .overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
             background-color: var(--bg-color);
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-            z-index: 100;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        /* Container Principal */
+        .panel-container {
+            width: 200px;
+            background-color: var(--panel-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 24px;
+            padding: 16px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            padding: 20px;
-            text-align: center;
+            box-sizing: border-box;
         }
 
-        .overlay.active {
-            opacity: 0.98;
-            pointer-events: auto;
-        }
-
-        .overlay h2 {
-            font-size: 1.4rem;
-            margin-bottom: 10px;
+        .section-title {
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--text-dark);
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            margin: 0 0 8px 0;
         }
 
-        .overlay p {
-            color: var(--text-muted);
-            margin-bottom: 15px;
-            font-size: 0.85rem;
+        .main-timer {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--text-time);
+            font-family: monospace;
+            margin-bottom: 4px;
         }
 
-        .mobile-controls {
-            display: flex;
-            flex-direction: column;
-            background-color: var(--container-bg);
-            border-top: 1.5px solid rgba(254, 205, 211, 0.8);
-            padding: 12px 16px calc(15px + env(safe-area-inset-bottom, 12px)) 16px;
-            flex-shrink: 0;
-            gap: 10px;
-            min-height: 195px;
-        }
-
-        .control-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-        }
-
-        .dpad-container {
-            position: relative;
-            width: 155px;
-            height: 155px;
-            flex-shrink: 0;
-        }
-
-        .dpad-btn {
-            position: absolute;
-            background-color: rgba(255, 255, 255, 0.9);
-            color: var(--text-main);
-            border: 1.5px solid rgba(254, 205, 211, 0.9);
-            font-size: 24px;
-            font-weight: bold;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 4px 8px rgba(76, 5, 25, 0.08);
-            border-radius: 16px;
-            width: 56px;
-            height: 56px;
-        }
-
-        .dpad-btn:active { background-color: var(--accent-color); color: white; }
-        #btn-left { top: 49px; left: 0; }
-        #btn-right { top: 49px; right: 0; }
-        #btn-down { bottom: 0; left: 49px; }
-
-        .action-container {
-            display: flex;
-            flex-direction: row;
-            justify-content: space-between;
-            align-items: center;
-            flex: 1;
-            padding-left: 10px;
-        }
-
-        .left-actions {
-            display: flex;
-            align-items: center;
-        }
-
-        .right-actions {
-            display: flex;
-            flex-direction: row;
-            gap: 14px;
-            align-items: center;
-            justify-content: flex-end;
-        }
-
-        .action-btn {
-            border: none;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            font-weight: bold;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            cursor: pointer;
-        }
-
-        #btn-rotate {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--accent-color), #e11d48);
-            font-size: 12px;
-            letter-spacing: 0.5px;
-            border: 2px solid white;
-        }
-
-        #btn-hard-drop {
-            width: 76px;
-            height: 76px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--accent-secondary), #059669);
-            font-size: 12px;
-            letter-spacing: 0.5px;
-            border: 2px solid white;
-        }
-
-        #btn-hold-action { 
-            background-color: #64748b; 
-            width: 65px;
-            height: 44px;
+        /* --- O BOTÃO SOLICITADO --- */
+        .filter-toggle-btn {
+            background-color: var(--btn-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-dark);
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 3px 10px;
             border-radius: 12px;
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .btn {
-            padding: 8px 18px;
-            background-color: var(--accent-color);
-            border: none;
-            border-radius: 18px;
-            color: white;
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 5px;
-        }
-
-        .settings-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
-            width: 100%;
-            max-width: 240px;
-            margin-bottom: 15px;
-        }
-
-        .theme-opt {
-            padding: 8px;
-            border-radius: 8px;
-            border: 1.5px solid #cbd5e1;
-            font-size: 0.75rem;
-            font-weight: bold;
-            background: white;
-            cursor: pointer;
-        }
-
-        .theme-opt.selected {
-            border-color: var(--accent-color);
-            background-color: var(--container-bg);
-            color: var(--text-main);
-        }
-
-        .scores-list {
-            width: 100%;
-            max-width: 220px;
-            max-height: 120px;
-            overflow-y: auto;
-            margin: 10px 0;
-            background: rgba(255,255,255,0.5);
-            border-radius: 8px;
-            padding: 6px;
-        }
-
-        .score-item {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.75rem;
-            padding: 4px 6px;
-            border-bottom: 1px solid rgba(0,0,0,0.05);
-        }
-
-        .score-item:last-child { border: none; }
-        .score-item.top { font-weight: bold; color: var(--accent-color); }
-
-        /* Novos estilos para o seletor de tipos de recorde */
-        .score-filter-tabs {
-            display: flex;
-            gap: 4px;
-            width: 100%;
-            max-width: 220px;
-            margin-bottom: 8px;
-            background: rgba(0, 0, 0, 0.05);
-            padding: 2px;
-            border-radius: 10px;
-        }
-
-        .filter-tab-btn {
-            flex: 1;
-            border: none;
-            background: transparent;
-            padding: 6px 2px;
-            font-size: 0.65rem;
-            font-weight: bold;
-            color: var(--text-muted);
-            border-radius: 8px;
             cursor: pointer;
             transition: all 0.2s ease;
+            margin-bottom: 12px;
+            outline: none;
         }
 
-        .filter-tab-btn.active {
-            background: white;
-            color: var(--text-main);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        .filter-toggle-btn:hover {
+            background-color: var(--btn-hover);
         }
+
+        /* Grid de Metas e Recordes */
+        .splits-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .split-row {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            align-items: center;
+            font-size: 12px;
+        }
+
+        .target-pts {
+            font-weight: 800;
+            color: var(--text-dark);
+        }
+
+        .current-split-time {
+            font-family: monospace;
+            color: var(--text-dark);
+            font-weight: bold;
+            text-align: right;
+        }
+
+        .pb-row {
+            grid-column: 1 / span 2;
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 1px;
+        }
+
+        .pb-time {
+            font-family: monospace;
+            font-weight: bold;
+        }
+
+        /* Divisor Tracejado */
+        .divider {
+            width: 100%;
+            border-top: 1px dashed var(--border-color);
+            margin: 8px 0;
+        }
+
+        /* Sub-containers (Próximo, Pontos, Linhas) */
+        .sub-box {
+            width: 100%;
+            background-color: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-sizing: border-box;
+            margin-bottom: 8px;
+        }
+
+        .sub-box:last-child {
+            margin-bottom: 0;
+        }
+
+        .sub-box .value {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--text-time);
+            margin-top: 4px;
+        }
+
+        /* Bloco de Peça (Tetris) */
+        .next-piece-preview {
+            width: 60px;
+            height: 45px;
+            display: grid;
+            grid-template-columns: repeat(3, 15px);
+            grid-template-rows: repeat(2, 15px);
+            gap: 2px;
+            justify-content: center;
+            align-content: center;
+            margin-top: 6px;
+        }
+
+        .block {
+            background-color: #a085ff;
+            border-radius: 3px;
+        }
+        .empty { visibility: hidden; }
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>Tulip Tetris</h1>
-        <div class="header-actions">
-            <button class="menu-trigger-btn" id="btn-rewind-ui" onclick="rewindTime()">↩ 10s</button>
-            <button class="menu-trigger-btn" id="btn-pause-ui" onclick="togglePause()">Pausar</button>
-            <button class="menu-trigger-btn" onclick="openMenu()">Menu</button>
-        </div>
-    </header>
+<div class="panel-container">
+    <div class="section-title">Speedrun</div>
+    <div class="divider"></div>
+    
+    <div class="main-timer">00:09.8</div>
 
-    <div class="game-layout">
-        <div class="side-panel">
-            <div class="hud-card" id="hold-card" onclick="playerHold()" style="cursor: pointer;">
-                <div class="hud-label">Guardar (H)</div>
-                <canvas id="hold-canvas" class="side-canvas" width="56" height="56"></canvas>
-            </div>
-            <div class="hud-card" onclick="openScores()" style="cursor:pointer;">
-                <div id="highscore-label" class="hud-label">Recorde 🏆</div>
-                <div id="highscore" class="hud-value">0</div>
-            </div>
-            <div class="hud-card">
-                <div class="hud-label">Nível</div>
-                <div id="level" class="hud-value">1</div>
-            </div>
+    <button class="filter-toggle-btn" id="filterBtn" onclick="toggleFilter()">⏱️ All Time</button>
+
+    <div class="splits-container">
+        <div class="split-row">
+            <span class="target-pts">500 pts</span>
+            <span class="current-split-time">-:-.-</span>
+            <div class="pb-row">PB (Recorde): <span class="pb-time" id="pb-500">01:37.6</span></div>
+        </div>
+        
+        <div class="split-row">
+            <span class="target-pts">1000 pts</span>
+            <span class="current-split-time">-:-.-</span>
+            <div class="pb-row">PB (Recorde): <span class="pb-time" id="pb-1000">03:29.7</span></div>
         </div>
 
-        <div class="main-board-wrapper">
-            <canvas id="board" width="240" height="480"></canvas>
-            
-            <div id="game-over-screen" class="overlay">
-                <h2>Fim de Jogo 🌷</h2>
-                <p>Pontos Feitos: <span id="final-score">0</span></p>
-                <button class="btn" onclick="resetGame()">Jogar de Novo</button>
-                <button class="btn" style="background:#64748b;" onclick="openScores()">Ver Placar</button>
-            </div>
-            
-            <div id="pause-screen" class="overlay">
-                <h2 style="color: var(--accent-color);">Pausado</h2>
-                <button class="btn" onclick="togglePause()">Continuar</button>
-                <button class="btn" style="background:#9f1239; margin-top:8px;" onclick="resetGame()">Reiniciar</button>
-            </div>
-
-            <div id="menu-screen" class="overlay">
-                <h2>Temas & Cores</h2>
-                <p>Escolha a identidade visual:</p>
-                <div class="settings-grid">
-                    <button class="theme-opt selected" id="theme-tulip" onclick="setTheme('tulip')">Tulipa Rosa</button>
-                    <button class="theme-opt" id="theme-sunflower" onclick="setTheme('sunflower')">Girassol Ouro</button>
-                    <button class="theme-opt" id="theme-lavender" onclick="setTheme('lavender')">Lavanda Roxa</button>
-                    <button class="theme-opt" id="theme-forest" onclick="setTheme('forest')">Floresta Nativa</button>
-                </div>
-                <button class="btn" onclick="closeMenu()">Voltar ao Jogo</button>
-            </div>
-
-            <div id="scores-screen" class="overlay">
-                <h2>Placar de Recordes</h2>
-                
-                <div class="score-filter-tabs">
-                    <button class="filter-tab-btn active" id="tab-today" onclick="changeScoreFilter('today')">Hoje</button>
-                    <button class="filter-tab-btn" id="tab-week" onclick="changeScoreFilter('week')">Semana</button>
-                    <button class="filter-tab-btn" id="tab-all" onclick="changeScoreFilter('all')">História</button>
-                </div>
-
-                <div class="scores-list" id="scores-container"></div>
-                <button class="btn" style="background:#9f1239; font-size:0.6rem; padding:4px 8px;" onclick="clearScores()">Limpar Filtrados</button>
-                <br>
-                <button class="btn" onclick="closeScores()">Fechar</button>
-            </div>
+        <div class="split-row">
+            <span class="target-pts">1500 pts</span>
+            <span class="current-split-time">-:-.-</span>
+            <div class="pb-row">PB (Recorde): <span class="pb-time" id="pb-1500">05:19.2</span></div>
         </div>
 
-        <div class="speedrun-panel">
-            <div class="sr-title">Speedrun</div>
-            <div class="sr-timer" id="sr-timer">00:00.0</div>
-            
-            <div class="sr-split" id="split-500">
-                <div class="sr-split-meta"><span>500 pts</span><span class="curr-split">-:--.-</span></div>
-                <div class="sr-split-pb"><span>PB (Recorde):</span><span class="pb-split">--:--.-</span></div>
-            </div>
-            <div class="sr-split" id="split-1000">
-                <div class="sr-split-meta"><span>1000 pts</span><span class="curr-split">-:--.-</span></div>
-                <div class="sr-split-pb"><span>PB (Recorde):</span><span class="pb-split">--:--.-</span></div>
-            </div>
-            <div class="sr-split" id="split-1500">
-                <div class="sr-split-meta"><span>1500 pts</span><span class="curr-split">-:--.-</span></div>
-                <div class="sr-split-pb"><span>PB (Recorde):</span><span class="pb-split">--:--.-</span></div>
-            </div>
-            <div class="sr-split" id="split-2000">
-                <div class="sr-split-meta"><span>2000 pts</span><span class="curr-split">-:--.-</span></div>
-                <div class="sr-split-pb"><span>PB (Recorde):</span><span class="pb-split">--:--.-</span></div>
-            </div>
-
-            <div class="hud-card" style="margin-top: 4px; padding: 2px;">
-                <div class="hud-label" style="font-size:0.5rem">Próximo</div>
-                <canvas id="next-canvas" class="side-canvas" width="56" height="56"></canvas>
-            </div>
-            <div class="hud-card" style="padding: 2px;">
-                <div class="hud-label" style="font-size:0.5rem">Pontos</div>
-                <div id="score" class="hud-value" style="font-size:0.75rem">0</div>
-            </div>
-            <div class="hud-card" style="padding: 2px;">
-                <div class="hud-label" style="font-size:0.5rem">Linhas</div>
-                <div id="lines" class="hud-value" style="font-size:0.75rem">0</div>
-            </div>
+        <div class="split-row">
+            <span class="target-pts">2000 pts</span>
+            <span class="current-split-time">-:-.-</span>
+            <div class="pb-row">PB (Recorde): <span class="pb-time" id="pb-2000">07:08.9</span></div>
         </div>
     </div>
 
-    <div class="mobile-controls">
-        <div class="control-row">
-            <div class="dpad-container">
-                <button class="dpad-btn" id="btn-left">←</button>
-                <button class="dpad-btn" id="btn-right">→</button>
-                <button class="dpad-btn" id="btn-down">↓</button>
-            </div>
-
-            <div class="action-container">
-                <div class="left-actions">
-                    <button class="action-btn" id="btn-hold-action">HOLD</button>
-                </div>
-                <div class="right-actions">
-                    <button class="action-btn" id="btn-hard-drop">DROP</button>
-                    <button class="action-btn" id="btn-rotate">GIRAR</button>
-                </div>
-            </div>
+    <div class="sub-box">
+        <div class="section-title" style="font-size: 11px; margin: 0;">Próximo</div>
+        <div class="next-piece-preview">
+            <div class="empty"></div><div class="block"></div><div class="empty"></div>
+            <div class="block"></div><div class="block"></div><div class="block"></div>
         </div>
     </div>
 
-    <script>
-        const canvas = document.getElementById('board');
-        const ctx = canvas.getContext('2d');
-        const nextCanvas = document.getElementById('next-canvas');
-        const nextCtx = nextCanvas.getContext('2d');
-        const holdCanvas = document.getElementById('hold-canvas');
-        const holdCtx = holdCanvas.getContext('2d');
+    <div class="sub-box">
+        <div class="section-title" style="font-size: 11px; margin: 0;">Pontos</div>
+        <div class="value">0</div>
+    </div>
 
-        const COLS = 10; const ROWS = 20; 
-        const BLOCK_SIZE = 24;      
-        const SIDE_BLOCK_SIZE = 12; 
+    <div class="sub-box">
+        <div class="section-title" style="font-size: 11px; margin: 0;">Linhas</div>
+        <div class="value">0</div>
+    </div>
+</div>
 
-        const THEMES = {
-            tulip: {
-                mainBg: ["#fdf2f8", "#fdf4ff", "#f0fdf4", "#fff7ed", "#f0f9ff"],
-                container: "#fff1f2", text: "#4c0519", muted: "#9f1239", accent: "#db2777", secondary: "#10b981",
-                colors: [null, '#f43f5e', '#fb7185', '#f472b6', '#fbbf24', '#34d399', '#a78bfa', '#f87171']
-            },
-            sunflower: {
-                mainBg: ["#fefce8", "#fffbeb", "#fef3c7", "#fde68a", "#fcd34d"],
-                container: "#fef9c3", text: "#451a03", muted: "#78350f", accent: "#d97706", secondary: "#059669",
-                colors: [null, '#eab308', '#f59e0b', '#b45309', '#facc15', '#10b981', '#f97316', '#ca8a04']
-            },
-            lavender: {
-                mainBg: ["#faf5ff", "#f3e8ff", "#e9d5ff", "#d8b4fe", "#c084fc"],
-                container: "#f3e8ff", text: "#3b0764", muted: "#6b21a8", accent: "#9333ea", secondary: "#06b6d4",
-                colors: [null, '#a855f7', '#c084fc', '#e879f9', '#6366f1', '#2dd4bf', '#a78bfa', '#818cf8']
-            },
-            forest: {
-                mainBg: ["#f0fdf4", "#dcfce7", "#bbf7d0", "#86efac", "#4ade80"],
-                container: "#e8f5e9", text: "#052e16", muted: "#14532d", accent: "#16a34a", secondary: "#ea580c",
-                colors: [null, '#22c55e', '#16a34a', '#15803d', '#84cc16', '#0d9488', '#eab308', '#10b981']
-            }
-        };
-
-        let currentThemeKey = 'tulip';
-        let currentTheme = THEMES.tulip;
-
-        const SHAPES = [
-            [],
-            [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]], // I
-            [[2,0,0],[2,2,2],[0,0,0]],                 // J
-            [[0,0,3],[3,3,3],[0,0,0]],                 // L
-            [[4,4],[4,4]],                             // O
-            [[0,5,5],[5,5,0],[0,0,0]],                 // S
-            [[0,6,0],[6,6,6],[0,0,0]],                 // T
-            [[7,7,0],[0,7,7],[0,0,0]]                  // Z
-        ];
-
-        let board = createMatrix(COLS, ROWS);
-        let score = 0; let lines = 0; let level = 1;
-        let gameOver = false; let isPaused = false; let isMenuOpen = false; let isScoresOpen = false;
-        let dropCounter = 0; 
-        let dropInterval = 1000; 
-        let lastTime = 0;
-        let hasHeld = false;
-        let lineFlashFrames = [];
-
-        // Estruturas de Time Travel
-        let timeHistory = [];
-        let historyTimer = 0;
-
-        // Variáveis de Speedrun
-        let startTime = null;
-        let elapsedGameTime = 0;
-        const TARGETS = [500, 1000, 1500, 2000];
-        let runSplits = { 500: null, 1000: null, 1500: null, 2000: null };
-        let pbSplits = { 500: null, 1000: null, 1500: null, 2000: null };
-
-        const DAS_DELAY = 200; 
-        const DAS_INTERVAL = 60; 
-        let holdTimers = {};
-
-        const player = { pos: {x: 0, y: 0}, matrix: null, nextMatrix: null, holdMatrix: null };
-
-        // Variável de controle do filtro ativo de recordes ('today', 'week', 'all')
-        let currentScoreFilter = 'today';
-
-        function createMatrix(w, h) {
-            const matrix = [];
-            while (h--) matrix.push(new Array(w).fill(0));
-            return matrix;
+<script>
+    // Banco de dados fake para os recordes
+    const recordDatabase = {
+        alltime: {
+            500: "01:37.6",
+            1000: "03:29.7",
+            1500: "05:19.2",
+            2000: "07:08.9"
+        },
+        weekly: {
+            500: "01:45.2",
+            1000: "03:42.0",
+            1500: "05:35.1",
+            2000: "07:22.4"
+        },
+        daily: {
+            500: "01:59.0",
+            1000: "04:10.5",
+            1500: "06:02.3",
+            2000: "08:15.1"
         }
+    };
 
-        function triggerVibrate(ms) {
-            if (navigator.vibrate) navigator.vibrate(ms);
-        }
+    // Estados possíveis do filtro
+    const filters = ["alltime", "daily", "weekly"];
+    let currentFilterIndex = 0;
 
-        function applyThemeStyles() {
-            const r = document.documentElement.style;
-            r.setProperty('--container-bg', currentTheme.container);
-            r.setProperty('--text-main', currentTheme.text);
-            r.setProperty('--text-muted', currentTheme.muted);
-            r.setProperty('--accent-color', currentTheme.accent);
-            r.setProperty('--accent-secondary', currentTheme.secondary);
-            updateBackgroundProgress();
-        }
-
-        function setTheme(key) {
-            currentThemeKey = key;
-            currentTheme = THEMES[key];
-            document.querySelectorAll('.theme-opt').forEach(b => b.classList.remove('selected'));
-            document.getElementById(`theme-${key}`).classList.add('selected');
-            applyThemeStyles();
-            draw();
-        }
-
-        function updateBackgroundProgress() {
-            const backgrounds = currentTheme.mainBg;
-            const bgIndex = Math.min(backgrounds.length - 1, Math.floor((level - 1) / 2));
-            document.body.style.backgroundColor = backgrounds[bgIndex];
-        }
-
-        function formatTime(ms) {
-            if (ms === null || ms === undefined) return "--:--.-";
-            const totalSeconds = ms / 1000;
-            const minutes = Math.floor(totalSeconds / 60);
-            const seconds = Math.floor(totalSeconds % 60);
-            const tenths = Math.floor((ms % 1000) / 100);
-            return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${tenths}`;
-        }
-
-        function loadPbSplits() {
-            const stored = localStorage.getItem('tulip_tetris_pb_splits');
-            if (stored) {
-                pbSplits = JSON.parse(stored);
-            }
-            TARGETS.forEach(t => {
-                const card = document.getElementById(`split-${t}`);
-                card.querySelector('.pb-split').innerText = formatTime(pbSplits[t]);
-            });
-        }
-
-        function checkSpeedrunSplits() {
-            TARGETS.forEach(target => {
-                if (score >= target && !runSplits[target]) {
-                    runSplits[target] = elapsedGameTime;
-                    const card = document.getElementById(`split-${target}`);
-                    card.querySelector('.curr-split').innerText = formatTime(elapsedGameTime);
-                    card.classList.add('split-done');
-
-                    if (pbSplits[target]) {
-                        if (elapsedGameTime < pbSplits[target]) {
-                            card.classList.add('split-ahead'); 
-                        } else {
-                            card.classList.add('split-behind'); 
-                        }
-                    } else {
-                        card.classList.add('split-ahead');
-                        pbSplits[target] = elapsedGameTime;
-                        localStorage.setItem('tulip_tetris_pb_splits', JSON.stringify(pbSplits));
-                    }
-                }
-            });
-        }
-
-        /* --- SISTEMA ROBUSTO DE RECORDES --- */
+    function toggleFilter() {
+        // Avança para o próximo filtro na array
+        currentFilterIndex = (currentFilterIndex + 1) % filters.length;
+        const currentFilter = filters[currentFilterIndex];
         
-        function getScoresFromStorage() {
-            const data = localStorage.getItem('tulip_tetris_scores_v2');
-            return data ? JSON.parse(data) : [];
-        }
-
-        function saveScoreToStorage(newScore) {
-            if (newScore <= 0) return;
-            const scores = getScoresFromStorage();
-            scores.push({
-                score: newScore,
-                date: new Date().toISOString()
-            });
-            // Ordena decrescente por pontuação
-            scores.sort((a, b) => b.score - a.score);
-            localStorage.setItem('tulip_tetris_scores_v2', JSON.stringify(scores));
-            updateHUDHighScore();
-        }
-
-        function isToday(dateString) {
-            const d = new Date(dateString);
-            const today = new Date();
-            return d.getDate() === today.getDate() &&
-                   d.getMonth() === today.getMonth() &&
-                   d.getFullYear() === today.getFullYear();
-        }
-
-        function isThisWeek(dateString) {
-            const d = new Date(dateString);
-            const today = new Date();
-            
-            // Zera as horas para comparação pura de datas
-            const startOfWeek = new Date(today);
-            startOfWeek.setDate(today.getDate() - today.getDay()); // Domingo
-            startOfWeek.setHours(0,0,0,0);
-            
-            const endOfWeek = new Date(startOfWeek);
-            endOfWeek.setDate(startOfWeek.getDate() + 6); // Sábado
-            endOfWeek.setHours(23,59,59,999);
-
-            return d >= startOfWeek && d <= endOfWeek;
-        }
-
-        function filterScores(filterType) {
-            const allScores = getScoresFromStorage();
-            if (filterType === 'today') {
-                return allScores.filter(s => isToday(s.date));
-            } else if (filterType === 'week') {
-                return allScores.filter(s => isThisWeek(s.date));
-            }
-            return allScores; // 'all'
-        }
-
-        function changeScoreFilter(filterType) {
-            currentScoreFilter = filterType;
-            document.querySelectorAll('.filter-tab-btn').forEach(b => b.classList.remove('active'));
-            if (filterType === 'today') document.getElementById('tab-today').classList.add('active');
-            if (filterType === 'week') document.getElementById('tab-week').classList.add('active');
-            if (filterType === 'all') document.getElementById('tab-all').classList.add('active');
-            renderScoresList();
-        }
-
-        function renderScoresList() {
-            const container = document.getElementById('scores-container');
-            container.innerHTML = '';
-            
-            const filtered = filterScores(currentScoreFilter);
-
-            if (filtered.length === 0) {
-                container.innerHTML = `<div style="font-size:0.7rem; color:var(--text-muted); text-align:center; padding: 20px 0;">Nenhum recorde neste período</div>`;
-                return;
-            }
-
-            // Exibe até os 15 melhores do período filtrado
-            filtered.slice(0, 15).forEach((item, index) => {
-                const row = document.createElement('div');
-                row.className = `score-item ${index === 0 ? 'top' : ''}`;
-                
-                const dateObj = new Date(item.date);
-                const formattedDate = `${dateObj.getDate().toString().padStart(2, '0')}/${(dateObj.getMonth() + 1).toString().padStart(2, '0')}`;
-
-                row.innerHTML = `
-                    <span>#${index + 1} - ${item.score} pts</span>
-                    <span style="font-size:0.6rem; opacity:0.7;">${formattedDate}</span>
-                `;
-                container.appendChild(row);
-            });
-        }
-
-        function updateHUDHighScore() {
-            // No HUD principal da sidebar, mostramos o maior recorde da História por padrão
-            const allScores = getScoresFromStorage();
-            const topScore = allScores.length > 0 ? allScores[0].score : 0;
-            document.getElementById('highscore').innerText = topScore;
-        }
-
-        function clearScores() {
-            if (confirm(`Deseja limpar apenas os recordes exibidos de "${currentScoreFilter === 'today' ? 'Hoje' : currentScoreFilter === 'week' ? 'Esta Semana' : 'Toda a História'}"?`)) {
-                let allScores = getScoresFromStorage();
-                
-                if (currentScoreFilter === 'today') {
-                    allScores = allScores.filter(s => !isToday(s.date));
-                } else if (currentScoreFilter === 'week') {
-                    allScores = allScores.filter(s => !isThisWeek(s.date));
-                } else {
-                    allScores = [];
-                }
-
-                localStorage.setItem('tulip_tetris_scores_v2', JSON.stringify(allScores));
-                renderScoresList();
-                updateHUDHighScore();
-            }
-        }
-
-        /* --- FIM DO SISTEMA DE RECORDES --- */
-
-        function drawBlock(context, x, y, colorIndex, size, isGhost = false) {
-            if (lineFlashFrames.includes(y) && context === ctx) {
-                context.fillStyle = '#ffffff';
-            } else {
-                context.fillStyle = isGhost ? 'rgba(0, 0, 0, 0.04)' : currentTheme.colors[colorIndex];
-            }
-            
-            const radius = size * 0.25;
-            const bx = x * size;
-            const by = y * size;
-
-            context.beginPath();
-            context.moveTo(bx + radius, by);
-            context.lineTo(bx + size - radius, by);
-            context.quadraticCurveTo(bx + size, by, bx + size, by + radius);
-            context.lineTo(bx + size, by + size - radius);
-            context.quadraticCurveTo(bx + size, by + size, bx + size - radius, by + size);
-            context.lineTo(bx + radius, by + size);
-            context.quadraticCurveTo(bx, by + size, bx, by + size - radius);
-            context.lineTo(bx, by + radius);
-            context.quadraticCurveTo(bx, by, bx + radius, by);
-            context.closePath();
-            context.fill();
-
-            if (isGhost) {
-                context.strokeStyle = currentTheme.accent;
-                context.lineWidth = 0.8;
-                context.setLineDash([2, 2]);
-                context.stroke();
-                context.setLineDash([]);
-            } else {
-                context.fillStyle = 'rgba(255,255,255,0.2)';
-                context.fillRect(bx + 2, by + 2, size - 4, 1.5);
-            }
-        }
-
-        function getGhostPosition() {
-            const ghostPos = { x: player.pos.x, y: player.pos.y };
-            while (!collide(board, { pos: ghostPos, matrix: player.matrix })) {
-                ghostPos.y++;
-            }
-            ghostPos.y--;
-            return ghostPos;
-        }
-
-        function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            ctx.strokeStyle = 'rgba(0,0,0,0.03)';
-            ctx.lineWidth = 0.5;
-            for(let i = 1; i < COLS; i++) {
-                ctx.beginPath(); ctx.moveTo(i * BLOCK_SIZE, 0); ctx.lineTo(i * BLOCK_SIZE, canvas.height); ctx.stroke();
-            }
-            for(let j = 1; j < ROWS; j++) {
-                ctx.beginPath(); ctx.moveTo(0, j * BLOCK_SIZE); ctx.lineTo(canvas.width, j * BLOCK_SIZE); ctx.stroke();
-            }
-
-            drawMatrix(board, {x: 0, y: 0}, ctx, BLOCK_SIZE, false);
-            
-            if (player.matrix && !gameOver && !isPaused && !isMenuOpen) {
-                const ghostPos = getGhostPosition();
-                drawMatrix(player.matrix, ghostPos, ctx, BLOCK_SIZE, true);
-                drawMatrix(player.matrix, player.pos, ctx, BLOCK_SIZE, false);
-            }
-
-            nextCtx.clearRect(0, 0, nextCanvas.width, nextCanvas.height);
-            if (player.nextMatrix) {
-                const offsetX = (4 - player.nextMatrix[0].length) / 2;
-                const offsetY = (4 - player.nextMatrix.length) / 2;
-                drawMatrix(player.nextMatrix, {x: offsetX, y: offsetY}, nextCtx, SIDE_BLOCK_SIZE, false);
-            }
-
-            holdCtx.clearRect(0, 0, holdCanvas.width, holdCanvas.height);
-            if (player.holdMatrix) {
-                const offsetX = (4 - player.holdMatrix[0].length) / 2;
-                const offsetY = (4 - player.holdMatrix.length) / 2;
-                drawMatrix(player.holdMatrix, {x: offsetX, y: offsetY}, holdCtx, SIDE_BLOCK_SIZE, false);
-            }
-        }
-
-        function drawMatrix(matrix, offset, context, size, isGhost = false) {
-            matrix.forEach((row, y) => {
-                row.forEach((value, x) => {
-                    if (value !== 0) drawBlock(context, x + offset.x, y + offset.y, value, size, isGhost);
-                });
-            });
-        }
-
-        function collide(board, target) {
-            const m = target.matrix; const o = target.pos;
-            for (let y = 0; y < m.length; ++y) {
-                for (let x = 0; x < m[y].length; ++x) {
-                    if (m[y][x] !== 0 &&
-                       (board[y + o.y] === undefined || board[y + o.y][x + o.x] === undefined || board[y + o.y][x + o.x] !== 0)) {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-
-        function merge(board, player) {
-            player.matrix.forEach((row, y) => {
-                row.forEach((value, x) => {
-                    if (value !== 0) board[y + player.pos.y][x + player.pos.x] = value;
-                });
-            });
-        }
-
-        function playerDrop() {
-            if (gameOver || isPaused || isMenuOpen) return;
-            player.pos.y++;
-            if (collide(board, player)) {
-                player.pos.y--;
-                merge(board, player);
-                playerReset();
-                arenaSweep();
-                updateScore();
-                triggerVibrate(12);
-            }
-            dropCounter = 0;
-        }
-
-        function playerHardDrop() {
-            if (gameOver || isPaused || isMenuOpen) return;
-            let dropped = false;
-            while (!collide(board, player)) {
-                player.pos.y++;
-                dropped = true;
-            }
-            if (dropped) {
-                player.pos.y--;
-                merge(board, player);
-                playerReset();
-                arenaSweep();
-                updateScore();
-                triggerVibrate(30); 
-            }
-            dropCounter = 0;
-        }
-
-        function playerMove(dir) {
-            if (gameOver || isPaused || isMenuOpen) return;
-            player.pos.x += dir;
-            if (collide(board, player)) player.pos.x -= dir;
-        }
-
-        function playerHold() {
-            if (gameOver || isPaused || isMenuOpen || hasHeld) return;
-            triggerVibrate(15);
-            const currentMatrix = player.matrix;
-            if (!player.holdMatrix) {
-                player.holdMatrix = currentMatrix;
-                playerReset();
-            } else {
-                player.matrix = player.holdMatrix;
-                player.holdMatrix = currentMatrix;
-                player.pos.y = 0;
-                player.pos.x = (board[0].length / 2 | 0) - (player.matrix[0].length / 2 | 0);
-            }
-            hasHeld = true;
-            draw();
-        }
-
-        function playerRotate() {
-            if (gameOver || isPaused || isMenuOpen) return;
-            const originalX = player.pos.x;
-            const originalY = player.pos.y;
-            rotate(player.matrix);
-
-            const kicks = [0, -1, 1, -2, 2];
-            let success = false;
-
-            for (let kick of kicks) {
-                player.pos.x = originalX + kick;
-                if (!collide(board, player)) {
-                    success = true;
-                    break;
-                }
-            }
-
-            if (!success) { 
-                rotate(player.matrix, -1);
-                player.pos.x = originalX;
-                player.pos.y = originalY;
-            } else {
-                triggerVibrate(8);
-            }
-        }
-
-        function rotate(matrix, dir = 1) {
-            for (let y = 0; y < matrix.length; ++y) {
-                for (let x = 0; x < y; ++x) {
-                    [matrix[x][y], matrix[y][x]] = [matrix[y][x], matrix[x][y]];
-                }
-            }
-            if (dir > 0) matrix.forEach(row => row.reverse());
-            else matrix.reverse();
-        }
-
-        function playerReset() {
-            if (!player.nextMatrix) {
-                player.nextMatrix = SHAPES[Math.floor(Math.random() * (SHAPES.length - 1)) + 1];
-            }
-            player.matrix = player.nextMatrix;
-            player.nextMatrix = SHAPES[Math.floor(Math.random() * (SHAPES.length - 1)) + 1];
-            player.pos.y = 0;
-            player.pos.x = (board[0].length / 2 | 0) - (player.matrix[0].length / 2 | 0);
-
-            if (collide(board, player)) {
-                gameOver = true;
-                saveScoreToStorage(score);
-                document.getElementById('final-score').innerText = score;
-                document.getElementById('game-over-screen').classList.add('active');
-            }
-            hasHeld = false;
-        }
-
-        function arenaSweep() {
-            let rowCount = 0;
-            outer: for (let y = board.length - 1; y >= 0; --y) {
-                for (let x = 0; x < board[y].length; ++x) {
-                    if (board[y][x] === 0) continue outer;
-                }
-                const row = board.splice(y, 1)[0].fill(0);
-                board.unshift(row);
-                ++y;
-                rowCount++;
-                lineFlashFrames.push(0); 
-            }
-            
-            if (rowCount > 0) {
-                lines += rowCount;
-                if (rowCount === 1) score += 40 * level;
-                else if (rowCount === 2) score += 100 * level;
-                else if (rowCount === 3) score += 300 * level;
-                else if (rowCount === 4) score += 1200 * level;
-
-                level = Math.floor(lines / 10) + 1;
-                dropInterval = Math.max(100, 1000 - (level - 1) * 90);
-                applyThemeStyles();
-            }
-        }
-
-        function updateScore() {
-            document.getElementById('score').innerText = score;
-            document.getElementById('lines').innerText = lines;
-            document.getElementById('level').innerText = level;
-            checkSpeedrunSplits();
-        }
-
-        function saveGameState() {
-            if (gameOver || isPaused || isMenuOpen) return;
-            const state = {
-                board: board.map(row => [...row]),
-                player: {
-                    pos: { ...player.pos },
-                    matrix: player.matrix.map(row => [...row]),
-                    nextMatrix: player.nextMatrix.map(row => [...row]),
-                    holdMatrix: player.holdMatrix ? player.holdMatrix.map(row => [...row]) : null
-                },
-                score: score,
-                lines: lines,
-                level: level,
-                dropInterval: dropInterval,
-                hasHeld: hasHeld,
-                elapsedGameTime: elapsedGameTime,
-                runSplits: { ...runSplits }
-            };
-            timeHistory.push(state);
-            if (timeHistory.length > 20) timeHistory.shift(); 
-        }
-
-        function rewindTime() {
-            if (timeHistory.length === 0 || gameOver) return;
-            triggerVibrate(60);
-            
-            const previousState = timeHistory[0]; 
-            timeHistory = []; 
-
-            board = previousState.board;
-            player.pos = previousState.player.pos;
-            player.matrix = previousState.player.matrix;
-            player.nextMatrix = previousState.player.nextMatrix;
-            player.holdMatrix = previousState.player.holdMatrix;
-            score = previousState.score;
-            lines = previousState.lines;
-            level = previousState.level;
-            dropInterval = previousState.dropInterval;
-            hasHeld = previousState.hasHeld;
-            elapsedGameTime = previousState.elapsedGameTime;
-            runSplits = previousState.runSplits;
-
-            TARGETS.forEach(t => {
-                const card = document.getElementById(`split-${t}`);
-                if (!runSplits[t]) {
-                    card.classList.remove('split-done', 'split-ahead', 'split-behind');
-                    card.querySelector('.curr-split').innerText = "-:--.-";
-                } else {
-                    card.querySelector('.curr-split').innerText = formatTime(runSplits[t]);
-                }
-            });
-
-            if (isPaused) togglePause();
-            updateScore();
-            applyThemeStyles();
-            draw();
-        }
-
-        function resetGame() {
-            board = createMatrix(COLS, ROWS);
-            score = 0; lines = 0; level = 1; dropInterval = 1000;
-            gameOver = false; isPaused = false; hasHeld = false;
-            timeHistory = []; historyTimer = 0;
-            startTime = performance.now();
-            elapsedGameTime = 0;
-            runSplits = { 500: null, 1000: null, 1500: null, 2000: null };
-            
-            TARGETS.forEach(t => {
-                const card = document.getElementById(`split-${t}`);
-                card.classList.remove('split-done', 'split-ahead', 'split-behind');
-                card.querySelector('.curr-split').innerText = "-:--.-";
-            });
-
-            document.getElementById('game-over-screen').classList.remove('active');
-            document.getElementById('pause-screen').classList.remove('active');
-            document.getElementById('btn-pause-ui').innerText = "Pausar";
-            
-            player.holdMatrix = null;
-            player.nextMatrix = null;
-            playerReset();
-            updateScore();
-            applyThemeStyles();
-            loadPbSplits();
-            updateHUDHighScore();
-        }
-
-        function togglePause() {
-            if (gameOver || isMenuOpen || isScoresOpen) return;
-            isPaused = !isPaused;
-            const pauseScr = document.getElementById('pause-screen');
-            const pauseBtn = document.getElementById('btn-pause-ui');
-            if (isPaused) {
-                pauseScr.classList.add('active');
-                pauseBtn.innerText = "Voltar";
-            } else {
-                pauseScr.classList.remove('active');
-                pauseBtn.innerText = "Pausar";
-                startTime = performance.now() - elapsedGameTime; 
-            }
-        }
-
-        function openMenu() {
-            if(gameOver) return;
-            if(!isPaused) togglePause();
-            isMenuOpen = true;
-            document.getElementById('menu-screen').classList.add('active');
-        }
-
-        function closeMenu() {
-            isMenuOpen = false;
-            document.getElementById('menu-screen').classList.remove('active');
-            if(isPaused) togglePause();
-        }
-
-        function openScores() {
-            // Pausa o jogo nativamente se estiver ativo
-            if (!isPaused && !gameOver && !isMenuOpen) {
-                togglePause();
-            }
-            isScoresOpen = true;
-            document.getElementById('scores-screen').classList.add('active');
-            changeScoreFilter(currentScoreFilter); // Renderiza com o filtro atual selecionado
-        }
-
-        function closeScores() {
-            isScoresOpen = false;
-            document.getElementById('scores-screen').classList.remove('active');
-        }
-
-        // Setup dos botões físicos/touch
-        function bindControl(id, actionPress, actionRelease = null) {
-            const btn = document.getElementById(id);
-            
-            const onPress = (e) => {
-                e.preventDefault();
-                actionPress();
-                if (actionRelease) {
-                    if (holdTimers[id]) clearInterval(holdTimers[id]);
-                    holdTimers[id] = setTimeout(() => {
-                        holdTimers[id] = setInterval(actionPress, DAS_INTERVAL);
-                    }, DAS_DELAY);
-                }
-            };
-
-            const onRelease = (e) => {
-                e.preventDefault();
-                if (holdTimers[id]) {
-                    clearTimeout(holdTimers[id]);
-                    clearInterval(holdTimers[id]);
-                    holdTimers[id] = null;
-                }
-                if (actionRelease) actionRelease();
-            };
-
-            btn.addEventListener('mousedown', onPress);
-            btn.addEventListener('mouseup', onRelease);
-            btn.addEventListener('mouseleave', onRelease);
-
-            btn.addEventListener('touchstart', onPress, {pasive: false});
-            btn.addEventListener('touchend', onRelease, {pasive: false});
-            btn.addEventListener('touchcancel', onRelease, {pasive: false});
-        }
-
-        bindControl('btn-left', () => playerMove(-1), () => {});
-        bindControl('btn-right', () => playerMove(1), () => {});
-        bindControl('btn-down', () => playerDrop(), () => {});
+        const btn = document.getElementById("filterBtn");
         
-        // Botões de clique único sem repetição contínua
-        document.getElementById('btn-rotate').addEventListener('click', playerRotate);
-        document.getElementById('btn-rotate').addEventListener('touchstart', (e) => { e.preventDefault(); playerRotate(); });
-        document.getElementById('btn-hard-drop').addEventListener('click', playerHardDrop);
-        document.getElementById('btn-hard-drop').addEventListener('touchstart', (e) => { e.preventDefault(); playerHardDrop(); });
-        document.getElementById('btn-hold-action').addEventListener('click', playerHold);
-        document.getElementById('btn-hold-action').addEventListener('touchstart', (e) => { e.preventDefault(); playerHold(); });
+        // Atualiza o texto do botão
+        if (currentFilter === "alltime") btn.innerText = "⏱️ All Time";
+        if (currentFilter === "daily") btn.innerText = "☀️ Daily";
+        if (currentFilter === "weekly") btn.innerText = "📅 Weekly";
 
-        document.addEventListener('keydown', event => {
-            if (event.key === 'ArrowLeft' || event.key === 'a') playerMove(-1);
-            else if (event.key === 'ArrowRight' || event.key === 'd') playerMove(1);
-            else if (event.key === 'ArrowDown' || event.key === 's') playerDrop();
-            else if (event.key === 'ArrowUp' || event.key === 'w') playerRotate();
-            else if (event.key === ' ') playerHardDrop();
-            else if (event.key === 'c' || event.key === 'h') playerHold();
-            else if (event.key === 'p' || event.key === 'Escape') togglePause();
-        });
+        // Atualiza os valores na tela com base no filtro selecionado
+        document.getElementById("pb-500").innerText = recordDatabase[currentFilter][500];
+        document.getElementById("pb-1000").innerText = recordDatabase[currentFilter][1000];
+        document.getElementById("pb-1500").innerText = recordDatabase[currentFilter][1500];
+        document.getElementById("pb-2000").innerText = recordDatabase[currentFilter][2000];
+    }
+</script>
 
-        function update(time = 0) {
-            if (lineFlashFrames.length > 0) {
-                lineFlashFrames = [];
-                draw();
-            }
-
-            if (!isPaused && !gameOver && !isMenuOpen) {
-                if (!startTime) startTime = time;
-                elapsedGameTime = time - startTime;
-                document.getElementById('sr-timer').innerText = formatTime(elapsedGameTime);
-
-                const deltaTime = time - lastTime;
-                lastTime = time;
-
-                dropCounter += deltaTime;
-                if (dropCounter > dropInterval) {
-                    playerDrop();
-                }
-
-                historyTimer += deltaTime;
-                if (historyTimer > 500) { 
-                    saveGameState();
-                    historyTimer = 0;
-                }
-            } else {
-                lastTime = time;
-            }
-
-            draw();
-            requestAnimationFrame(update);
-        }
-
-        // Inicialização primária
-        applyThemeStyles();
-        resetGame();
-        requestAnimationFrame(update);
-    </script>
 </body>
 </html>
