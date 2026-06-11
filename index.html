@@ -204,7 +204,7 @@
 
         /* Classes de Status da Run Atual */
         .run-ahead {
-            color: var(--status-red) !important; /* Vermelho na imagem indica que está abaixo do tempo/mais rápido */
+            color: var(--status-red) !important;
         }
         
         .run-behind {
@@ -304,7 +304,7 @@
         <div class="header-buttons">
             <button class="btn-small" id="btn-10s">↩ 10s</button>
             <button class="btn-small action" id="btn-pause">Pausar</button>
-            <button class="btn-small" id="btn-menu">Menu</button>
+            <button class="btn-small" id="btn-menu">Reiniciar</button>
         </div>
     </header>
 
@@ -459,11 +459,9 @@
 
         let particles = [];
 
-        // Controle do período ativo selecionado
         let periodoAtivo = 'dia'; 
         const sequenciaPeriodos = ['dia', 'semana', 'mes'];
 
-        // Estrutura de PBs segregada por período
         let pbsPorPeriodo = {
             dia: {
                 score: { 30000: null, 60000: null, 90000: null, 120000: null },
@@ -497,13 +495,11 @@
             }
         };
 
-        // Estrutura auxiliar para travar o tempo conquistado na run atual
         let runConquistas = {
             score: { 30000: null, 60000: null, 90000: null, 120000: null },
             lines: { 25: null, 50: null, 75: null, 100: null }
         };
 
-        // Recuperação do LocalStorage com tratamento de dados legados
         if (localStorage.getItem('tulip_tetris_multiy_pbs')) {
             pbsPorPeriodo = JSON.parse(localStorage.getItem('tulip_tetris_multiy_pbs'));
         } else if (localStorage.getItem('tulip_tetris_pbs')) {
@@ -526,6 +522,15 @@
                 this.x = Math.floor((COLS - this.matrix[0].length) / 2);
                 this.y = type === 'I' ? -1 : 0;
             }
+        }
+
+        function formatTime(ms) {
+            if (ms === null || ms === undefined) return "00:00.0";
+            const totalSeconds = ms / 1000;
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = Math.floor(totalSeconds % 60);
+            const tenths = Math.floor((ms % 1000) / 100);
+            return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${tenths}`;
         }
 
         function init() {
@@ -553,6 +558,7 @@
             
             updateUI();
             updatePBDisplay();
+            lastTime = performance.now();
             requestAnimationFrame(gameLoop);
         }
 
@@ -906,7 +912,6 @@
                 const tempoPB = pbAtual.rawTimes.score[target];
 
                 if (tempoConquistado !== null) {
-                    // Já alcançou a meta nesta run
                     elRun.textContent = formatTime(tempoConquistado);
                     if (tempoPB && tempoConquistado < tempoPB) {
                         elRun.className = "run-completed-better";
@@ -916,14 +921,13 @@
                         elRun.className = "run-completed-better";
                     }
                 } else {
-                    // Ainda não alcançou a meta
                     if (tempoPB) {
                         let delta = elapsedMs - tempoPB;
                         if (delta < 0) {
                             elRun.textContent = "-" + formatTime(Math.abs(delta));
                             elRun.className = "run-ahead";
                         } else {
-                            elRun.textContent = formatTime(elapsedMs);
+                            elRun.textContent = "+" + formatTime(delta);
                             elRun.className = "run-behind";
                         }
                     } else {
@@ -957,7 +961,7 @@
                             elRun.textContent = "-" + formatTime(Math.abs(delta));
                             elRun.className = "run-ahead";
                         } else {
-                            elRun.textContent = formatTime(elapsedMs);
+                            elRun.textContent = "+" + formatTime(delta);
                             elRun.className = "run-behind";
                         }
                     } else {
@@ -968,78 +972,72 @@
             });
         }
 
-        function formatTime(ms) {
-            let totalSeconds = Math.floor(ms / 1000);
-            let minutes = Math.floor(totalSeconds / 60);
-            let seconds = totalSeconds % 60;
-            let tenths = Math.floor((ms % 1000) / 100);
-            return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${tenths}`;
-        }
-
         function updateUI() {
             document.getElementById('current-score').textContent = score;
             document.getElementById('current-lines').textContent = lines;
             document.getElementById('game-level').textContent = level;
+            
+            const pbAtual = pbsPorPeriodo[periodoAtivo];
+            document.getElementById('best-score').textContent = pbAtual.maxScore;
+            document.getElementById('best-lines').textContent = pbAtual.maxLines;
 
             const bgIndex = (level - 1) % LEVEL_BACKGROUNDS.length;
-            document.documentElement.style.setProperty('--bg-color', LEVEL_BACKGROUNDS[bgIndex]);
+            document.body.style.backgroundColor = LEVEL_BACKGROUNDS[bgIndex];
         }
 
         function updatePBDisplay() {
             const pbAtual = pbsPorPeriodo[periodoAtivo];
-
-            document.getElementById('best-score').textContent = pbAtual.maxScore || 0;
-            document.getElementById('best-lines').textContent = pbAtual.maxLines || 0;
-
-            document.getElementById('pb-30k').textContent = pbAtual.score[30000] || '00:00.0';
-            document.getElementById('pb-60k').textContent = pbAtual.score[60000] || '00:00.0';
-            document.getElementById('pb-90k').textContent = pbAtual.score[90000] || '00:00.0';
-            document.getElementById('pb-120k').textContent = pbAtual.score[120000] || '00:00.0';
-
-            document.getElementById('pb-25l').textContent = pbAtual.lines[25] || '00:00.0';
-            document.getElementById('pb-50l').textContent = pbAtual.lines[50] || '00:00.0';
-            document.getElementById('pb-75l').textContent = pbAtual.lines[75] || '00:00.0';
-            document.getElementById('pb-100l').textContent = pbAtual.lines[100] || '00:00.0';
             
-            updateLiveRunColumn();
+            [30000, 60000, 90000, 120000].forEach(target => {
+                const pbTime = pbAtual.score[target];
+                document.getElementById(`pb-${target}`).textContent = pbTime ? pbTime : "00:00.0";
+            });
+
+            [25, 50, 75, 100].forEach(target => {
+                const pbTime = pbAtual.lines[target];
+                document.getElementById(`pb-${target}l`).textContent = pbTime ? pbTime : "00:00.0";
+            });
         }
 
-        // Eventos de Teclado
-        document.addEventListener('keydown', ev => {
+        // Eventos e Controles
+        document.addEventListener('keydown', event => {
             if (gameOver) return;
             
-            if (ev.key.toLowerCase() === 'p') {
+            if (event.key.toLowerCase() === 'p') {
                 togglePause();
                 return;
             }
 
             if (isPaused) return;
 
-            switch (ev.key) {
-                case 'ArrowLeft': move(-1); break;
-                case 'ArrowRight': move(1); break;
-                case 'ArrowDown': playerDrop(); break;
-                case 'ArrowUp': rotate(); break;
-                case ' ': hardDrop(); break;
-                case 'h': case 'H': handleHold(); break;
+            switch (event.key) {
+                case 'ArrowLeft':
+                    move(-1);
+                    break;
+                case 'ArrowRight':
+                    move(1);
+                    break;
+                case 'ArrowDown':
+                    playerDrop();
+                    break;
+                case 'ArrowUp':
+                    rotate();
+                    break;
+                case ' ':
+                    hardDrop();
+                    break;
+                case 'h':
+                case 'H':
+                    handleHold();
+                    break;
             }
-            draw();
         });
-
-        // Controles Mobile / Cliques
-        document.getElementById('ctrl-left').addEventListener('click', () => { if(!isPaused && !gameOver) { move(-1); draw(); } });
-        document.getElementById('ctrl-right').addEventListener('click', () => { if(!isPaused && !gameOver) { move(1); draw(); } });
-        document.getElementById('ctrl-down').addEventListener('click', () => { if(!isPaused && !gameOver) { playerDrop(); draw(); } });
-        document.getElementById('ctrl-up').addEventListener('click', () => { if(!isPaused && !gameOver) { rotate(); draw(); } });
-        document.getElementById('ctrl-rotate').addEventListener('click', () => { if(!isPaused && !gameOver) { rotate(); draw(); } });
-        document.getElementById('ctrl-drop').addEventListener('click', () => { if(!isPaused && !gameOver) { hardDrop(); draw(); } });
-        document.getElementById('ctrl-hold').addEventListener('click', () => { if(!isPaused && !gameOver) { handleHold(); draw(); } });
 
         function togglePause() {
             isPaused = !isPaused;
             const btn = document.getElementById('btn-pause');
             if (isPaused) {
-                btn.textContent = "Retomar";
+                btn.textContent = "Continuar";
                 clearInterval(timerInterval);
             } else {
                 btn.textContent = "Pausar";
@@ -1050,34 +1048,35 @@
             }
         }
 
+        // Mapeamento dos botões da interface
         document.getElementById('btn-pause').addEventListener('click', togglePause);
+        document.getElementById('btn-menu').addEventListener('click', init);
         
         document.getElementById('btn-10s').addEventListener('click', () => {
-            if (gameOver) return;
-            startTime = startTime + 10000;
-            if (Date.now() - startTime < 0) startTime = Date.now();
-            updateTimer();
-        });
-
-        document.getElementById('btn-menu').addEventListener('click', () => {
-            if(confirm("Reiniciar o jogo atual?")) {
-                init();
+            if (!isPaused && !gameOver) {
+                startTime -= 10000; // Adiciona 10 segundos no timer (penalidade/teste)
             }
         });
 
-        // Alternador de períodos de PB (Dia, Semana, Mês)
         document.getElementById('btn-mode').addEventListener('click', () => {
-            let idx = sequenciaPeriodos.indexOf(periodoAtivo);
-            idx = (idx + 1) % sequenciaPeriodos.length;
-            periodoAtivo = sequenciaPeriodos[idx];
-            
-            const emoticons = { dia: '☀️ DIA', semana: '🗓️ SEMANA', mes: '🌙 MÊS' };
-            document.getElementById('btn-mode').textContent = emoticons[periodoAtivo];
-            
+            let index = sequenciaPeriodos.indexOf(periodoAtivo);
+            index = (index + 1) % sequenciaPeriodos.length;
+            periodoAtivo = sequenciaPeriodos[index];
+            document.getElementById('btn-mode').textContent = `☀️ ${periodoAtivo.toUpperCase()}`;
+            updateUI();
             updatePBDisplay();
         });
 
-        // Inicialização automática
+        // Controles de Toque / Mobile
+        document.getElementById('ctrl-left').addEventListener('click', () => { if(!isPaused && !gameOver) move(-1); });
+        document.getElementById('ctrl-right').addEventListener('click', () => { if(!isPaused && !gameOver) move(1); });
+        document.getElementById('ctrl-down').addEventListener('click', () => { if(!isPaused && !gameOver) playerDrop(); });
+        document.getElementById('ctrl-up').addEventListener('click', () => { if(!isPaused && !gameOver) rotate(); });
+        document.getElementById('ctrl-rotate').addEventListener('click', () => { if(!isPaused && !gameOver) rotate(); });
+        document.getElementById('ctrl-drop').addEventListener('click', () => { if(!isPaused && !gameOver) hardDrop(); });
+        document.getElementById('ctrl-hold').addEventListener('click', () => { if(!isPaused && !gameOver) handleHold(); });
+
+        // Inicializa o jogo ao carregar
         init();
     </script>
 </body>
