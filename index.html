@@ -14,6 +14,8 @@
             --btn-blue: #5B6D86;
             --btn-green: #00A877;
             --btn-pink: #E02B5E;
+            --status-green: #28a745;
+            --status-red: #dc3545;
         }
 
         * {
@@ -31,7 +33,7 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            transition: background-color 0.5s ease; /* Transição suave para a mudança de cor */
+            transition: background-color 0.5s ease;
         }
 
         /* Header */
@@ -179,6 +181,7 @@
         .pb-table td {
             padding: 4px 0;
             font-weight: 600;
+            transition: color 0.2s ease;
         }
 
         .pb-table td:last-child {
@@ -256,7 +259,6 @@
         .btn-action-round.rotate { background-color: var(--btn-pink); }
         .btn-action-round:active { filter: brightness(0.9); }
 
-        /* Renderização interna dos blocos das caixas de previsão */
         .preview-canvas {
             position: absolute;
             top: 0;
@@ -315,10 +317,10 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr><td>10k</td><td id="pb-10k">-:-.-</td></tr>
-                        <tr><td>30k</td><td id="pb-30k">-:-.-</td></tr>
-                        <tr><td>60k</td><td id="pb-60k">-:-.-</td></tr>
-                        <tr><td>100k</td><td id="pb-100k">-:-.-</td></tr>
+                        <tr id="row-30k"><td>30k</td><td id="pb-30k">-:-.-</td></tr>
+                        <tr id="row-60k"><td>60k</td><td id="pb-60k">-:-.-</td></tr>
+                        <tr id="row-90k"><td>90k</td><td id="pb-90k">-:-.-</td></tr>
+                        <tr id="row-120k"><td>120k</td><td id="pb-120k">-:-.-</td></tr>
                     </tbody>
                 </table>
 
@@ -330,10 +332,10 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr><td>25 L</td><td id="pb-25l">-:-.-</td></tr>
-                        <tr><td>50 L</td><td id="pb-50l">-:-.-</td></tr>
-                        <tr><td>75 L</td><td id="pb-75l">-:-.-</td></tr>
-                        <tr><td>100 L</td><td id="pb-100l">-:-.-</td></tr>
+                        <tr id="row-25l"><td>25 L</td><td id="pb-25l">-:-.-</td></tr>
+                        <tr id="row-50l"><td>50 L</td><td id="pb-50l">-:-.-</td></tr>
+                        <tr id="row-75l"><td>75 L</td><td id="pb-75l">-:-.-</td></tr>
+                        <tr id="row-100l"><td>100 L</td><td id="pb-100l">-:-.-</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -399,18 +401,9 @@
             'L': [[0,0,1],[1,1,1],[0,0,0]]
         };
 
-        // Cores pastéis para o fundo de cada nível (cicla se passar de 10)
         const LEVEL_BACKGROUNDS = [
-            '#FFF0F2', // Nível 1
-            '#E6F4F1', // Nível 2
-            '#F9F0FA', // Nível 3
-            '#F0F7E6', // Nível 4
-            '#FFF9E6', // Nível 5
-            '#E6EBF5', // Nível 6
-            '#F5E6EC', // Nível 7
-            '#EAF5E6', // Nível 8
-            '#F5F5E6', // Nível 9
-            '#ECE6F5'  // Nível 10+
+            '#FFF0F2', '#E6F4F1', '#F9F0FA', '#F0F7E6', '#FFF9E6',
+            '#E6EBF5', '#F5E6EC', '#EAF5E6', '#F5F5E6', '#ECE6F5'
         ];
 
         let grid = Array.from({length: ROWS}, () => Array(COLS).fill(0));
@@ -435,19 +428,35 @@
 
         let particles = [];
 
+        // Thresholds atualizados para 30k, 60k, 90k e 120k
         let pbs = {
-            score: { 10000: null, 30000: null, 60000: null, 100000: null },
+            score: { 30000: null, 60000: null, 90000: null, 120000: null },
             lines: { 25: null, 50: null, 75: null, 100: null },
             maxScore: 0,
             maxLines: 0
         };
 
+        // Lógica para converter milissegundos numéricos salvos no LocalStorage de volta para inteiros
+        let pbRawTimes = {
+            score: { 30000: null, 60000: null, 90000: null, 120000: null },
+            lines: { 25: null, 50: null, 75: null, 100: null }
+        };
+
         if (localStorage.getItem('tulip_tetris_pbs')) {
             const stored = JSON.parse(localStorage.getItem('tulip_tetris_pbs'));
-            if (stored.lines && (stored.lines[10] !== undefined || stored.lines[25] === undefined)) {
-                stored.lines = { 25: null, 50: null, 75: null, 100: null };
+            // Limpa dados antigos que não usam a estrutura nova de 30k-120k
+            if (stored.score && stored.score[10000] !== undefined) {
+                stored.score = { 30000: null, 60000: null, 90000: null, 120000: null };
             }
             pbs = stored;
+            
+            // Popula os tempos brutos baseados no PB recuperado para fazer o cálculo de verde/vermelho
+            if (stored.rawTimes) {
+                pbRawTimes = stored.rawTimes;
+            } else {
+                // Fallback caso não existam tempos brutos guardados ainda
+                pbRawTimes.rawTimes = { score: {}, lines: {} };
+            }
             updatePBDisplay();
         }
 
@@ -480,6 +489,9 @@
             nextPiece = getRandomPiece();
             spawnPiece();
             
+            // Reseta cores dos PBs ao reiniciar a run
+            resetRowColors();
+
             updateUI();
             requestAnimationFrame(gameLoop);
         }
@@ -558,8 +570,6 @@
                 score += basePoints[cleared] * level;
 
                 level = Math.floor(lines / 10) + 1;
-                
-                // Incremento reduzido para 50ms (antes era 100ms) e velocidade mínima em 150ms
                 dropInterval = Math.max(150, 1000 - (level - 1) * 50);
 
                 checkSpeedrunMilestones();
@@ -602,24 +612,35 @@
 
         function checkSpeedrunMilestones() {
             const timeStr = formatTime(elapsedMs);
+            let pbChanged = false;
             
-            [10000, 30000, 60000, 100000].forEach(target => {
+            [30000, 60000, 90000, 120000].forEach(target => {
                 if (score >= target && !pbs.score[target]) {
                     pbs.score[target] = timeStr;
+                    pbRawTimes.score[target] = elapsedMs;
+                    pbChanged = true;
                 }
             });
 
             [25, 50, 75, 100].forEach(target => {
                 if (lines >= target && !pbs.lines[target]) {
                     pbs.lines[target] = timeStr;
+                    pbRawTimes.lines[target] = elapsedMs;
+                    pbChanged = true;
                 }
             });
 
             if (score > pbs.maxScore) pbs.maxScore = score;
             if (lines > pbs.maxLines) pbs.maxLines = lines;
 
-            localStorage.setItem('tulip_tetris_pbs', JSON.stringify(pbs));
-            updatePBDisplay();
+            if (pbChanged || score > pbs.maxScore || lines > pbs.maxLines) {
+                const dataToStore = {
+                    ...pbs,
+                    rawTimes: pbRawTimes
+                };
+                localStorage.setItem('tulip_tetris_pbs', JSON.stringify(dataToStore));
+                updatePBDisplay();
+            }
         }
 
         function move(dir) {
@@ -804,6 +825,60 @@
             if (isPaused || gameOver) return;
             elapsedMs = Date.now() - startTime;
             document.getElementById('game-timer').textContent = formatTime(elapsedMs);
+
+            // Atualiza as cores comparativas de tempo com o PB em tempo real
+            compareLiveRunAndPB();
+        }
+
+        function compareLiveRunAndPB() {
+            // Comparação de pontos
+            [30000, 60000, 90000, 120000].forEach(target => {
+                const element = document.getElementById(`row-${target}`);
+                if (!element) return;
+                
+                const pbTime = pbRawTimes.score[target];
+                
+                if (score >= target) {
+                    // Já alcançou o alvo! Se bateu o PB ou não havia PB anterior, fica verde
+                    element.style.color = "var(--status-green)";
+                } else if (pbTime) {
+                    // Ainda não alcançou o alvo. Se o tempo da run atual já superou o tempo do PB, ficou vermelho
+                    if (elapsedMs > pbTime) {
+                        element.style.color = "var(--status-red)";
+                    } else {
+                        element.style.color = ""; // Neutro enquanto estiver no ritmo correto
+                    }
+                }
+            });
+
+            // Comparação de linhas
+            [25, 50, 75, 100].forEach(target => {
+                const element = document.getElementById(`row-${target}l`);
+                if (!element) return;
+
+                const pbTime = pbRawTimes.lines[target];
+
+                if (lines >= target) {
+                    element.style.color = "var(--status-green)";
+                } else if (pbTime) {
+                    if (elapsedMs > pbTime) {
+                        element.style.color = "var(--status-red)";
+                    } else {
+                        element.style.color = "";
+                    }
+                }
+            });
+        }
+
+        function resetRowColors() {
+            [30000, 60000, 90000, 120000].forEach(target => {
+                const el = document.getElementById(`row-${target}`);
+                if (el) el.style.color = "";
+            });
+            [25, 50, 75, 100].forEach(target => {
+                const el = document.getElementById(`row-${target}l`);
+                if (el) el.style.color = "";
+            });
         }
 
         function formatTime(ms) {
@@ -819,19 +894,18 @@
             document.getElementById('current-lines').textContent = lines;
             document.getElementById('game-level').textContent = level;
 
-            // Altera a cor de fundo com base no nível usando a lista de cores pastéis
             const bgIndex = (level - 1) % LEVEL_BACKGROUNDS.length;
             document.documentElement.style.setProperty('--bg-color', LEVEL_BACKGROUNDS[bgIndex]);
         }
 
         function updatePBDisplay() {
-            document.getElementById('best-score').textContent = pbs.maxScore;
-            document.getElementById('best-lines').textContent = pbs.maxLines;
+            document.getElementById('best-score').textContent = pbs.maxScore || 0;
+            document.getElementById('best-lines').textContent = pbs.maxLines || 0;
 
-            document.getElementById('pb-10k').textContent = pbs.score[10000] || '-:-.-';
             document.getElementById('pb-30k').textContent = pbs.score[30000] || '-:-.-';
             document.getElementById('pb-60k').textContent = pbs.score[60000] || '-:-.-';
-            document.getElementById('pb-100k').textContent = pbs.score[100000] || '-:-.-';
+            document.getElementById('pb-90k').textContent = pbs.score[90000] || '-:-.-';
+            document.getElementById('pb-120k').textContent = pbs.score[120000] || '-:-.-';
 
             document.getElementById('pb-25l').textContent = pbs.lines[25] || '-:-.-';
             document.getElementById('pb-50l').textContent = pbs.lines[50] || '-:-.-';
