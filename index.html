@@ -14,8 +14,8 @@
             --btn-blue: #5B6D86;
             --btn-green: #00A877;
             --btn-pink: #E02B5E;
-            --status-green: #28a745;
-            --status-red: #dc3545;
+            --status-green: #25a244;
+            --status-red: #d12b53;
         }
 
         * {
@@ -142,7 +142,7 @@
 
         /* Painel Speedrun customizado */
         .speedrun-panel {
-            width: 160px;
+            width: 210px;
         }
 
         .timer {
@@ -173,22 +173,50 @@
         }
 
         .pb-table th {
-            color: var(--text-red);
-            font-size: 10px;
-            padding-bottom: 4px;
+            color: var(--text-dark);
+            font-size: 11px;
+            font-weight: bold;
+            padding-bottom: 6px;
             text-transform: uppercase;
         }
 
-        .pb-table td {
-            padding: 4px 0;
-            font-weight: 600;
-            transition: color 0.2s ease;
+        .pb-table th:nth-child(2), .pb-table td:nth-child(2) {
+            text-align: center;
         }
 
-        .pb-table td:last-child {
+        .pb-table th:last-child, .pb-table td:last-child {
             text-align: right;
+        }
+
+        .pb-table td {
+            padding: 5px 0;
+            font-weight: 600;
             font-variant-numeric: tabular-nums;
-            color: #776063;
+        }
+
+        .pb-table td:first-child {
+            color: var(--text-dark);
+        }
+
+        .pb-table td:nth-child(2) {
+            color: #554044;
+        }
+
+        /* Classes de Status da Run Atual */
+        .run-ahead {
+            color: var(--status-red) !important; /* Vermelho na imagem indica que está abaixo do tempo/mais rápido */
+        }
+        
+        .run-behind {
+            color: var(--status-red) !important;
+        }
+
+        .run-completed-better {
+            color: var(--status-green) !important;
+        }
+
+        .run-completed-worse {
+            color: var(--status-red) !important;
         }
 
         /* Controles Mobile */
@@ -313,30 +341,32 @@
                 <table class="pb-table">
                     <thead>
                         <tr>
-                            <th>Metas Pts</th>
+                            <th>META</th>
                             <th>PB</th>
+                            <th>ESTA RUN</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr id="row-30000"><td>30k</td><td id="pb-30k">-:-.-</td></tr>
-                        <tr id="row-60000"><td>60k</td><td id="pb-60k">-:-.-</td></tr>
-                        <tr id="row-90000"><td>90k</td><td id="pb-90k">-:-.-</td></tr>
-                        <tr id="row-120000"><td>120k</td><td id="pb-120k">-:-.-</td></tr>
+                        <tr id="row-30000"><td class="meta-label">30k</td><td id="pb-30k">00:00.0</td><td id="run-30000">-00:00.0</td></tr>
+                        <tr id="row-60000"><td class="meta-label">60k</td><td id="pb-60k">00:00.0</td><td id="run-60000">-00:00.0</td></tr>
+                        <tr id="row-90000"><td class="meta-label">90k</td><td id="pb-90k">00:00.0</td><td id="run-90000">-00:00.0</td></tr>
+                        <tr id="row-120000"><td class="meta-label">120k</td><td id="pb-120k">00:00.0</td><td id="run-120000">-00:00.0</td></tr>
                     </tbody>
                 </table>
 
                 <table class="pb-table" style="margin-top: 12px; border-top: 1px dashed var(--border-color); padding-top: 8px;">
                     <thead>
                         <tr>
-                            <th>Metas Linhas</th>
+                            <th>META</th>
                             <th>PB</th>
+                            <th>ESTA RUN</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr id="row-25l"><td>25 L</td><td id="pb-25l">-:-.-</td></tr>
-                        <tr id="row-50l"><td>50 L</td><td id="pb-50l">-:-.-</td></tr>
-                        <tr id="row-75l"><td>75 L</td><td id="pb-75l">-:-.-</td></tr>
-                        <tr id="row-100l"><td>100 L</td><td id="pb-100l">-:-.-</td></tr>
+                        <tr id="row-25l"><td class="meta-label">25 L</td><td id="pb-25l">00:00.0</td><td id="run-25l">-00:00.0</td></tr>
+                        <tr id="row-50l"><td class="meta-label">50 L</td><td id="pb-50l">00:00.0</td><td id="run-50l">-00:00.0</td></tr>
+                        <tr id="row-75l"><td class="meta-label">75 L</td><td id="pb-75l">00:00.0</td><td id="run-75l">-00:00.0</td></tr>
+                        <tr id="row-100l"><td class="meta-label">100 L</td><td id="pb-100l">00:00.0</td><td id="run-100l">-00:00.0</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -467,11 +497,16 @@
             }
         };
 
+        // Estrutura auxiliar para travar o tempo conquistado na run atual
+        let runConquistas = {
+            score: { 30000: null, 60000: null, 90000: null, 120000: null },
+            lines: { 25: null, 50: null, 75: null, 100: null }
+        };
+
         // Recuperação do LocalStorage com tratamento de dados legados
         if (localStorage.getItem('tulip_tetris_multiy_pbs')) {
             pbsPorPeriodo = JSON.parse(localStorage.getItem('tulip_tetris_multiy_pbs'));
         } else if (localStorage.getItem('tulip_tetris_pbs')) {
-            // Migração amigável caso existisse um registro do modelo simples anterior
             try {
                 const antigo = JSON.parse(localStorage.getItem('tulip_tetris_pbs'));
                 if (antigo.score && antigo.score[30000] !== undefined) {
@@ -505,6 +540,9 @@
             dropInterval = 1000;
             particles = [];
             
+            runConquistas.score = { 30000: null, 60000: null, 90000: null, 120000: null };
+            runConquistas.lines = { 25: null, 50: null, 75: null, 100: null };
+            
             elapsedMs = 0;
             startTime = Date.now();
             clearInterval(timerInterval);
@@ -513,7 +551,6 @@
             nextPiece = getRandomPiece();
             spawnPiece();
             
-            resetRowColors();
             updateUI();
             updatePBDisplay();
             requestAnimationFrame(gameLoop);
@@ -639,18 +676,26 @@
             const pbAtual = pbsPorPeriodo[periodoAtivo];
             
             [30000, 60000, 90000, 120000].forEach(target => {
-                if (score >= target && !pbAtual.score[target]) {
-                    pbAtual.score[target] = timeStr;
-                    pbAtual.rawTimes.score[target] = elapsedMs;
-                    pbChanged = true;
+                if (score >= target && !runConquistas.score[target]) {
+                    runConquistas.score[target] = elapsedMs;
+                    
+                    if (!pbAtual.rawTimes.score[target] || elapsedMs < pbAtual.rawTimes.score[target]) {
+                        pbAtual.score[target] = timeStr;
+                        pbAtual.rawTimes.score[target] = elapsedMs;
+                        pbChanged = true;
+                    }
                 }
             });
 
             [25, 50, 75, 100].forEach(target => {
-                if (lines >= target && !pbAtual.lines[target]) {
-                    pbAtual.lines[target] = timeStr;
-                    pbAtual.rawTimes.lines[target] = elapsedMs;
-                    pbChanged = true;
+                if (lines >= target && !runConquistas.lines[target]) {
+                    runConquistas.lines[target] = elapsedMs;
+                    
+                    if (!pbAtual.rawTimes.lines[target] || elapsedMs < pbAtual.rawTimes.lines[target]) {
+                        pbAtual.lines[target] = timeStr;
+                        pbAtual.rawTimes.lines[target] = elapsedMs;
+                        pbChanged = true;
+                    }
                 }
             });
 
@@ -846,61 +891,80 @@
             elapsedMs = Date.now() - startTime;
             document.getElementById('game-timer').textContent = formatTime(elapsedMs);
 
-            compareLiveRunAndPB();
+            updateLiveRunColumn();
         }
 
-        function compareLiveRunAndPB() {
+        function updateLiveRunColumn() {
             const pbAtual = pbsPorPeriodo[periodoAtivo];
 
-            // Comparação de pontos
+            // 1. Processamento de Pontos
             [30000, 60000, 90000, 120000].forEach(target => {
-                const element = document.getElementById(`row-${target}`);
-                if (!element) return;
-                
-                const pbTime = pbAtual.rawTimes.score[target];
-                
-                if (score >= target) {
-                    element.style.color = "var(--status-green)";
-                } else if (pbTime) {
-                    if (elapsedMs > pbTime) {
-                        element.style.color = "var(--status-red)";
+                const elRun = document.getElementById(`run-${target}`);
+                if (!elRun) return;
+
+                const tempoConquistado = runConquistas.score[target];
+                const tempoPB = pbAtual.rawTimes.score[target];
+
+                if (tempoConquistado !== null) {
+                    // Já alcançou a meta nesta run
+                    elRun.textContent = formatTime(tempoConquistado);
+                    if (tempoPB && tempoConquistado < tempoPB) {
+                        elRun.className = "run-completed-better";
+                    } else if (tempoPB && tempoConquistado >= tempoPB) {
+                        elRun.className = "run-completed-worse";
                     } else {
-                        element.style.color = "";
+                        elRun.className = "run-completed-better";
                     }
                 } else {
-                    element.style.color = "";
+                    // Ainda não alcançou a meta
+                    if (tempoPB) {
+                        let delta = elapsedMs - tempoPB;
+                        if (delta < 0) {
+                            elRun.textContent = "-" + formatTime(Math.abs(delta));
+                            elRun.className = "run-ahead";
+                        } else {
+                            elRun.textContent = formatTime(elapsedMs);
+                            elRun.className = "run-behind";
+                        }
+                    } else {
+                        elRun.textContent = formatTime(elapsedMs);
+                        elRun.className = "";
+                    }
                 }
             });
 
-            // Comparação de linhas
+            // 2. Processamento de Linhas
             [25, 50, 75, 100].forEach(target => {
-                const element = document.getElementById(`row-${target}l`);
-                if (!element) return;
+                const elRun = document.getElementById(`run-${target}l`);
+                if (!elRun) return;
 
-                const pbTime = pbAtual.rawTimes.lines[target];
+                const tempoConquistado = runConquistas.lines[target];
+                const tempoPB = pbAtual.rawTimes.lines[target];
 
-                if (lines >= target) {
-                    element.style.color = "var(--status-green)";
-                } else if (pbTime) {
-                    if (elapsedMs > pbTime) {
-                        element.style.color = "var(--status-red)";
+                if (tempoConquistado !== null) {
+                    elRun.textContent = formatTime(tempoConquistado);
+                    if (tempoPB && tempoConquistado < tempoPB) {
+                        elRun.className = "run-completed-better";
+                    } else if (tempoPB && tempoConquistado >= tempoPB) {
+                        elRun.className = "run-completed-worse";
                     } else {
-                        element.style.color = "";
+                        elRun.className = "run-completed-better";
                     }
                 } else {
-                    element.style.color = "";
+                    if (tempoPB) {
+                        let delta = elapsedMs - tempoPB;
+                        if (delta < 0) {
+                            elRun.textContent = "-" + formatTime(Math.abs(delta));
+                            elRun.className = "run-ahead";
+                        } else {
+                            elRun.textContent = formatTime(elapsedMs);
+                            elRun.className = "run-behind";
+                        }
+                    } else {
+                        elRun.textContent = formatTime(elapsedMs);
+                        elRun.className = "";
+                    }
                 }
-            });
-        }
-
-        function resetRowColors() {
-            [30000, 60000, 90000, 120000].forEach(target => {
-                const el = document.getElementById(`row-${target}`);
-                if (el) el.style.color = "";
-            });
-            [25, 50, 75, 100].forEach(target => {
-                const el = document.getElementById(`row-${target}l`);
-                if (el) el.style.color = "";
             });
         }
 
@@ -927,85 +991,94 @@
             document.getElementById('best-score').textContent = pbAtual.maxScore || 0;
             document.getElementById('best-lines').textContent = pbAtual.maxLines || 0;
 
-            document.getElementById('pb-30k').textContent = pbAtual.score[30000] || '-:-.-';
-            document.getElementById('pb-60k').textContent = pbAtual.score[60000] || '-:-.-';
-            document.getElementById('pb-90k').textContent = pbAtual.score[90000] || '-:-.-';
-            document.getElementById('pb-120k').textContent = pbAtual.score[120000] || '-:-.-';
+            document.getElementById('pb-30k').textContent = pbAtual.score[30000] || '00:00.0';
+            document.getElementById('pb-60k').textContent = pbAtual.score[60000] || '00:00.0';
+            document.getElementById('pb-90k').textContent = pbAtual.score[90000] || '00:00.0';
+            document.getElementById('pb-120k').textContent = pbAtual.score[120000] || '00:00.0';
 
-            document.getElementById('pb-25l').textContent = pbAtual.lines[25] || '-:-.-';
-            document.getElementById('pb-50l').textContent = pbAtual.lines[50] || '-:-.-';
-            document.getElementById('pb-75l').textContent = pbAtual.lines[75] || '-:-.-';
-            document.getElementById('pb-100l').textContent = pbAtual.lines[100] || '-:-.-';
+            document.getElementById('pb-25l').textContent = pbAtual.lines[25] || '00:00.0';
+            document.getElementById('pb-50l').textContent = pbAtual.lines[50] || '00:00.0';
+            document.getElementById('pb-75l').textContent = pbAtual.lines[75] || '00:00.0';
+            document.getElementById('pb-100l').textContent = pbAtual.lines[100] || '00:00.0';
+            
+            updateLiveRunColumn();
         }
 
         // Eventos de Teclado
-        document.addEventListener('keydown', event => {
+        document.addEventListener('keydown', ev => {
             if (gameOver) return;
-            if (event.key === 'h' || event.key === 'H') handleHold();
+            
+            if (ev.key.toLowerCase() === 'p') {
+                togglePause();
+                return;
+            }
+
             if (isPaused) return;
 
-            switch (event.key) {
+            switch (ev.key) {
                 case 'ArrowLeft': move(-1); break;
                 case 'ArrowRight': move(1); break;
                 case 'ArrowDown': playerDrop(); break;
                 case 'ArrowUp': rotate(); break;
                 case ' ': hardDrop(); break;
+                case 'h': case 'H': handleHold(); break;
             }
+            draw();
         });
 
-        // Eventos dos Controles Mobile e On-Screen
-        document.getElementById('ctrl-left').addEventListener('click', () => !isPaused && !gameOver && move(-1));
-        document.getElementById('ctrl-right').addEventListener('click', () => !isPaused && !gameOver && move(1));
-        document.getElementById('ctrl-down').addEventListener('click', () => !isPaused && !gameOver && playerDrop());
-        document.getElementById('ctrl-up').addEventListener('click', () => !isPaused && !gameOver && rotate());
-        document.getElementById('ctrl-rotate').addEventListener('click', () => !isPaused && !gameOver && rotate());
-        document.getElementById('ctrl-drop').addEventListener('click', () => !isPaused && !gameOver && hardDrop());
-        document.getElementById('ctrl-hold').addEventListener('click', () => !isPaused && !gameOver && handleHold());
+        // Controles Mobile / Cliques
+        document.getElementById('ctrl-left').addEventListener('click', () => { if(!isPaused && !gameOver) { move(-1); draw(); } });
+        document.getElementById('ctrl-right').addEventListener('click', () => { if(!isPaused && !gameOver) { move(1); draw(); } });
+        document.getElementById('ctrl-down').addEventListener('click', () => { if(!isPaused && !gameOver) { playerDrop(); draw(); } });
+        document.getElementById('ctrl-up').addEventListener('click', () => { if(!isPaused && !gameOver) { rotate(); draw(); } });
+        document.getElementById('ctrl-rotate').addEventListener('click', () => { if(!isPaused && !gameOver) { rotate(); draw(); } });
+        document.getElementById('ctrl-drop').addEventListener('click', () => { if(!isPaused && !gameOver) { hardDrop(); draw(); } });
+        document.getElementById('ctrl-hold').addEventListener('click', () => { if(!isPaused && !gameOver) { handleHold(); draw(); } });
 
-        // Lógica do Botão de Pausa
-        document.getElementById('btn-pause').addEventListener('click', () => {
-            if (gameOver) return;
+        function togglePause() {
             isPaused = !isPaused;
-            document.getElementById('btn-pause').textContent = isPaused ? "Retomar" : "Pausar";
-            if (!isPaused) {
+            const btn = document.getElementById('btn-pause');
+            if (isPaused) {
+                btn.textContent = "Retomar";
+                clearInterval(timerInterval);
+            } else {
+                btn.textContent = "Pausar";
+                startTime = Date.now() - elapsedMs;
+                timerInterval = setInterval(updateTimer, 100);
                 lastTime = performance.now();
                 requestAnimationFrame(gameLoop);
             }
-        });
+        }
 
-        // Alternância Cíclica de Período (Dia -> Semana -> Mês)
-        document.getElementById('btn-mode').addEventListener('click', () => {
-            let indexAtual = sequenciaPeriodos.indexOf(periodoAtivo);
-            let proximoIndex = (indexAtual + 1) % sequenciaPeriodos.length;
-            periodoAtivo = sequenciaPeriodos[proximoIndex];
-
-            // Atualiza os textos do botão visualmente
-            const icones = { dia: '☀️ DIA', semana: '🗓️ SEMANA', mes: '🌙 MÊS' };
-            document.getElementById('btn-mode').textContent = icones[periodoAtivo];
-
-            // Atualiza registros da interface com base no novo período escolhido
-            resetRowColors();
-            updatePBDisplay();
-            compareLiveRunAndPB();
-        });
-
-        // Botão Voltar 10s (Uso experimental/treino)
+        document.getElementById('btn-pause').addEventListener('click', togglePause);
+        
         document.getElementById('btn-10s').addEventListener('click', () => {
-            if (gameOver || isPaused) return;
-            startTime += 10000; // Atrasa o início, adicionando tempo decorrido
+            if (gameOver) return;
+            startTime = startTime + 10000;
+            if (Date.now() - startTime < 0) startTime = Date.now();
+            updateTimer();
         });
 
-        // Botão Menu (Reinicia a partida para testes rápidos)
         document.getElementById('btn-menu').addEventListener('click', () => {
-            if(confirm("Deseja reiniciar a partida atual?")) {
+            if(confirm("Reiniciar o jogo atual?")) {
                 init();
             }
         });
 
-        // Inicialização automática do game ao carregar a página
-        window.addEventListener('DOMContentLoaded', () => {
-            init();
+        // Alternador de períodos de PB (Dia, Semana, Mês)
+        document.getElementById('btn-mode').addEventListener('click', () => {
+            let idx = sequenciaPeriodos.indexOf(periodoAtivo);
+            idx = (idx + 1) % sequenciaPeriodos.length;
+            periodoAtivo = sequenciaPeriodos[idx];
+            
+            const emoticons = { dia: '☀️ DIA', semana: '🗓️ SEMANA', mes: '🌙 MÊS' };
+            document.getElementById('btn-mode').textContent = emoticons[periodoAtivo];
+            
+            updatePBDisplay();
         });
+
+        // Inicialização automática
+        init();
     </script>
 </body>
 </html>
