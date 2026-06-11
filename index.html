@@ -431,6 +431,37 @@
 
         .score-item:last-child { border: none; }
         .score-item.top { font-weight: bold; color: var(--accent-color); }
+
+        /* Novos estilos para o seletor de tipos de recorde */
+        .score-filter-tabs {
+            display: flex;
+            gap: 4px;
+            width: 100%;
+            max-width: 220px;
+            margin-bottom: 8px;
+            background: rgba(0, 0, 0, 0.05);
+            padding: 2px;
+            border-radius: 10px;
+        }
+
+        .filter-tab-btn {
+            flex: 1;
+            border: none;
+            background: transparent;
+            padding: 6px 2px;
+            font-size: 0.65rem;
+            font-weight: bold;
+            color: var(--text-muted);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .filter-tab-btn.active {
+            background: white;
+            color: var(--text-main);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
     </style>
 </head>
 <body>
@@ -451,7 +482,7 @@
                 <canvas id="hold-canvas" class="side-canvas" width="56" height="56"></canvas>
             </div>
             <div class="hud-card" onclick="openScores()" style="cursor:pointer;">
-                <div class="hud-label">Recorde 🏆</div>
+                <div id="highscore-label" class="hud-label">Recorde 🏆</div>
                 <div id="highscore" class="hud-value">0</div>
             </div>
             <div class="hud-card">
@@ -489,9 +520,16 @@
             </div>
 
             <div id="scores-screen" class="overlay">
-                <h2>Histórico de Recordes</h2>
+                <h2>Placar de Recordes</h2>
+                
+                <div class="score-filter-tabs">
+                    <button class="filter-tab-btn active" id="tab-today" onclick="changeScoreFilter('today')">Hoje</button>
+                    <button class="filter-tab-btn" id="tab-week" onclick="changeScoreFilter('week')">Semana</button>
+                    <button class="filter-tab-btn" id="tab-all" onclick="changeScoreFilter('all')">História</button>
+                </div>
+
                 <div class="scores-list" id="scores-container"></div>
-                <button class="btn" style="background:#9f1239; font-size:0.6rem; padding:4px 8px;" onclick="clearScores()">Limpar Histórico</button>
+                <button class="btn" style="background:#9f1239; font-size:0.6rem; padding:4px 8px;" onclick="clearScores()">Limpar Filtrados</button>
                 <br>
                 <button class="btn" onclick="closeScores()">Fechar</button>
             </div>
@@ -603,7 +641,7 @@
         ];
 
         let board = createMatrix(COLS, ROWS);
-        let score = 0; let lines = 0; let level = 1; let highscore = 0;
+        let score = 0; let lines = 0; let level = 1;
         let gameOver = false; let isPaused = false; let isMenuOpen = false; let isScoresOpen = false;
         let dropCounter = 0; 
         let dropInterval = 1000; 
@@ -627,6 +665,9 @@
         let holdTimers = {};
 
         const player = { pos: {x: 0, y: 0}, matrix: null, nextMatrix: null, holdMatrix: null };
+
+        // Variável de controle do filtro ativo de recordes ('today', 'week', 'all')
+        let currentScoreFilter = 'today';
 
         function createMatrix(w, h) {
             const matrix = [];
@@ -705,6 +746,123 @@
                 }
             });
         }
+
+        /* --- SISTEMA ROBUSTO DE RECORDES --- */
+        
+        function getScoresFromStorage() {
+            const data = localStorage.getItem('tulip_tetris_scores_v2');
+            return data ? JSON.parse(data) : [];
+        }
+
+        function saveScoreToStorage(newScore) {
+            if (newScore <= 0) return;
+            const scores = getScoresFromStorage();
+            scores.push({
+                score: newScore,
+                date: new Date().toISOString()
+            });
+            // Ordena decrescente por pontuação
+            scores.sort((a, b) => b.score - a.score);
+            localStorage.setItem('tulip_tetris_scores_v2', JSON.stringify(scores));
+            updateHUDHighScore();
+        }
+
+        function isToday(dateString) {
+            const d = new Date(dateString);
+            const today = new Date();
+            return d.getDate() === today.getDate() &&
+                   d.getMonth() === today.getMonth() &&
+                   d.getFullYear() === today.getFullYear();
+        }
+
+        function isThisWeek(dateString) {
+            const d = new Date(dateString);
+            const today = new Date();
+            
+            // Zera as horas para comparação pura de datas
+            const startOfWeek = new Date(today);
+            startOfWeek.setDate(today.getDate() - today.getDay()); // Domingo
+            startOfWeek.setHours(0,0,0,0);
+            
+            const endOfWeek = new Date(startOfWeek);
+            endOfWeek.setDate(startOfWeek.getDate() + 6); // Sábado
+            endOfWeek.setHours(23,59,59,999);
+
+            return d >= startOfWeek && d <= endOfWeek;
+        }
+
+        function filterScores(filterType) {
+            const allScores = getScoresFromStorage();
+            if (filterType === 'today') {
+                return allScores.filter(s => isToday(s.date));
+            } else if (filterType === 'week') {
+                return allScores.filter(s => isThisWeek(s.date));
+            }
+            return allScores; // 'all'
+        }
+
+        function changeScoreFilter(filterType) {
+            currentScoreFilter = filterType;
+            document.querySelectorAll('.filter-tab-btn').forEach(b => b.classList.remove('active'));
+            if (filterType === 'today') document.getElementById('tab-today').classList.add('active');
+            if (filterType === 'week') document.getElementById('tab-week').classList.add('active');
+            if (filterType === 'all') document.getElementById('tab-all').classList.add('active');
+            renderScoresList();
+        }
+
+        function renderScoresList() {
+            const container = document.getElementById('scores-container');
+            container.innerHTML = '';
+            
+            const filtered = filterScores(currentScoreFilter);
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div style="font-size:0.7rem; color:var(--text-muted); text-align:center; padding: 20px 0;">Nenhum recorde neste período</div>`;
+                return;
+            }
+
+            // Exibe até os 15 melhores do período filtrado
+            filtered.slice(0, 15).forEach((item, index) => {
+                const row = document.createElement('div');
+                row.className = `score-item ${index === 0 ? 'top' : ''}`;
+                
+                const dateObj = new Date(item.date);
+                const formattedDate = `${dateObj.getDate().toString().padStart(2, '0')}/${(dateObj.getMonth() + 1).toString().padStart(2, '0')}`;
+
+                row.innerHTML = `
+                    <span>#${index + 1} - ${item.score} pts</span>
+                    <span style="font-size:0.6rem; opacity:0.7;">${formattedDate}</span>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        function updateHUDHighScore() {
+            // No HUD principal da sidebar, mostramos o maior recorde da História por padrão
+            const allScores = getScoresFromStorage();
+            const topScore = allScores.length > 0 ? allScores[0].score : 0;
+            document.getElementById('highscore').innerText = topScore;
+        }
+
+        function clearScores() {
+            if (confirm(`Deseja limpar apenas os recordes exibidos de "${currentScoreFilter === 'today' ? 'Hoje' : currentScoreFilter === 'week' ? 'Esta Semana' : 'Toda a História'}"?`)) {
+                let allScores = getScoresFromStorage();
+                
+                if (currentScoreFilter === 'today') {
+                    allScores = allScores.filter(s => !isToday(s.date));
+                } else if (currentScoreFilter === 'week') {
+                    allScores = allScores.filter(s => !isThisWeek(s.date));
+                } else {
+                    allScores = [];
+                }
+
+                localStorage.setItem('tulip_tetris_scores_v2', JSON.stringify(allScores));
+                renderScoresList();
+                updateHUDHighScore();
+            }
+        }
+
+        /* --- FIM DO SISTEMA DE RECORDES --- */
 
         function drawBlock(context, x, y, colorIndex, size, isGhost = false) {
             if (lineFlashFrames.includes(y) && context === ctx) {
@@ -888,14 +1046,6 @@
             }
 
             if (!success) { 
-                player.pos.x = originalX;
-                player.pos.y = originalY - 1;
-                if (!collide(board, player)) {
-                    success = true;
-                }
-            }
-
-            if (!success) { 
                 rotate(player.matrix, -1);
                 player.pos.x = originalX;
                 player.pos.y = originalY;
@@ -914,87 +1064,47 @@
             else matrix.reverse();
         }
 
-        function getRandomPiece() {
-            const pieces = 'IJLOSTZ';
-            const pieceType = pieces[Math.floor(Math.random() * pieces.length)];
-            return SHAPES[pieces.indexOf(pieceType) + 1];
-        }
-
-        function saveScoreToHistory(finalScore) {
-            let history = JSON.parse(localStorage.getItem('tetris_scores_history')) || [];
-            history.push({ score: finalScore, date: new Date().toLocaleDateString('pt-BR') });
-            history.sort((a, b) => b.score - a.score);
-            history = history.slice(0, 10);
-            localStorage.setItem('tetris_scores_history', JSON.stringify(history));
-            
-            if (history[0] && history[0].score > highscore) {
-                highscore = history[0].score;
-                localStorage.setItem('tulip_tetris_highscore', highscore);
-            }
-
-            TARGETS.forEach(t => {
-                if (runSplits[t]) {
-                    if (!pbSplits[t] || runSplits[t] < pbSplits[t]) {
-                        pbSplits[t] = runSplits[t];
-                    }
-                }
-            });
-            localStorage.setItem('tulip_tetris_pb_splits', JSON.stringify(pbSplits));
-        }
-
         function playerReset() {
             if (!player.nextMatrix) {
-                player.matrix = getRandomPiece();
-                player.nextMatrix = getRandomPiece();
-            } else {
-                player.matrix = player.nextMatrix;
-                player.nextMatrix = getRandomPiece();
+                player.nextMatrix = SHAPES[Math.floor(Math.random() * (SHAPES.length - 1)) + 1];
             }
-            
+            player.matrix = player.nextMatrix;
+            player.nextMatrix = SHAPES[Math.floor(Math.random() * (SHAPES.length - 1)) + 1];
             player.pos.y = 0;
             player.pos.x = (board[0].length / 2 | 0) - (player.matrix[0].length / 2 | 0);
-            hasHeld = false;
 
             if (collide(board, player)) {
                 gameOver = true;
-                saveScoreToHistory(score);
+                saveScoreToStorage(score);
                 document.getElementById('final-score').innerText = score;
                 document.getElementById('game-over-screen').classList.add('active');
             }
+            hasHeld = false;
         }
 
         function arenaSweep() {
-            let rowCount = 1;
-            let clearedLines = [];
-            
+            let rowCount = 0;
             outer: for (let y = board.length - 1; y >= 0; --y) {
                 for (let x = 0; x < board[y].length; ++x) {
                     if (board[y][x] === 0) continue outer;
                 }
-                clearedLines.push(y);
+                const row = board.splice(y, 1)[0].fill(0);
+                board.unshift(row);
+                ++y;
+                rowCount++;
+                lineFlashFrames.push(0); 
             }
+            
+            if (rowCount > 0) {
+                lines += rowCount;
+                if (rowCount === 1) score += 40 * level;
+                else if (rowCount === 2) score += 100 * level;
+                else if (rowCount === 3) score += 300 * level;
+                else if (rowCount === 4) score += 1200 * level;
 
-            if(clearedLines.length > 0) {
-                lineFlashFrames = [...clearedLines];
-                triggerVibrate(clearedLines.length === 4 ? [40, 30, 40, 30] : 50);
-                
-                setTimeout(() => {
-                    lineFlashFrames = [];
-                    clearedLines.sort((a, b) => a - b).forEach(y => {
-                        board.splice(y, 1);
-                        board.unshift(new Array(COLS).fill(0));
-                    });
-
-                    lines += clearedLines.length;
-                    score += clearedLines.length * rowCount * 15;
-                    level = Math.floor(lines / 8) + 1;
-                    
-                    dropInterval = Math.max(80, 1000 - (level - 1) * 50);
-                    
-                    updateBackgroundProgress();
-                    updateScore();
-                    checkSpeedrunSplits();
-                }, 80);
+                level = Math.floor(lines / 10) + 1;
+                dropInterval = Math.max(100, 1000 - (level - 1) * 90);
+                applyThemeStyles();
             }
         }
 
@@ -1002,257 +1112,229 @@
             document.getElementById('score').innerText = score;
             document.getElementById('lines').innerText = lines;
             document.getElementById('level').innerText = level;
-            document.getElementById('highscore').innerText = highscore;
+            checkSpeedrunSplits();
         }
 
-        function togglePause() {
-            if (gameOver || isMenuOpen || isScoresOpen) return;
-            isPaused = !isPaused;
-            
-            document.getElementById('pause-screen').classList.toggle('active', isPaused);
-            document.getElementById('btn-pause-ui').innerText = isPaused ? "Voltar" : "Pausar";
-            
-            if (!isPaused) { 
-                lastTime = performance.now(); 
-                update(); 
-            }
-        }
-
-        function openMenu() {
-            if(!isPaused && !gameOver) togglePause();
-            isMenuOpen = true;
-            document.getElementById('menu-screen').classList.add('active');
-        }
-        
-        function closeMenu() {
-            isMenuOpen = false;
-            document.getElementById('menu-screen').classList.remove('active');
-            lastTime = performance.now();
-            update();
-        }
-
-        function openScores() {
-            if(!isPaused && !gameOver) togglePause();
-            isScoresOpen = true;
-            const container = document.getElementById('scores-container');
-            container.innerHTML = '';
-            let history = JSON.parse(localStorage.getItem('tetris_scores_history')) || [];
-            
-            if (history.length === 0) {
-                container.innerHTML = '<div style="font-size:0.75rem; color:gray; padding:10px;">Nenhum recorde ainda!</div>';
-            } else {
-                history.forEach((h, idx) => {
-                    const item = document.createElement('div');
-                    item.className = `score-item ${idx === 0 ? 'top' : ''}`;
-                    item.innerHTML = `<span>#1 - ${h.date}</span> <span>${h.score} pts</span>`;
-                    container.appendChild(item);
-                });
-            }
-            document.getElementById('scores-screen').classList.add('active');
-        }
-
-        function closeScores() {
-            isScoresOpen = false;
-            document.getElementById('scores-screen').classList.remove('active');
-            lastTime = performance.now();
-            update();
-        }
-
-        function clearScores() {
-            if(confirm("Deseja apagar todo o histórico de pontos e splits de speedrun?")) {
-                localStorage.removeItem('tetris_scores_history');
-                localStorage.removeItem('tulip_tetris_pb_splits');
-                highscore = 0;
-                localStorage.setItem('tulip_tetris_highscore', 0);
-                pbSplits = { 500: null, 1000: null, 1500: null, 2000: null };
-                loadPbSplits();
-                updateScore();
-                openScores();
-            }
+        function saveGameState() {
+            if (gameOver || isPaused || isMenuOpen) return;
+            const state = {
+                board: board.map(row => [...row]),
+                player: {
+                    pos: { ...player.pos },
+                    matrix: player.matrix.map(row => [...row]),
+                    nextMatrix: player.nextMatrix.map(row => [...row]),
+                    holdMatrix: player.holdMatrix ? player.holdMatrix.map(row => [...row]) : null
+                },
+                score: score,
+                lines: lines,
+                level: level,
+                dropInterval: dropInterval,
+                hasHeld: hasHeld,
+                elapsedGameTime: elapsedGameTime,
+                runSplits: { ...runSplits }
+            };
+            timeHistory.push(state);
+            if (timeHistory.length > 20) timeHistory.shift(); 
         }
 
         function rewindTime() {
-            if (timeHistory.length === 0) return;
+            if (timeHistory.length === 0 || gameOver) return;
+            triggerVibrate(60);
             
-            // Pega o estado de 10 segundos atrás (ou o mais antigo disponível)
-            const targetIndex = Math.max(0, timeHistory.length - 10);
-            const snapshot = timeHistory[targetIndex];
-            
-            // Restaura o estado completo do jogo
-            board = snapshot.board.map(row => [...row]);
-            score = snapshot.score;
-            lines = snapshot.lines;
-            level = snapshot.level;
-            dropInterval = snapshot.dropInterval;
-            hasHeld = snapshot.hasHeld;
-            elapsedGameTime = snapshot.elapsedGameTime;
-            
-            player.pos = { ...snapshot.playerPos };
-            player.matrix = snapshot.playerMatrix ? snapshot.playerMatrix.map(row => [...row]) : null;
-            player.nextMatrix = snapshot.playerNextMatrix ? snapshot.playerNextMatrix.map(row => [...row]) : null;
-            player.holdMatrix = snapshot.playerHoldMatrix ? snapshot.playerHoldMatrix.map(row => [...row]) : null;
-            
-            // Remove os estados futuros da linha do tempo retrocedida
-            timeHistory = timeHistory.slice(0, targetIndex + 1);
-            
-            // Se o jogo estivesse em GameOver, remove a tela
-            if (gameOver) {
-                gameOver = false;
-                document.getElementById('game-over-screen').classList.remove('active');
-                lastTime = performance.now();
-                update();
-            }
+            const previousState = timeHistory[0]; 
+            timeHistory = []; 
 
-            // Atualiza splits de speedrun de forma retroativa
+            board = previousState.board;
+            player.pos = previousState.player.pos;
+            player.matrix = previousState.player.matrix;
+            player.nextMatrix = previousState.player.nextMatrix;
+            player.holdMatrix = previousState.player.holdMatrix;
+            score = previousState.score;
+            lines = previousState.lines;
+            level = previousState.level;
+            dropInterval = previousState.dropInterval;
+            hasHeld = previousState.hasHeld;
+            elapsedGameTime = previousState.elapsedGameTime;
+            runSplits = previousState.runSplits;
+
             TARGETS.forEach(t => {
-                if (score < t) {
-                    runSplits[t] = null;
-                    const card = document.getElementById(`split-${t}`);
-                    card.className = "sr-split";
+                const card = document.getElementById(`split-${t}`);
+                if (!runSplits[t]) {
+                    card.classList.remove('split-done', 'split-ahead', 'split-behind');
                     card.querySelector('.curr-split').innerText = "-:--.-";
+                } else {
+                    card.querySelector('.curr-split').innerText = formatTime(runSplits[t]);
                 }
             });
 
-            triggerVibrate([40, 40]);
-            updateBackgroundProgress();
+            if (isPaused) togglePause();
             updateScore();
+            applyThemeStyles();
             draw();
         }
 
         function resetGame() {
             board = createMatrix(COLS, ROWS);
-            score = 0; lines = 0; level = 1;
-            gameOver = false; isPaused = false; isMenuOpen = false; isScoresOpen = false;
-            dropCounter = 0; dropInterval = 1000;
-            player.holdMatrix = null;
-            player.nextMatrix = null;
-            timeHistory = [];
-            historyTimer = 0;
-            
+            score = 0; lines = 0; level = 1; dropInterval = 1000;
+            gameOver = false; isPaused = false; hasHeld = false;
+            timeHistory = []; historyTimer = 0;
+            startTime = performance.now();
             elapsedGameTime = 0;
             runSplits = { 500: null, 1000: null, 1500: null, 2000: null };
-            document.getElementById('sr-timer').innerText = "00:00.0";
+            
             TARGETS.forEach(t => {
                 const card = document.getElementById(`split-${t}`);
-                card.className = "sr-split";
+                card.classList.remove('split-done', 'split-ahead', 'split-behind');
                 card.querySelector('.curr-split').innerText = "-:--.-";
             });
-            
-            document.querySelectorAll('.overlay').forEach(o => o.classList.remove('active'));
+
+            document.getElementById('game-over-screen').classList.remove('active');
+            document.getElementById('pause-screen').classList.remove('active');
             document.getElementById('btn-pause-ui').innerText = "Pausar";
             
-            highscore = parseInt(localStorage.getItem('tulip_tetris_highscore')) || 0;
-            loadPbSplits();
+            player.holdMatrix = null;
+            player.nextMatrix = null;
             playerReset();
             updateScore();
-            
-            lastTime = performance.now();
-            update();
+            applyThemeStyles();
+            loadPbSplits();
+            updateHUDHighScore();
         }
 
-        function startDas(key, action) {
-            if (holdTimers[key]) return;
-            action();
-            holdTimers[key] = setTimeout(() => {
-                holdTimers[key] = setInterval(action, DAS_INTERVAL);
-            }, DAS_DELAY);
+        function togglePause() {
+            if (gameOver || isMenuOpen || isScoresOpen) return;
+            isPaused = !isPaused;
+            const pauseScr = document.getElementById('pause-screen');
+            const pauseBtn = document.getElementById('btn-pause-ui');
+            if (isPaused) {
+                pauseScr.classList.add('active');
+                pauseBtn.innerText = "Voltar";
+            } else {
+                pauseScr.classList.remove('active');
+                pauseBtn.innerText = "Pausar";
+                startTime = performance.now() - elapsedGameTime; 
+            }
         }
 
-        function stopDas(key) {
-            clearTimeout(holdTimers[key]);
-            clearInterval(holdTimers[key]);
-            delete holdTimers[key];
+        function openMenu() {
+            if(gameOver) return;
+            if(!isPaused) togglePause();
+            isMenuOpen = true;
+            document.getElementById('menu-screen').classList.add('active');
         }
 
-        const bindControl = (id, action, key) => {
-            const btn = document.getElementById(id);
-            btn.addEventListener('touchstart', (e) => { e.preventDefault(); startDas(key, action); });
-            btn.addEventListener('touchend', (e) => { e.preventDefault(); stopDas(key); });
-            btn.addEventListener('touchcancel', (e) => { e.preventDefault(); stopDas(key); });
-        };
+        function closeMenu() {
+            isMenuOpen = false;
+            document.getElementById('menu-screen').classList.remove('active');
+            if(isPaused) togglePause();
+        }
 
-        bindControl('btn-left', () => playerMove(-1), 'left');
-        bindControl('btn-right', () => playerMove(1), 'right');
-        bindControl('btn-down', () => playerDrop(), 'down');
-
-        document.getElementById('btn-rotate').addEventListener('touchstart', (e) => { e.preventDefault(); playerRotate(); });
-        document.getElementById('btn-hold-action').addEventListener('touchstart', (e) => { e.preventDefault(); playerHold(); });
-        document.getElementById('btn-hard-drop').addEventListener('touchstart', (e) => { e.preventDefault(); playerHardDrop(); });
-
-        window.addEventListener('keydown', event => {
-            if (isMenuOpen || isScoresOpen) return;
-            
-            if (event.key === 'p' || event.key === 'P' || event.key === 'Escape') {
+        function openScores() {
+            // Pausa o jogo nativamente se estiver ativo
+            if (!isPaused && !gameOver && !isMenuOpen) {
                 togglePause();
-                return;
             }
-            
-            if (event.key === 'Backspace') {
-                rewindTime();
-                return;
-            }
-            
-            if (isPaused || gameOver) return;
+            isScoresOpen = true;
+            document.getElementById('scores-screen').classList.add('active');
+            changeScoreFilter(currentScoreFilter); // Renderiza com o filtro atual selecionado
+        }
 
-            switch (event.key) {
-                case 'ArrowLeft': case 'a': case 'A': playerMove(-1); break;
-                case 'ArrowRight': case 'd': case 'D': playerMove(1); break;
-                case 'ArrowDown': case 's': case 'S': playerDrop(); break;
-                case 'ArrowUp': case 'w': case 'W': playerRotate(); break;
-                case ' ': playerHardDrop(); break;
-                case 'h': case 'H': playerHold(); break; 
-            }
-            draw();
+        function closeScores() {
+            isScoresOpen = false;
+            document.getElementById('scores-screen').classList.remove('active');
+        }
+
+        // Setup dos botões físicos/touch
+        function bindControl(id, actionPress, actionRelease = null) {
+            const btn = document.getElementById(id);
+            
+            const onPress = (e) => {
+                e.preventDefault();
+                actionPress();
+                if (actionRelease) {
+                    if (holdTimers[id]) clearInterval(holdTimers[id]);
+                    holdTimers[id] = setTimeout(() => {
+                        holdTimers[id] = setInterval(actionPress, DAS_INTERVAL);
+                    }, DAS_DELAY);
+                }
+            };
+
+            const onRelease = (e) => {
+                e.preventDefault();
+                if (holdTimers[id]) {
+                    clearTimeout(holdTimers[id]);
+                    clearInterval(holdTimers[id]);
+                    holdTimers[id] = null;
+                }
+                if (actionRelease) actionRelease();
+            };
+
+            btn.addEventListener('mousedown', onPress);
+            btn.addEventListener('mouseup', onRelease);
+            btn.addEventListener('mouseleave', onRelease);
+
+            btn.addEventListener('touchstart', onPress, {pasive: false});
+            btn.addEventListener('touchend', onRelease, {pasive: false});
+            btn.addEventListener('touchcancel', onRelease, {pasive: false});
+        }
+
+        bindControl('btn-left', () => playerMove(-1), () => {});
+        bindControl('btn-right', () => playerMove(1), () => {});
+        bindControl('btn-down', () => playerDrop(), () => {});
+        
+        // Botões de clique único sem repetição contínua
+        document.getElementById('btn-rotate').addEventListener('click', playerRotate);
+        document.getElementById('btn-rotate').addEventListener('touchstart', (e) => { e.preventDefault(); playerRotate(); });
+        document.getElementById('btn-hard-drop').addEventListener('click', playerHardDrop);
+        document.getElementById('btn-hard-drop').addEventListener('touchstart', (e) => { e.preventDefault(); playerHardDrop(); });
+        document.getElementById('btn-hold-action').addEventListener('click', playerHold);
+        document.getElementById('btn-hold-action').addEventListener('touchstart', (e) => { e.preventDefault(); playerHold(); });
+
+        document.addEventListener('keydown', event => {
+            if (event.key === 'ArrowLeft' || event.key === 'a') playerMove(-1);
+            else if (event.key === 'ArrowRight' || event.key === 'd') playerMove(1);
+            else if (event.key === 'ArrowDown' || event.key === 's') playerDrop();
+            else if (event.key === 'ArrowUp' || event.key === 'w') playerRotate();
+            else if (event.key === ' ') playerHardDrop();
+            else if (event.key === 'c' || event.key === 'h') playerHold();
+            else if (event.key === 'p' || event.key === 'Escape') togglePause();
         });
 
         function update(time = 0) {
-            if (gameOver || isPaused || isMenuOpen || isScoresOpen) return;
-            
-            const deltaTime = time - lastTime;
-            lastTime = time;
-
-            elapsedGameTime += deltaTime;
-            document.getElementById('sr-timer').innerText = formatTime(elapsedGameTime);
-
-            // Grava um snapshot do estado atual a cada 1 segundo (1000ms)
-            historyTimer += deltaTime;
-            if (historyTimer >= 1000) {
-                historyTimer = 0;
-                timeHistory.push({
-                    board: board.map(row => [...row]),
-                    score: score,
-                    lines: lines,
-                    level: level,
-                    dropInterval: dropInterval,
-                    hasHeld: hasHeld,
-                    elapsedGameTime: elapsedGameTime,
-                    playerPos: { ...player.pos },
-                    playerMatrix: player.matrix ? player.matrix.map(row => [...row]) : null,
-                    playerNextMatrix: player.nextMatrix ? player.nextMatrix.map(row => [...row]) : null,
-                    playerHoldMatrix: player.holdMatrix ? player.holdMatrix.map(row => [...row]) : null
-                });
-                
-                // Limita o histórico para não acumular memória indefinidamente (guarda até 60s por segurança)
-                if (timeHistory.length > 60) {
-                    timeHistory.shift();
-                }
+            if (lineFlashFrames.length > 0) {
+                lineFlashFrames = [];
+                draw();
             }
 
-            dropCounter += deltaTime;
-            if (dropCounter > dropInterval) {
-                playerDrop();
+            if (!isPaused && !gameOver && !isMenuOpen) {
+                if (!startTime) startTime = time;
+                elapsedGameTime = time - startTime;
+                document.getElementById('sr-timer').innerText = formatTime(elapsedGameTime);
+
+                const deltaTime = time - lastTime;
+                lastTime = time;
+
+                dropCounter += deltaTime;
+                if (dropCounter > dropInterval) {
+                    playerDrop();
+                }
+
+                historyTimer += deltaTime;
+                if (historyTimer > 500) { 
+                    saveGameState();
+                    historyTimer = 0;
+                }
+            } else {
+                lastTime = time;
             }
 
             draw();
             requestAnimationFrame(update);
         }
 
-        highscore = parseInt(localStorage.getItem('tulip_tetris_highscore')) || 0;
+        // Inicialização primária
         applyThemeStyles();
-        loadPbSplits();
-        playerReset();
-        updateScore();
-        lastTime = performance.now();
+        resetGame();
         requestAnimationFrame(update);
     </script>
 </body>
