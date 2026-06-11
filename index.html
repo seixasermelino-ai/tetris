@@ -162,6 +162,7 @@
             cursor: pointer;
             margin-bottom: 12px;
             display: inline-block;
+            text-transform: uppercase;
         }
 
         .pb-table {
@@ -317,10 +318,10 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr id="row-30k"><td>30k</td><td id="pb-30k">-:-.-</td></tr>
-                        <tr id="row-60k"><td>60k</td><td id="pb-60k">-:-.-</td></tr>
-                        <tr id="row-90k"><td>90k</td><td id="pb-90k">-:-.-</td></tr>
-                        <tr id="row-120k"><td>120k</td><td id="pb-120k">-:-.-</td></tr>
+                        <tr id="row-30000"><td>30k</td><td id="pb-30k">-:-.-</td></tr>
+                        <tr id="row-60000"><td>60k</td><td id="pb-60k">-:-.-</td></tr>
+                        <tr id="row-90000"><td>90k</td><td id="pb-90k">-:-.-</td></tr>
+                        <tr id="row-120000"><td>120k</td><td id="pb-120k">-:-.-</td></tr>
                     </tbody>
                 </table>
 
@@ -428,36 +429,59 @@
 
         let particles = [];
 
-        // Thresholds atualizados para 30k, 60k, 90k e 120k
-        let pbs = {
-            score: { 30000: null, 60000: null, 90000: null, 120000: null },
-            lines: { 25: null, 50: null, 75: null, 100: null },
-            maxScore: 0,
-            maxLines: 0
+        // Controle do período ativo selecionado
+        let periodoAtivo = 'dia'; 
+        const sequenciaPeriodos = ['dia', 'semana', 'mes'];
+
+        // Estrutura de PBs segregada por período
+        let pbsPorPeriodo = {
+            dia: {
+                score: { 30000: null, 60000: null, 90000: null, 120000: null },
+                lines: { 25: null, 50: null, 75: null, 100: null },
+                rawTimes: {
+                    score: { 30000: null, 60000: null, 90000: null, 120000: null },
+                    lines: { 25: null, 50: null, 75: null, 100: null }
+                },
+                maxScore: 0,
+                maxLines: 0
+            },
+            semana: {
+                score: { 30000: null, 60000: null, 90000: null, 120000: null },
+                lines: { 25: null, 50: null, 75: null, 100: null },
+                rawTimes: {
+                    score: { 30000: null, 60000: null, 90000: null, 120000: null },
+                    lines: { 25: null, 50: null, 75: null, 100: null }
+                },
+                maxScore: 0,
+                maxLines: 0
+            },
+            mes: {
+                score: { 30000: null, 60000: null, 90000: null, 120000: null },
+                lines: { 25: null, 50: null, 75: null, 100: null },
+                rawTimes: {
+                    score: { 30000: null, 60000: null, 90000: null, 120000: null },
+                    lines: { 25: null, 50: null, 75: null, 100: null }
+                },
+                maxScore: 0,
+                maxLines: 0
+            }
         };
 
-        // Lógica para converter milissegundos numéricos salvos no LocalStorage de volta para inteiros
-        let pbRawTimes = {
-            score: { 30000: null, 60000: null, 90000: null, 120000: null },
-            lines: { 25: null, 50: null, 75: null, 100: null }
-        };
-
-        if (localStorage.getItem('tulip_tetris_pbs')) {
-            const stored = JSON.parse(localStorage.getItem('tulip_tetris_pbs'));
-            // Limpa dados antigos que não usam a estrutura nova de 30k-120k
-            if (stored.score && stored.score[10000] !== undefined) {
-                stored.score = { 30000: null, 60000: null, 90000: null, 120000: null };
-            }
-            pbs = stored;
-            
-            // Popula os tempos brutos baseados no PB recuperado para fazer o cálculo de verde/vermelho
-            if (stored.rawTimes) {
-                pbRawTimes = stored.rawTimes;
-            } else {
-                // Fallback caso não existam tempos brutos guardados ainda
-                pbRawTimes.rawTimes = { score: {}, lines: {} };
-            }
-            updatePBDisplay();
+        // Recuperação do LocalStorage com tratamento de dados legados
+        if (localStorage.getItem('tulip_tetris_multiy_pbs')) {
+            pbsPorPeriodo = JSON.parse(localStorage.getItem('tulip_tetris_multiy_pbs'));
+        } else if (localStorage.getItem('tulip_tetris_pbs')) {
+            // Migração amigável caso existisse um registro do modelo simples anterior
+            try {
+                const antigo = JSON.parse(localStorage.getItem('tulip_tetris_pbs'));
+                if (antigo.score && antigo.score[30000] !== undefined) {
+                    pbsPorPeriodo.dia.score = antigo.score;
+                    pbsPorPeriodo.dia.lines = antigo.lines || pbsPorPeriodo.dia.lines;
+                    pbsPorPeriodo.dia.maxScore = antigo.maxScore || 0;
+                    pbsPorPeriodo.dia.maxLines = antigo.maxLines || 0;
+                    if (antigo.rawTimes) pbsPorPeriodo.dia.rawTimes = antigo.rawTimes;
+                }
+            } catch(e) { console.error("Erro na migração de PBs antigos", e); }
         }
 
         class Piece {
@@ -489,10 +513,9 @@
             nextPiece = getRandomPiece();
             spawnPiece();
             
-            // Reseta cores dos PBs ao reiniciar a run
             resetRowColors();
-
             updateUI();
+            updatePBDisplay();
             requestAnimationFrame(gameLoop);
         }
 
@@ -613,32 +636,29 @@
         function checkSpeedrunMilestones() {
             const timeStr = formatTime(elapsedMs);
             let pbChanged = false;
+            const pbAtual = pbsPorPeriodo[periodoAtivo];
             
             [30000, 60000, 90000, 120000].forEach(target => {
-                if (score >= target && !pbs.score[target]) {
-                    pbs.score[target] = timeStr;
-                    pbRawTimes.score[target] = elapsedMs;
+                if (score >= target && !pbAtual.score[target]) {
+                    pbAtual.score[target] = timeStr;
+                    pbAtual.rawTimes.score[target] = elapsedMs;
                     pbChanged = true;
                 }
             });
 
             [25, 50, 75, 100].forEach(target => {
-                if (lines >= target && !pbs.lines[target]) {
-                    pbs.lines[target] = timeStr;
-                    pbRawTimes.lines[target] = elapsedMs;
+                if (lines >= target && !pbAtual.lines[target]) {
+                    pbAtual.lines[target] = timeStr;
+                    pbAtual.rawTimes.lines[target] = elapsedMs;
                     pbChanged = true;
                 }
             });
 
-            if (score > pbs.maxScore) pbs.maxScore = score;
-            if (lines > pbs.maxLines) pbs.maxLines = lines;
+            if (score > pbAtual.maxScore) pbAtual.maxScore = score;
+            if (lines > pbAtual.maxLines) pbAtual.maxLines = lines;
 
-            if (pbChanged || score > pbs.maxScore || lines > pbs.maxLines) {
-                const dataToStore = {
-                    ...pbs,
-                    rawTimes: pbRawTimes
-                };
-                localStorage.setItem('tulip_tetris_pbs', JSON.stringify(dataToStore));
+            if (pbChanged || score > pbAtual.maxScore || lines > pbAtual.maxLines) {
+                localStorage.setItem('tulip_tetris_multiy_pbs', JSON.stringify(pbsPorPeriodo));
                 updatePBDisplay();
             }
         }
@@ -826,28 +846,29 @@
             elapsedMs = Date.now() - startTime;
             document.getElementById('game-timer').textContent = formatTime(elapsedMs);
 
-            // Atualiza as cores comparativas de tempo com o PB em tempo real
             compareLiveRunAndPB();
         }
 
         function compareLiveRunAndPB() {
+            const pbAtual = pbsPorPeriodo[periodoAtivo];
+
             // Comparação de pontos
             [30000, 60000, 90000, 120000].forEach(target => {
                 const element = document.getElementById(`row-${target}`);
                 if (!element) return;
                 
-                const pbTime = pbRawTimes.score[target];
+                const pbTime = pbAtual.rawTimes.score[target];
                 
                 if (score >= target) {
-                    // Já alcançou o alvo! Se bateu o PB ou não havia PB anterior, fica verde
                     element.style.color = "var(--status-green)";
                 } else if (pbTime) {
-                    // Ainda não alcançou o alvo. Se o tempo da run atual já superou o tempo do PB, ficou vermelho
                     if (elapsedMs > pbTime) {
                         element.style.color = "var(--status-red)";
                     } else {
-                        element.style.color = ""; // Neutro enquanto estiver no ritmo correto
+                        element.style.color = "";
                     }
+                } else {
+                    element.style.color = "";
                 }
             });
 
@@ -856,7 +877,7 @@
                 const element = document.getElementById(`row-${target}l`);
                 if (!element) return;
 
-                const pbTime = pbRawTimes.lines[target];
+                const pbTime = pbAtual.rawTimes.lines[target];
 
                 if (lines >= target) {
                     element.style.color = "var(--status-green)";
@@ -866,6 +887,8 @@
                     } else {
                         element.style.color = "";
                     }
+                } else {
+                    element.style.color = "";
                 }
             });
         }
@@ -899,20 +922,23 @@
         }
 
         function updatePBDisplay() {
-            document.getElementById('best-score').textContent = pbs.maxScore || 0;
-            document.getElementById('best-lines').textContent = pbs.maxLines || 0;
+            const pbAtual = pbsPorPeriodo[periodoAtivo];
 
-            document.getElementById('pb-30k').textContent = pbs.score[30000] || '-:-.-';
-            document.getElementById('pb-60k').textContent = pbs.score[60000] || '-:-.-';
-            document.getElementById('pb-90k').textContent = pbs.score[90000] || '-:-.-';
-            document.getElementById('pb-120k').textContent = pbs.score[120000] || '-:-.-';
+            document.getElementById('best-score').textContent = pbAtual.maxScore || 0;
+            document.getElementById('best-lines').textContent = pbAtual.maxLines || 0;
 
-            document.getElementById('pb-25l').textContent = pbs.lines[25] || '-:-.-';
-            document.getElementById('pb-50l').textContent = pbs.lines[50] || '-:-.-';
-            document.getElementById('pb-75l').textContent = pbs.lines[75] || '-:-.-';
-            document.getElementById('pb-100l').textContent = pbs.lines[100] || '-:-.-';
+            document.getElementById('pb-30k').textContent = pbAtual.score[30000] || '-:-.-';
+            document.getElementById('pb-60k').textContent = pbAtual.score[60000] || '-:-.-';
+            document.getElementById('pb-90k').textContent = pbAtual.score[90000] || '-:-.-';
+            document.getElementById('pb-120k').textContent = pbAtual.score[120000] || '-:-.-';
+
+            document.getElementById('pb-25l').textContent = pbAtual.lines[25] || '-:-.-';
+            document.getElementById('pb-50l').textContent = pbAtual.lines[50] || '-:-.-';
+            document.getElementById('pb-75l').textContent = pbAtual.lines[75] || '-:-.-';
+            document.getElementById('pb-100l').textContent = pbAtual.lines[100] || '-:-.-';
         }
 
+        // Eventos de Teclado
         document.addEventListener('keydown', event => {
             if (gameOver) return;
             if (event.key === 'h' || event.key === 'H') handleHold();
@@ -927,31 +953,59 @@
             }
         });
 
-        document.getElementById('ctrl-left').addEventListener('click', () => !isPaused && move(-1));
-        document.getElementById('ctrl-right').addEventListener('click', () => !isPaused && move(1));
-        document.getElementById('ctrl-down').addEventListener('click', () => !isPaused && playerDrop());
-        document.getElementById('ctrl-up').addEventListener('click', () => !isPaused && rotate());
-        document.getElementById('ctrl-rotate').addEventListener('click', () => !isPaused && rotate());
-        document.getElementById('ctrl-drop').addEventListener('click', () => !isPaused && hardDrop());
-        document.getElementById('ctrl-hold').addEventListener('click', () => !isPaused && handleHold());
+        // Eventos dos Controles Mobile e On-Screen
+        document.getElementById('ctrl-left').addEventListener('click', () => !isPaused && !gameOver && move(-1));
+        document.getElementById('ctrl-right').addEventListener('click', () => !isPaused && !gameOver && move(1));
+        document.getElementById('ctrl-down').addEventListener('click', () => !isPaused && !gameOver && playerDrop());
+        document.getElementById('ctrl-up').addEventListener('click', () => !isPaused && !gameOver && rotate());
+        document.getElementById('ctrl-rotate').addEventListener('click', () => !isPaused && !gameOver && rotate());
+        document.getElementById('ctrl-drop').addEventListener('click', () => !isPaused && !gameOver && hardDrop());
+        document.getElementById('ctrl-hold').addEventListener('click', () => !isPaused && !gameOver && handleHold());
 
+        // Lógica do Botão de Pausa
         document.getElementById('btn-pause').addEventListener('click', () => {
+            if (gameOver) return;
             isPaused = !isPaused;
             document.getElementById('btn-pause').textContent = isPaused ? "Retomar" : "Pausar";
             if (!isPaused) {
-                startTime = Date.now() - elapsedMs;
                 lastTime = performance.now();
                 requestAnimationFrame(gameLoop);
             }
         });
 
-        document.getElementById('btn-10s').addEventListener('click', () => {
-            init();
+        // Alternância Cíclica de Período (Dia -> Semana -> Mês)
+        document.getElementById('btn-mode').addEventListener('click', () => {
+            let indexAtual = sequenciaPeriodos.indexOf(periodoAtivo);
+            let proximoIndex = (indexAtual + 1) % sequenciaPeriodos.length;
+            periodoAtivo = sequenciaPeriodos[proximoIndex];
+
+            // Atualiza os textos do botão visualmente
+            const icones = { dia: '☀️ DIA', semana: '🗓️ SEMANA', mes: '🌙 MÊS' };
+            document.getElementById('btn-mode').textContent = icones[periodoAtivo];
+
+            // Atualiza registros da interface com base no novo período escolhido
+            resetRowColors();
+            updatePBDisplay();
+            compareLiveRunAndPB();
         });
 
-        window.onload = () => {
+        // Botão Voltar 10s (Uso experimental/treino)
+        document.getElementById('btn-10s').addEventListener('click', () => {
+            if (gameOver || isPaused) return;
+            startTime += 10000; // Atrasa o início, adicionando tempo decorrido
+        });
+
+        // Botão Menu (Reinicia a partida para testes rápidos)
+        document.getElementById('btn-menu').addEventListener('click', () => {
+            if(confirm("Deseja reiniciar a partida atual?")) {
+                init();
+            }
+        });
+
+        // Inicialização automática do game ao carregar a página
+        window.addEventListener('DOMContentLoaded', () => {
             init();
-        };
+        });
     </script>
 </body>
 </html>
