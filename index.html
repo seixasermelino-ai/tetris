@@ -347,10 +347,10 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr id="row-30000"><td class="meta-label">30k</td><td id="pb-30k">00:00.0</td><td id="run-30000"></td></tr>
-                        <tr id="row-60000"><td class="meta-label">60k</td><td id="pb-60k">00:00.0</td><td id="run-60000"></td></tr>
-                        <tr id="row-90000"><td class="meta-label">90k</td><td id="pb-90k">00:00.0</td><td id="run-90000"></td></tr>
-                        <tr id="row-120000"><td class="meta-label">120k</td><td id="pb-120k">00:00.0</td><td id="run-120000"></td></tr>
+                        <tr id="row-30000"><td class="meta-label">30k</td><td id="pb-30k">00:00.0</td><td id="run-30000">-00:00.0</td></tr>
+                        <tr id="row-60000"><td class="meta-label">60k</td><td id="pb-60k">00:00.0</td><td id="run-60000">-00:00.0</td></tr>
+                        <tr id="row-90000"><td class="meta-label">90k</td><td id="pb-90k">00:00.0</td><td id="run-90000">-00:00.0</td></tr>
+                        <tr id="row-120000"><td class="meta-label">120k</td><td id="pb-120k">00:00.0</td><td id="run-120000">-00:00.0</td></tr>
                     </tbody>
                 </table>
 
@@ -363,10 +363,10 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr id="row-25l"><td class="meta-label">25 L</td><td id="pb-25l">00:00.0</td><td id="run-25l"></td></tr>
-                        <tr id="row-50l"><td class="meta-label">50 L</td><td id="pb-50l">00:00.0</td><td id="run-50l"></td></tr>
-                        <tr id="row-75l"><td class="meta-label">75 L</td><td id="pb-75l">00:00.0</td><td id="run-75l"></td></tr>
-                        <tr id="row-100l"><td class="meta-label">100 L</td><td id="pb-100l">00:00.0</td><td id="run-100l"></td></tr>
+                        <tr id="row-25l"><td class="meta-label">25 L</td><td id="pb-25l">00:00.0</td><td id="run-25l">-00:00.0</td></tr>
+                        <tr id="row-50l"><td class="meta-label">50 L</td><td id="pb-50l">00:00.0</td><td id="run-50l">-00:00.0</td></tr>
+                        <tr id="row-75l"><td class="meta-label">75 L</td><td id="pb-75l">00:00.0</td><td id="run-75l">-00:00.0</td></tr>
+                        <tr id="row-100l"><td class="meta-label">100 L</td><td id="pb-100l">00:00.0</td><td id="run-100l">-00:00.0</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -921,9 +921,19 @@
                         elRun.className = "run-completed-better";
                     }
                 } else {
-                    // Mantém a coluna vazia até atingir a pontuação alvo
-                    elRun.textContent = "";
-                    elRun.className = "";
+                    if (tempoPB) {
+                        let delta = elapsedMs - tempoPB;
+                        if (delta < 0) {
+                            elRun.textContent = "-" + formatTime(Math.abs(delta));
+                            elRun.className = "run-ahead";
+                        } else {
+                            elRun.textContent = "+" + formatTime(delta);
+                            elRun.className = "run-behind";
+                        }
+                    } else {
+                        elRun.textContent = formatTime(elapsedMs);
+                        elRun.className = "";
+                    }
                 }
             });
 
@@ -945,99 +955,128 @@
                         elRun.className = "run-completed-better";
                     }
                 } else {
-                    // Mantém a coluna vazia até atingir a meta de linhas alvo
-                    elRun.textContent = "";
-                    elRun.className = "";
+                    if (tempoPB) {
+                        let delta = elapsedMs - tempoPB;
+                        if (delta < 0) {
+                            elRun.textContent = "-" + formatTime(Math.abs(delta));
+                            elRun.className = "run-ahead";
+                        } else {
+                            elRun.textContent = "+" + formatTime(delta);
+                            elRun.className = "run-behind";
+                        }
+                    } else {
+                        elRun.textContent = formatTime(elapsedMs);
+                        elRun.className = "";
+                    }
                 }
             });
+        }
+
+        function updateUI() {
+            document.getElementById('current-score').textContent = score;
+            document.getElementById('current-lines').textContent = lines;
+            document.getElementById('game-level').textContent = level;
+            
+            const pbAtual = pbsPorPeriodo[periodoAtivo];
+            document.getElementById('best-score').textContent = pbAtual.maxScore;
+            document.getElementById('best-lines').textContent = pbAtual.maxLines;
+
+            const bgIndex = (level - 1) % LEVEL_BACKGROUNDS.length;
+            document.body.style.backgroundColor = LEVEL_BACKGROUNDS[bgIndex];
         }
 
         function updatePBDisplay() {
             const pbAtual = pbsPorPeriodo[periodoAtivo];
             
             [30000, 60000, 90000, 120000].forEach(target => {
-                const el = document.getElementById(`pb-${target / 1000}k`);
-                if (el) el.textContent = pbAtual.score[target] || "00:00.0";
+                const pbTime = pbAtual.score[target];
+                document.getElementById(`pb-${target}`).textContent = pbTime ? pbTime : "00:00.0";
             });
 
             [25, 50, 75, 100].forEach(target => {
-                const el = document.getElementById(`pb-${target}l`);
-                if (el) el.textContent = pbAtual.lines[target] || "00:00.0";
+                const pbTime = pbAtual.lines[target];
+                document.getElementById(`pb-${target}l`).textContent = pbTime ? pbTime : "00:00.0";
             });
-
-            document.getElementById('best-score').textContent = pbAtual.maxScore || 0;
-            document.getElementById('best-lines').textContent = pbAtual.maxLines || 0;
         }
 
-        function updateUI() {
-            document.getElementById('game-level').textContent = level;
-            document.getElementById('current-score').textContent = score;
-            document.getElementById('current-lines').textContent = lines;
-
-            const bgIndex = (level - 1) % LEVEL_BACKGROUNDS.length;
-            document.body.style.backgroundColor = LEVEL_BACKGROUNDS[bgIndex];
-        }
-
-        // Eventos e Controles por Teclado
+        // Eventos e Controles
         document.addEventListener('keydown', event => {
-            if (gameOver || isPaused) return;
-            switch (event.keyCode) {
-                case 37: move(-1); break;
-                case 39: move(1); break;
-                case 40: playerDrop(); break;
-                case 38: rotate(); break;
-                case 32: hardDrop(); break;
-                case 72: handleHold(); break;
+            if (gameOver) return;
+            
+            if (event.key.toLowerCase() === 'p') {
+                togglePause();
+                return;
+            }
+
+            if (isPaused) return;
+
+            switch (event.key) {
+                case 'ArrowLeft':
+                    move(-1);
+                    break;
+                case 'ArrowRight':
+                    move(1);
+                    break;
+                case 'ArrowDown':
+                    playerDrop();
+                    break;
+                case 'ArrowUp':
+                    rotate();
+                    break;
+                case ' ':
+                    hardDrop();
+                    break;
+                case 'h':
+                case 'H':
+                    handleHold();
+                    break;
             }
         });
 
-        // Controles de Clique / Touchscreen Mobile
-        document.getElementById('ctrl-up').addEventListener('click', () => { if (!gameOver && !isPaused) rotate(); });
-        document.getElementById('ctrl-left').addEventListener('click', () => { if (!gameOver && !isPaused) move(-1); });
-        document.getElementById('ctrl-down').addEventListener('click', () => { if (!gameOver && !isPaused) playerDrop(); });
-        document.getElementById('ctrl-right').addEventListener('click', () => { if (!gameOver && !isPaused) move(1); });
-        document.getElementById('ctrl-hold').addEventListener('click', () => { if (!gameOver && !isPaused) handleHold(); });
-        document.getElementById('ctrl-drop').addEventListener('click', () => { if (!gameOver && !isPaused) hardDrop(); });
-        document.getElementById('ctrl-rotate').addEventListener('click', () => { if (!gameOver && !isPaused) rotate(); });
-
-        // Botões do Painel Superior / Menus
-        document.getElementById('btn-mode').addEventListener('click', () => {
-            const index = sequenciaPeriodos.indexOf(periodoAtivo);
-            const nextIndex = (index + 1) % sequenciaPeriodos.length;
-            periodoAtivo = sequenciaPeriodos[nextIndex];
-            document.getElementById('btn-mode').textContent = `☀️ ${periodoAtivo.toUpperCase()}`;
-            updatePBDisplay();
-            updateLiveRunColumn();
-        });
-
-        const btnPause = document.getElementById('btn-pause');
-        btnPause.addEventListener('click', () => {
+        function togglePause() {
             isPaused = !isPaused;
+            const btn = document.getElementById('btn-pause');
             if (isPaused) {
-                btnPause.textContent = "Continuar";
+                btn.textContent = "Continuar";
                 clearInterval(timerInterval);
             } else {
-                btnPause.textContent = "Pausar";
+                btn.textContent = "Pausar";
                 startTime = Date.now() - elapsedMs;
                 timerInterval = setInterval(updateTimer, 100);
                 lastTime = performance.now();
                 requestAnimationFrame(gameLoop);
             }
-        });
+        }
 
-        document.getElementById('btn-menu').addEventListener('click', () => {
-            init();
-        });
-
+        // Mapeamento dos botões da interface
+        document.getElementById('btn-pause').addEventListener('click', togglePause);
+        document.getElementById('btn-menu').addEventListener('click', init);
+        
         document.getElementById('btn-10s').addEventListener('click', () => {
-            if (!gameOver && !isPaused) {
-                startTime = Math.min(Date.now(), startTime + 10000);
-                elapsedMs = Date.now() - startTime;
-                document.getElementById('game-timer').textContent = formatTime(elapsedMs);
+            if (!isPaused && !gameOver) {
+                startTime -= 10000; // Adiciona 10 segundos no timer (penalidade/teste)
             }
         });
 
-        // Inicia o App automaticamente
+        document.getElementById('btn-mode').addEventListener('click', () => {
+            let index = sequenciaPeriodos.indexOf(periodoAtivo);
+            index = (index + 1) % sequenciaPeriodos.length;
+            periodoAtivo = sequenciaPeriodos[index];
+            document.getElementById('btn-mode').textContent = `☀️ ${periodoAtivo.toUpperCase()}`;
+            updateUI();
+            updatePBDisplay();
+        });
+
+        // Controles de Toque / Mobile
+        document.getElementById('ctrl-left').addEventListener('click', () => { if(!isPaused && !gameOver) move(-1); });
+        document.getElementById('ctrl-right').addEventListener('click', () => { if(!isPaused && !gameOver) move(1); });
+        document.getElementById('ctrl-down').addEventListener('click', () => { if(!isPaused && !gameOver) playerDrop(); });
+        document.getElementById('ctrl-up').addEventListener('click', () => { if(!isPaused && !gameOver) rotate(); });
+        document.getElementById('ctrl-rotate').addEventListener('click', () => { if(!isPaused && !gameOver) rotate(); });
+        document.getElementById('ctrl-drop').addEventListener('click', () => { if(!isPaused && !gameOver) hardDrop(); });
+        document.getElementById('ctrl-hold').addEventListener('click', () => { if(!isPaused && !gameOver) handleHold(); });
+
+        // Inicializa o jogo ao carregar
         init();
     </script>
 </body>
