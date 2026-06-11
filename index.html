@@ -2,273 +2,1178 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Speedrun Panel</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Tulip Tetris Premium</title>
     <style>
         :root {
-            --bg-color: #fff5f6;
-            --panel-bg: #fff0f2;
-            --border-color: #ffd2d7;
-            --text-dark: #5c0616;
-            --text-muted: #a34756;
-            --text-time: #2b0007;
-            --btn-bg: #ffe0e4;
-            --btn-hover: #ffcbd3;
+            --bg-color: #fdf2f8; 
+            --container-bg: #fff1f2; 
+            --border-color: #fbecdd; 
+            --text-main: #4c0519; 
+            --text-muted: #9f1239;
+            --accent-color: #db2777; 
+            --accent-secondary: #10b981; 
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+            touch-action: manipulation;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            height: 100vh;
+            height: -webkit-fill-available;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            transition: background-color 0.8s ease, color 0.3s ease;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 15px 6px 15px;
+            flex-shrink: 0;
+            position: relative;
+            min-height: 44px;
+        }
+
+        header h1 {
+            font-size: 1.1rem;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            background: linear-gradient(45deg, #e11d48, #db2777, #10b981);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            max-width: 40%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-align: left;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .menu-trigger-btn {
+            background: var(--container-bg);
+            border: 1px solid #fecdd3;
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: var(--text-muted);
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(76, 5, 25, 0.04);
+            white-space: nowrap;
+        }
+        
+        #btn-pause-ui {
+            border-color: var(--accent-color);
+            background-color: #ffe4e6;
+            color: var(--accent-color);
+        }
+
+        #btn-rewind-ui {
+            border-color: #cbd5e1;
+            background-color: #f1f5f9;
+            color: #475569;
+        }
+        #btn-rewind-ui:active {
+            background-color: #e2e8f0;
+        }
+
+        .game-layout {
+            flex: 1;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
-            margin: 0;
+            gap: 8px;
+            padding: 2px 10px;
+            min-height: 0;
         }
 
-        /* Container Principal */
-        .panel-container {
-            width: 200px;
-            background-color: var(--panel-bg);
-            border: 2px solid var(--border-color);
-            border-radius: 24px;
-            padding: 16px;
+        .side-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            width: 72px;
+            flex-shrink: 0;
+        }
+
+        .speedrun-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            background-color: var(--container-bg);
+            border: 1.5px solid rgba(254, 205, 211, 0.6);
+            border-radius: 12px;
+            padding: 6px 4px;
+            box-shadow: 0 2px 4px rgba(76, 5, 25, 0.02);
+            width: 95px;
+            flex-shrink: 0;
+        }
+
+        .sr-title {
+            font-size: 0.55rem;
+            font-weight: bold;
+            text-align: center;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            border-bottom: 1px dashed rgba(254, 205, 211, 0.9);
+            padding-bottom: 2px;
+            margin-bottom: 2px;
+        }
+
+        .sr-timer {
+            font-size: 1rem;
+            font-weight: bold;
+            text-align: center;
+            color: var(--text-main);
+            font-family: monospace;
+            margin-bottom: 2px;
+        }
+
+        /* Estilização do novo botão de alternância de recorde */
+        .sr-filter-btn {
+            display: block;
+            margin: 0 auto 4px auto;
+            background-color: #fff;
+            border: 1px solid rgba(254, 205, 211, 0.8);
+            border-radius: 8px;
+            padding: 2px 6px;
+            font-size: 0.5rem;
+            font-weight: bold;
+            color: var(--text-muted);
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            box-shadow: 0 1px 2px rgba(76, 5, 25, 0.04);
+            transition: all 0.2s ease;
+        }
+        .sr-filter-btn:active {
+            transform: scale(0.95);
+            background-color: var(--container-bg);
+        }
+
+        .sr-split {
+            display: flex;
+            flex-direction: column;
+            font-size: 0.52rem;
+            line-height: 1.1;
+            padding: 2px 3px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.4);
+            margin-bottom: 1px;
+        }
+
+        .sr-split-meta {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            color: var(--text-main);
+        }
+
+        .sr-split-pb {
+            display: flex;
+            justify-content: space-between;
+            color: var(--text-muted);
+            font-size: 0.48rem;
+        }
+
+        .split-ahead { background-color: rgba(16, 185, 129, 0.2) !important; } 
+        .split-behind { background-color: rgba(239, 68, 68, 0.2) !important; }  
+        .split-done { background-color: rgba(100, 116, 139, 0.15); }
+
+        .hud-card {
+            background-color: var(--container-bg);
+            border: 1.5px solid rgba(254, 205, 211, 0.5);
+            border-radius: 12px;
+            padding: 5px 2px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(76, 5, 25, 0.02);
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        .hud-label {
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-size: 0.55rem;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+
+        .hud-value {
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: var(--text-main);
+        }
+
+        .side-canvas {
+            display: block;
+            background-color: rgba(255, 250, 251, 0.7);
+            border-radius: 8px;
+            margin: 4px auto 0 auto;
+            border: 1px solid rgba(254, 205, 211, 0.5);
+        }
+
+        .main-board-wrapper {
+            position: relative;
+            height: 100%;
+            aspect-ratio: 10 / 20;
+            max-height: 100%;
+            flex-shrink: 0;
+        }
+
+        #board {
+            display: block;
+            background-color: rgba(255, 250, 251, 0.8); 
+            border-radius: 14px;
+            border: 3px solid rgba(254, 205, 211, 0.8);
+            width: 100%;
+            height: 100%;
+            box-shadow: 0 6px 16px rgba(76, 5, 25, 0.04);
+        }
+
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-color);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 100;
             display: flex;
             flex-direction: column;
             align-items: center;
-            box-sizing: border-box;
+            justify-content: center;
+            padding: 20px;
+            text-align: center;
         }
 
-        .section-title {
-            font-size: 14px;
-            font-weight: 800;
-            color: var(--text-dark);
+        .overlay.active {
+            opacity: 0.98;
+            pointer-events: auto;
+        }
+
+        .overlay h2 {
+            font-size: 1.4rem;
+            margin-bottom: 10px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            margin: 0 0 8px 0;
         }
 
-        .main-timer {
-            font-size: 28px;
-            font-weight: 800;
-            color: var(--text-time);
-            font-family: monospace;
-            margin-bottom: 4px;
-        }
-
-        /* --- O BOTÃO SOLICITADO --- */
-        .filter-toggle-btn {
-            background-color: var(--btn-bg);
-            border: 1px solid var(--border-color);
-            color: var(--text-dark);
-            font-size: 10px;
-            font-weight: 700;
-            text-transform: uppercase;
-            padding: 3px 10px;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            margin-bottom: 12px;
-            outline: none;
-        }
-
-        .filter-toggle-btn:hover {
-            background-color: var(--btn-hover);
-        }
-
-        /* Grid de Metas e Recordes */
-        .splits-container {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-bottom: 16px;
-        }
-
-        .split-row {
-            display: grid;
-            grid-template-columns: 1fr auto;
-            align-items: center;
-            font-size: 12px;
-        }
-
-        .target-pts {
-            font-weight: 800;
-            color: var(--text-dark);
-        }
-
-        .current-split-time {
-            font-family: monospace;
-            color: var(--text-dark);
-            font-weight: bold;
-            text-align: right;
-        }
-
-        .pb-row {
-            grid-column: 1 / span 2;
-            font-size: 10px;
+        .overlay p {
             color: var(--text-muted);
-            margin-top: 1px;
+            margin-bottom: 15px;
+            font-size: 0.85rem;
         }
 
-        .pb-time {
-            font-family: monospace;
-            font-weight: bold;
-        }
-
-        /* Divisor Tracejado */
-        .divider {
-            width: 100%;
-            border-top: 1px dashed var(--border-color);
-            margin: 8px 0;
-        }
-
-        /* Sub-containers (Próximo, Pontos, Linhas) */
-        .sub-box {
-            width: 100%;
-            background-color: #ffffff;
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 10px;
+        .mobile-controls {
             display: flex;
             flex-direction: column;
+            background-color: var(--container-bg);
+            border-top: 1.5px solid rgba(254, 205, 211, 0.8);
+            padding: 12px 16px calc(15px + env(safe-area-inset-bottom, 12px)) 16px;
+            flex-shrink: 0;
+            gap: 10px;
+            min-height: 195px;
+        }
+
+        .control-row {
+            display: flex;
+            justify-content: space-between;
             align-items: center;
-            box-sizing: border-box;
-            margin-bottom: 8px;
+            width: 100%;
         }
 
-        .sub-box:last-child {
-            margin-bottom: 0;
+        .dpad-container {
+            position: relative;
+            width: 155px;
+            height: 155px;
+            flex-shrink: 0;
         }
 
-        .sub-box .value {
-            font-size: 18px;
-            font-weight: 800;
-            color: var(--text-time);
-            margin-top: 4px;
-        }
-
-        /* Bloco de Peça (Tetris) */
-        .next-piece-preview {
-            width: 60px;
-            height: 45px;
-            display: grid;
-            grid-template-columns: repeat(3, 15px);
-            grid-template-rows: repeat(2, 15px);
-            gap: 2px;
+        .dpad-btn {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.9);
+            color: var(--text-main);
+            border: 1.5px solid rgba(254, 205, 211, 0.9);
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
             justify-content: center;
-            align-content: center;
-            margin-top: 6px;
+            align-items: center;
+            box-shadow: 0 4px 8px rgba(76, 5, 25, 0.08);
+            border-radius: 16px;
+            width: 56px;
+            height: 56px;
         }
 
-        .block {
-            background-color: #a085ff;
-            border-radius: 3px;
+        .dpad-btn:active { background-color: var(--accent-color); color: white; }
+        #btn-left { top: 49px; left: 0; }
+        #btn-right { top: 49px; right: 0; }
+        #btn-down { bottom: 0; left: 49px; }
+
+        .action-container {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            flex: 1;
+            padding-left: 10px;
         }
-        .empty { visibility: hidden; }
+
+        .left-actions {
+            display: flex;
+            align-items: center;
+        }
+
+        .right-actions {
+            display: flex;
+            flex-direction: row;
+            gap: 14px;
+            align-items: center;
+            justify-content: flex-end;
+        }
+
+        .action-btn {
+            border: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            cursor: pointer;
+        }
+
+        #btn-rotate {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-color), #e11d48);
+            font-size: 12px;
+            letter-spacing: 0.5px;
+            border: 2px solid white;
+        }
+
+        #btn-hard-drop {
+            width: 76px;
+            height: 76px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-secondary), #059669);
+            font-size: 12px;
+            letter-spacing: 0.5px;
+            border: 2px solid white;
+        }
+
+        #btn-hold-action { 
+            background-color: #64748b; 
+            width: 65px;
+            height: 44px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn {
+            padding: 8px 18px;
+            background-color: var(--accent-color);
+            border: none;
+            border-radius: 18px;
+            color: white;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            width: 100%;
+            max-width: 240px;
+            margin-bottom: 15px;
+        }
+
+        .theme-opt {
+            padding: 8px;
+            border-radius: 8px;
+            border: 1.5px solid #cbd5e1;
+            font-size: 0.75rem;
+            font-weight: bold;
+            background: white;
+            cursor: pointer;
+        }
+
+        .theme-opt.selected {
+            border-color: var(--accent-color);
+            background-color: var(--container-bg);
+            color: var(--text-main);
+        }
+
+        .scores-list {
+            width: 100%;
+            max-width: 220px;
+            max-height: 120px;
+            overflow-y: auto;
+            margin: 10px 0;
+            background: rgba(255,255,255,0.5);
+            border-radius: 8px;
+            padding: 6px;
+        }
+
+        .score-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            padding: 4px 6px;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .score-item:last-child { border: none; }
+        .score-item.top { font-weight: bold; color: var(--accent-color); }
     </style>
 </head>
 <body>
 
-<div class="panel-container">
-    <div class="section-title">Speedrun</div>
-    <div class="divider"></div>
-    
-    <div class="main-timer">00:09.8</div>
-
-    <button class="filter-toggle-btn" id="filterBtn" onclick="toggleFilter()">⏱️ All Time</button>
-
-    <div class="splits-container">
-        <div class="split-row">
-            <span class="target-pts">500 pts</span>
-            <span class="current-split-time">-:-.-</span>
-            <div class="pb-row">PB (Recorde): <span class="pb-time" id="pb-500">01:37.6</span></div>
+    <header>
+        <h1>Tulip Tetris</h1>
+        <div class="header-actions">
+            <button class="menu-trigger-btn" id="btn-rewind-ui" onclick="rewindTime()">↩ 10s</button>
+            <button class="menu-trigger-btn" id="btn-pause-ui" onclick="togglePause()">Pausar</button>
+            <button class="menu-trigger-btn" onclick="openMenu()">Menu</button>
         </div>
+    </header>
+
+    <div class="game-layout">
+        <div class="side-panel">
+            <div class="hud-card" id="hold-card" onclick="playerHold()" style="cursor: pointer;">
+                <div class="hud-label">Guardar (H)</div>
+                <canvas id="hold-canvas" class="side-canvas" width="56" height="56"></canvas>
+            </div>
+            <div class="hud-card" onclick="openScores()" style="cursor:pointer;">
+                <div class="hud-label">Recorde 🏆</div>
+                <div id="highscore" class="hud-value">0</div>
+            </div>
+            <div class="hud-card">
+                <div class="hud-label">Nível</div>
+                <div id="level" class="hud-value">1</div>
+            </div>
+        </div>
+
+        <div class="main-board-wrapper">
+            <canvas id="board" width="240" height="480"></canvas>
+            
+            <div id="game-over-screen" class="overlay">
+                <h2>Fim de Jogo 🌷</h2>
+                <p>Pontos Feitos: <span id="final-score">0</span></p>
+                <button class="btn" onclick="resetGame()">Jogar de Novo</button>
+                <button class="btn" style="background:#64748b;" onclick="openScores()">Ver Placar</button>
+            </div>
+            
+            <div id="pause-screen" class="overlay">
+                <h2 style="color: var(--accent-color);">Pausado</h2>
+                <button class="btn" onclick="togglePause()">Continuar</button>
+                <button class="btn" style="background:#9f1239; margin-top:8px;" onclick="resetGame()">Reiniciar</button>
+            </div>
+
+            <div id="menu-screen" class="overlay">
+                <h2>Temas & Cores</h2>
+                <p>Escolha a identidade visual:</p>
+                <div class="settings-grid">
+                    <button class="theme-opt selected" id="theme-tulip" onclick="setTheme('tulip')">Tulipa Rosa</button>
+                    <button class="theme-opt" id="theme-sunflower" onclick="setTheme('sunflower')">Girassol Ouro</button>
+                    <button class="theme-opt" id="theme-lavender" onclick="setTheme('lavender')">Lavanda Roxa</button>
+                    <button class="theme-opt" id="theme-forest" onclick="setTheme('forest')">Floresta Nativa</button>
+                </div>
+                <button class="btn" onclick="closeMenu()">Voltar ao Jogo</button>
+            </div>
+
+            <div id="scores-screen" class="overlay">
+                <h2>Histórico de Recordes</h2>
+                <div class="scores-list" id="scores-container"></div>
+                <button class="btn" style="background:#9f1239; font-size:0.6rem; padding:4px 8px;" onclick="clearScores()">Limpar Histórico</button>
+                <br>
+                <button class="btn" onclick="closeScores()">Fechar</button>
+            </div>
+        </div>
+
+        <div class="speedrun-panel">
+            <div class="sr-title">Speedrun</div>
+            <div class="sr-timer" id="sr-timer">00:00.0</div>
+            
+            <button class="sr-filter-btn" id="sr-filter-toggle" onclick="toggleRecordFilter()">☀️ Dia</button>
+            
+            <div class="sr-split" id="split-500">
+                <div class="sr-split-meta"><span>500 pts</span><span class="curr-split">-:--.-</span></div>
+                <div class="sr-split-pb"><span>PB (Recorde):</span><span class="pb-split">--:--.-</span></div>
+            </div>
+            <div class="sr-split" id="split-1000">
+                <div class="sr-split-meta"><span>1000 pts</span><span class="curr-split">-:--.-</span></div>
+                <div class="sr-split-pb"><span>PB (Recorde):</span><span class="pb-split">--:--.-</span></div>
+            </div>
+            <div class="sr-split" id="split-1500">
+                <div class="sr-split-meta"><span>1500 pts</span><span class="curr-split">-:--.-</span></div>
+                <div class="sr-split-pb"><span>PB (Recorde):</span><span class="pb-split">--:--.-</span></div>
+            </div>
+            <div class="sr-split" id="split-2000">
+                <div class="sr-split-meta"><span>2000 pts</span><span class="curr-split">-:--.-</span></div>
+                <div class="sr-split-pb"><span>PB (Recorde):</span><span class="pb-split">--:--.-</span></div>
+            </div>
+
+            <div class="hud-card" style="margin-top: 4px; padding: 2px;">
+                <div class="hud-label" style="font-size:0.5rem">Próximo</div>
+                <canvas id="next-canvas" class="side-canvas" width="56" height="56"></canvas>
+            </div>
+            <div class="hud-card" style="padding: 2px;">
+                <div class="hud-label" style="font-size:0.5rem">Pontos</div>
+                <div id="score" class="hud-value" style="font-size:0.75rem">0</div>
+            </div>
+            <div class="hud-card" style="padding: 2px;">
+                <div class="hud-label" style="font-size:0.5rem">Linhas</div>
+                <div id="lines" class="hud-value" style="font-size:0.75rem">0</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mobile-controls">
+        <div class="control-row">
+            <div class="dpad-container">
+                <button class="dpad-btn" id="btn-left">←</button>
+                <button class="dpad-btn" id="btn-right">→</button>
+                <button class="dpad-btn" id="btn-down">↓</button>
+            </div>
+
+            <div class="action-container">
+                <div class="left-actions">
+                    <button class="action-btn" id="btn-hold-action">HOLD</button>
+                </div>
+                <div class="right-actions">
+                    <button class="action-btn" id="btn-hard-drop">DROP</button>
+                    <button class="action-btn" id="btn-rotate">GIRAR</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('board');
+        const ctx = canvas.getContext('2d');
+        const nextCanvas = document.getElementById('next-canvas');
+        const nextCtx = nextCanvas.getContext('2d');
+        const holdCanvas = document.getElementById('hold-canvas');
+        const holdCtx = holdCanvas.getContext('2d');
+
+        const COLS = 10; const ROWS = 20; 
+        const BLOCK_SIZE = 24;      
+        const SIDE_BLOCK_SIZE = 12; 
+
+        const THEMES = {
+            tulip: {
+                mainBg: ["#fdf2f8", "#fdf4ff", "#f0fdf4", "#fff7ed", "#f0f9ff"],
+                container: "#fff1f2", text: "#4c0519", muted: "#9f1239", accent: "#db2777", secondary: "#10b981",
+                colors: [null, '#f43f5e', '#fb7185', '#f472b6', '#fbbf24', '#34d399', '#a78bfa', '#f87171']
+            },
+            sunflower: {
+                mainBg: ["#fefce8", "#fffbeb", "#fef3c7", "#fde68a", "#fcd34d"],
+                container: "#fef9c3", text: "#451a03", muted: "#78350f", accent: "#d97706", secondary: "#059669",
+                colors: [null, '#eab308', '#f59e0b', '#b45309', '#facc15', '#10b981', '#f97316', '#ca8a04']
+            },
+            lavender: {
+                mainBg: ["#faf5ff", "#f3e8ff", "#e9d5ff", "#d8b4fe", "#c084fc"],
+                container: "#f3e8ff", text: "#3b0764", muted: "#6b21a8", accent: "#9333ea", secondary: "#06b6d4",
+                colors: [null, '#a855f7', '#c084fc', '#e879f9', '#6366f1', '#2dd4bf', '#a78bfa', '#818cf8']
+            },
+            forest: {
+                mainBg: ["#f0fdf4", "#dcfce7", "#bbf7d0", "#86efac", "#4ade80"],
+                container: "#e8f5e9", text: "#052e16", muted: "#14532d", accent: "#16a34a", secondary: "#ea580c",
+                colors: [null, '#22c55e', '#16a34a', '#15803d', '#84cc16', '#0d9488', '#eab308', '#10b981']
+            }
+        };
+
+        let currentThemeKey = 'tulip';
+        let currentTheme = THEMES.tulip;
+
+        const SHAPES = [
+            [],
+            [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]], // I
+            [[2,0,0],[2,2,2],[0,0,0]],                 // J
+            [[0,0,3],[3,3,3],[0,0,0]],                 // L
+            [[4,4],[4,4]],                             // O
+            [[0,5,5],[5,5,0],[0,0,0]],                 // S
+            [[0,6,0],[6,6,6],[0,0,0]],                 // T
+            [[7,7,0],[0,7,7],[0,0,0]]                  // Z
+        ];
+
+        let board = createMatrix(COLS, ROWS);
+        let score = 0; let lines = 0; let level = 1; let highscore = 0;
+        let gameOver = false; let isPaused = false; let isMenuOpen = false; let isScoresOpen = false;
+        let dropCounter = 0; 
+        let dropInterval = 1000; 
+        let lastTime = 0;
+        let hasHeld = false;
+        let lineFlashFrames = [];
+
+        // Estruturas de Time Travel
+        let timeHistory = [];
+        let historyTimer = 0;
+
+        // Variáveis de Speedrun
+        let startTime = null;
+        let elapsedGameTime = 0;
+        const TARGETS = [500, 1000, 1500, 2000];
+        let runSplits = { 500: null, 1000: null, 1500: null, 2000: null };
         
-        <div class="split-row">
-            <span class="target-pts">1000 pts</span>
-            <span class="current-split-time">-:-.-</span>
-            <div class="pb-row">PB (Recorde): <span class="pb-time" id="pb-1000">03:29.7</span></div>
-        </div>
+        // Estrutura atualizada para suportar os 3 filtros independentes
+        const FILTER_MODES = ['dia', 'semana', 'historia'];
+        const FILTER_LABELS = { dia: '☀️ Dia', semana: '🗓️ Semana', historia: '⏳ História' };
+        let currentFilterIndex = 0; 
 
-        <div class="split-row">
-            <span class="target-pts">1500 pts</span>
-            <span class="current-split-time">-:-.-</span>
-            <div class="pb-row">PB (Recorde): <span class="pb-time" id="pb-1500">05:19.2</span></div>
-        </div>
+        let pbSplitsByFilter = {
+            dia: { 500: null, 1000: null, 1500: null, 2000: null },
+            semana: { 500: null, 1000: null, 1500: null, 2000: null },
+            historia: { 500: null, 1000: null, 1500: null, 2000: null }
+        };
 
-        <div class="split-row">
-            <span class="target-pts">2000 pts</span>
-            <span class="current-split-time">-:-.-</span>
-            <div class="pb-row">PB (Recorde): <span class="pb-time" id="pb-2000">07:08.9</span></div>
-        </div>
-    </div>
+        const DAS_DELAY = 200; 
+        const DAS_INTERVAL = 60; 
+        let holdTimers = {};
 
-    <div class="sub-box">
-        <div class="section-title" style="font-size: 11px; margin: 0;">Próximo</div>
-        <div class="next-piece-preview">
-            <div class="empty"></div><div class="block"></div><div class="empty"></div>
-            <div class="block"></div><div class="block"></div><div class="block"></div>
-        </div>
-    </div>
+        const player = { pos: {x: 0, y: 0}, matrix: null, nextMatrix: null, holdMatrix: null };
 
-    <div class="sub-box">
-        <div class="section-title" style="font-size: 11px; margin: 0;">Pontos</div>
-        <div class="value">0</div>
-    </div>
-
-    <div class="sub-box">
-        <div class="section-title" style="font-size: 11px; margin: 0;">Linhas</div>
-        <div class="value">0</div>
-    </div>
-</div>
-
-<script>
-    // Banco de dados fake para os recordes
-    const recordDatabase = {
-        alltime: {
-            500: "01:37.6",
-            1000: "03:29.7",
-            1500: "05:19.2",
-            2000: "07:08.9"
-        },
-        weekly: {
-            500: "01:45.2",
-            1000: "03:42.0",
-            1500: "05:35.1",
-            2000: "07:22.4"
-        },
-        daily: {
-            500: "01:59.0",
-            1000: "04:10.5",
-            1500: "06:02.3",
-            2000: "08:15.1"
+        function createMatrix(w, h) {
+            const matrix = [];
+            while (h--) matrix.push(new Array(w).fill(0));
+            return matrix;
         }
-    };
 
-    // Estados possíveis do filtro
-    const filters = ["alltime", "daily", "weekly"];
-    let currentFilterIndex = 0;
+        function triggerVibrate(ms) {
+            if (navigator.vibrate) navigator.vibrate(ms);
+        }
 
-    function toggleFilter() {
-        // Avança para o próximo filtro na array
-        currentFilterIndex = (currentFilterIndex + 1) % filters.length;
-        const currentFilter = filters[currentFilterIndex];
-        
-        const btn = document.getElementById("filterBtn");
-        
-        // Atualiza o texto do botão
-        if (currentFilter === "alltime") btn.innerText = "⏱️ All Time";
-        if (currentFilter === "daily") btn.innerText = "☀️ Daily";
-        if (currentFilter === "weekly") btn.innerText = "📅 Weekly";
+        function applyThemeStyles() {
+            const r = document.documentElement.style;
+            r.setProperty('--container-bg', currentTheme.container);
+            r.setProperty('--text-main', currentTheme.text);
+            r.setProperty('--text-muted', currentTheme.muted);
+            r.setProperty('--accent-color', currentTheme.accent);
+            r.setProperty('--accent-secondary', currentTheme.secondary);
+            updateBackgroundProgress();
+        }
 
-        // Atualiza os valores na tela com base no filtro selecionado
-        document.getElementById("pb-500").innerText = recordDatabase[currentFilter][500];
-        document.getElementById("pb-1000").innerText = recordDatabase[currentFilter][1000];
-        document.getElementById("pb-1500").innerText = recordDatabase[currentFilter][1500];
-        document.getElementById("pb-2000").innerText = recordDatabase[currentFilter][2000];
-    }
-</script>
+        function setTheme(key) {
+            currentThemeKey = key;
+            currentTheme = THEMES[key];
+            document.querySelectorAll('.theme-opt').forEach(b => b.classList.remove('selected'));
+            document.getElementById(`theme-${key}`).classList.add('selected');
+            applyThemeStyles();
+            draw();
+        }
 
+        function updateBackgroundProgress() {
+            const backgrounds = currentTheme.mainBg;
+            const bgIndex = Math.min(backgrounds.length - 1, Math.floor((level - 1) / 2));
+            document.body.style.backgroundColor = backgrounds[bgIndex];
+        }
+
+        function formatTime(ms) {
+            if (ms === null || ms === undefined) return "--:--.-";
+            const totalSeconds = ms / 1000;
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = Math.floor(totalSeconds % 60);
+            const tenths = Math.floor((ms % 1000) / 100);
+            return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${tenths}`;
+        }
+
+        // Altera o filtro ativo e atualiza a exibição visual dos recordes
+        function toggleRecordFilter() {
+            currentFilterIndex = (currentFilterIndex + 1) % FILTER_MODES.length;
+            const currentFilter = FILTER_MODES[currentFilterIndex];
+            
+            // Atualiza o texto do botão
+            document.getElementById('sr-filter-toggle').innerText = FILTER_LABELS[currentFilter];
+            
+            // Atualiza os tempos exibidos no painel com base no filtro selecionado
+            const activePb = pbSplitsByFilter[currentFilter];
+            TARGETS.forEach(t => {
+                const card = document.getElementById(`split-${t}`);
+                card.querySelector('.pb-split').innerText = formatTime(activePb[t]);
+                
+                // Atualiza as cores de comparação dinamicamente ao trocar de filtro no meio do jogo
+                card.classList.remove('split-ahead', 'split-behind');
+                if (runSplits[t] && activePb[t]) {
+                    if (runSplits[t] < activePb[t]) {
+                        card.classList.add('split-ahead');
+                    } else {
+                        card.classList.add('split-behind');
+                    }
+                }
+            });
+            triggerVibrate(10);
+        }
+
+        function loadPbSplits() {
+            const stored = localStorage.getItem('tulip_tetris_pb_splits_v2');
+            if (stored) {
+                pbSplitsByFilter = JSON.parse(stored);
+            } else {
+                // Retrocompatibilidade opcional com a chave antiga se o usuário já tiver registros
+                const legacy = localStorage.getItem('tulip_tetris_pb_splits');
+                if (legacy) {
+                    pbSplitsByFilter.historia = JSON.parse(legacy);
+                }
+            }
+            
+            // Renderiza os dados iniciais do filtro atual (Dia)
+            const currentFilter = FILTER_MODES[currentFilterIndex];
+            TARGETS.forEach(t => {
+                const card = document.getElementById(`split-${t}`);
+                card.querySelector('.pb-split').innerText = formatTime(pbSplitsByFilter[currentFilter][t]);
+            });
+        }
+
+        function checkSpeedrunSplits() {
+            TARGETS.forEach(target => {
+                if (score >= target && !runSplits[target]) {
+                    runSplits[target] = elapsedGameTime;
+                    const card = document.getElementById(`split-${target}`);
+                    card.querySelector('.curr-split').innerText = formatTime(elapsedGameTime);
+                    card.classList.add('split-done');
+
+                    // Valida e salva o recorde em TODOS os filtros aplicáveis simultaneamente
+                    FILTER_MODES.forEach(filter => {
+                        const filterPb = pbSplitsByFilter[filter];
+                        if (!filterPb[target] || elapsedGameTime < filterPb[target]) {
+                            filterPb[target] = elapsedGameTime;
+                        }
+                    });
+
+                    localStorage.setItem('tulip_tetris_pb_splits_v2', JSON.stringify(pbSplitsByFilter));
+
+                    // Aplica o feedback visual para o filtro em exibição atual
+                    const currentFilter = FILTER_MODES[currentFilterIndex];
+                    const activePb = pbSplitsByFilter[currentFilter];
+                    
+                    if (elapsedGameTime <= activePb[target]) {
+                        card.classList.add('split-ahead');
+                    } else {
+                        card.classList.add('split-behind');
+                    }
+                }
+            });
+        }
+
+        function drawBlock(context, x, y, colorIndex, size, isGhost = false) {
+            if (lineFlashFrames.includes(y) && context === ctx) {
+                context.fillStyle = '#ffffff';
+            } else {
+                context.fillStyle = isGhost ? 'rgba(0, 0, 0, 0.04)' : currentTheme.colors[colorIndex];
+            }
+            
+            const radius = size * 0.25;
+            const bx = x * size;
+            const by = y * size;
+
+            context.beginPath();
+            context.moveTo(bx + radius, by);
+            context.lineTo(bx + size - radius, by);
+            context.quadraticCurveTo(bx + size, by, bx + size, by + radius);
+            context.lineTo(bx + size, by + size - radius);
+            context.quadraticCurveTo(bx + size, by + size, bx + size - radius, by + size);
+            context.lineTo(bx + radius, by + size);
+            context.quadraticCurveTo(bx, by + size, bx, by + size - radius);
+            context.lineTo(bx, by + radius);
+            context.quadraticCurveTo(bx, by, bx + radius, by);
+            context.closePath();
+            context.fill();
+
+            if (isGhost) {
+                context.strokeStyle = currentTheme.accent;
+                context.lineWidth = 0.8;
+                context.setLineDash([2, 2]);
+                context.stroke();
+                context.setLineDash([]);
+            } else {
+                context.fillStyle = 'rgba(255,255,255,0.2)';
+                context.fillRect(bx + 2, by + 2, size - 4, 1.5);
+            }
+        }
+
+        function getGhostPosition() {
+            const ghostPos = { x: player.pos.x, y: player.pos.y };
+            while (!collide(board, { pos: ghostPos, matrix: player.matrix })) {
+                ghostPos.y++;
+            }
+            ghostPos.y--;
+            return ghostPos;
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            ctx.strokeStyle = 'rgba(0,0,0,0.03)';
+            ctx.lineWidth = 0.5;
+            for(let i = 1; i < COLS; i++) {
+                ctx.beginPath(); ctx.moveTo(i * BLOCK_SIZE, 0); ctx.lineTo(i * BLOCK_SIZE, canvas.height); ctx.stroke();
+            }
+            for(let j = 1; j < ROWS; j++) {
+                ctx.beginPath(); ctx.moveTo(0, j * BLOCK_SIZE); ctx.lineTo(canvas.width, j * BLOCK_SIZE); ctx.stroke();
+            }
+
+            drawMatrix(board, {x: 0, y: 0}, ctx, BLOCK_SIZE, false);
+            
+            if (player.matrix && !gameOver && !isPaused && !isMenuOpen) {
+                const ghostPos = getGhostPosition();
+                drawMatrix(player.matrix, ghostPos, ctx, BLOCK_SIZE, true);
+                drawMatrix(player.matrix, player.pos, ctx, BLOCK_SIZE, false);
+            }
+
+            nextCtx.clearRect(0, 0, nextCanvas.width, nextCanvas.height);
+            if (player.nextMatrix) {
+                const offsetX = (4 - player.nextMatrix[0].length) / 2;
+                const offsetY = (4 - player.nextMatrix.length) / 2;
+                drawMatrix(player.nextMatrix, {x: offsetX, y: offsetY}, nextCtx, SIDE_BLOCK_SIZE, false);
+            }
+
+            holdCtx.clearRect(0, 0, holdCanvas.width, holdCanvas.height);
+            if (player.holdMatrix) {
+                const offsetX = (4 - player.holdMatrix[0].length) / 2;
+                const offsetY = (4 - player.holdMatrix.length) / 2;
+                drawMatrix(player.holdMatrix, {x: offsetX, y: offsetY}, holdCtx, SIDE_BLOCK_SIZE, false);
+            }
+        }
+
+        function drawMatrix(matrix, offset, context, size, isGhost = false) {
+            matrix.forEach((row, y) => {
+                row.forEach((value, x) => {
+                    if (value !== 0) drawBlock(context, x + offset.x, y + offset.y, value, size, isGhost);
+                });
+            });
+        }
+
+        function collide(board, target) {
+            const m = target.matrix; const o = target.pos;
+            for (let y = 0; y < m.length; ++y) {
+                for (let x = 0; x < m[y].length; ++x) {
+                    if (m[y][x] !== 0 &&
+                       (board[y + o.y] === undefined || board[y + o.y][x + o.x] === undefined || board[y + o.y][x + o.x] !== 0)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        function merge(board, player) {
+            player.matrix.forEach((row, y) => {
+                row.forEach((value, x) => {
+                    if (value !== 0) board[y + player.pos.y][x + player.pos.x] = value;
+                });
+            });
+        }
+
+        function playerDrop() {
+            if (gameOver || isPaused || isMenuOpen) return;
+            player.pos.y++;
+            if (collide(board, player)) {
+                player.pos.y--;
+                merge(board, player);
+                playerReset();
+                arenaSweep();
+                updateScore();
+                triggerVibrate(12);
+            }
+            dropCounter = 0;
+        }
+
+        function playerHardDrop() {
+            if (gameOver || isPaused || isMenuOpen) return;
+            let dropped = false;
+            while (!collide(board, player)) {
+                player.pos.y++;
+                dropped = true;
+            }
+            if (dropped) {
+                player.pos.y--;
+                merge(board, player);
+                playerReset();
+                arenaSweep();
+                updateScore();
+                triggerVibrate(30); 
+            }
+            dropCounter = 0;
+        }
+
+        function playerMove(dir) {
+            if (gameOver || isPaused || isMenuOpen) return;
+            player.pos.x += dir;
+            if (collide(board, player)) player.pos.x -= dir;
+        }
+
+        function playerHold() {
+            if (gameOver || isPaused || isMenuOpen || hasHeld) return;
+            triggerVibrate(15);
+            const currentMatrix = player.matrix;
+            if (!player.holdMatrix) {
+                player.holdMatrix = currentMatrix;
+                playerReset();
+            } else {
+                player.matrix = player.holdMatrix;
+                player.holdMatrix = currentMatrix;
+                player.pos.y = 0;
+                player.pos.x = (board[0].length / 2 | 0) - (player.matrix[0].length / 2 | 0);
+            }
+            hasHeld = true;
+            draw();
+        }
+
+        function playerRotate() {
+            if (gameOver || isPaused || isMenuOpen) return;
+            const originalX = player.pos.x;
+            const originalY = player.pos.y;
+            rotate(player.matrix);
+
+            const kicks = [0, -1, 1, -2, 2];
+            let success = false;
+
+            for (let kick of kicks) {
+                player.pos.x = originalX + kick;
+                if (!collide(board, player)) {
+                    success = true;
+                    break;
+                }
+            }
+
+            if (!success) {
+                player.pos.x = originalX;
+                player.pos.y = originalY;
+                // Executa rotação reversa se falhar em todos os cantos
+                rotate(player.matrix, -1);
+            }
+        }
+
+        function rotate(matrix, dir = 1) {
+            for (let y = 0; y < matrix.length; ++y) {
+                for (let x = 0; x < y; ++x) {
+                    [matrix[x][y], matrix[y][x]] = [matrix[y][x], matrix[x][y]];
+                }
+            }
+            if (dir > 0) matrix.forEach(row => row.reverse());
+            else matrix.reverse();
+        }
+
+        function playerReset() {
+            if (!player.nextMatrix) player.nextMatrix = SHAPES[Math.floor(Math.random() * (SHAPES.length - 1)) + 1];
+            player.matrix = player.nextMatrix;
+            player.nextMatrix = SHAPES[Math.floor(Math.random() * (SHAPES.length - 1)) + 1];
+            player.pos.y = 0;
+            player.pos.x = (board[0].length / 2 | 0) - (player.matrix[0].length / 2 | 0);
+            hasHeld = false;
+
+            if (collide(board, player)) {
+                gameOver = true;
+                document.getElementById('final-score').innerText = score;
+                document.getElementById('game-over-screen').classList.add('active');
+                saveScore(score);
+            }
+        }
+
+        function arenaSweep() {
+            let rowCount = 1;
+            const clearedRows = [];
+            for (let y = board.length - 1; y >= 0; --y) {
+                if (!board[y].includes(0)) clearedRows.push(y);
+            }
+
+            if (clearedRows.length > 0) {
+                lineFlashFrames = clearedRows;
+                draw();
+                setTimeout(() => {
+                    lineFlashFrames = [];
+                    clearedRows.forEach(y => {
+                        const row = board.splice(y, 1)[0].fill(0);
+                        board.unshift(row);
+                        lines++;
+                    });
+                    
+                    // Pontuação clássica com base no número de linhas limpas consecutivas
+                    if (clearedRows.length === 1) score += 100 * level;
+                    else if (clearedRows.length === 2) score += 300 * level;
+                    else if (clearedRows.length === 3) score += 500 * level;
+                    else if (clearedRows.length === 4) score += 800 * level;
+
+                    level = Math.floor(lines / 10) + 1;
+                    dropInterval = Math.max(100, 1000 - (level - 1) * 90);
+                    updateBackgroundProgress();
+                    updateScore();
+                    checkSpeedrunSplits();
+                }, 80);
+            }
+        }
+
+        function updateScore() {
+            document.getElementById('score').innerText = score;
+            document.getElementById('lines').innerText = lines;
+            document.getElementById('level').innerText = level;
+        }
+
+        function resetGame() {
+            board = createMatrix(COLS, ROWS);
+            score = 0; lines = 0; level = 1;
+            dropInterval = 1000;
+            gameOver = false;
+            isPaused = false;
+            hasHeld = false;
+            player.holdMatrix = null;
+            player.nextMatrix = null;
+            
+            // Inicializa ou limpa os marcadores de Speedrun do round atual
+            startTime = performance.now();
+            elapsedGameTime = 0;
+            runSplits = { 500: null, 1000: null, 1500: null, 2000: null };
+
+            TARGETS.forEach(t => {
+                const card = document.getElementById(`split-${t}`);
+                card.querySelector('.curr-split').innerText = "-:--.-";
+                card.classList.remove('split-done', 'split-ahead', 'split-behind');
+            });
+
+            document.getElementById('game-over-screen').classList.remove('active');
+            document.getElementById('pause-screen').classList.remove('active');
+            
+            playerReset();
+            updateScore();
+            loadPbSplits();
+            draw();
+        }
+
+        function togglePause() {
+            if (gameOver || isMenuOpen || isScoresOpen) return;
+            isPaused = !isPaused;
+            const screen = document.getElementById('pause-screen');
+            if (isPaused) screen.classList.add('active');
+            else screen.classList.remove('active');
+        }
+
+        function openMenu() { isMenuOpen = true; isPaused = true; document.getElementById('menu-screen').classList.add('active'); }
+        function closeMenu() { isMenuOpen = false; isPaused = false; document.getElementById('menu-screen').classList.remove('active'); }
+
+        function openScores() {
+            isScoresOpen = true; isPaused = true;
+            document.getElementById('scores-screen').classList.add('active');
+            renderScores();
+        }
+        function closeScores() { isScoresOpen = false; isPaused = false; document.getElementById('scores-screen').classList.remove('active'); }
+
+        function saveScore(s) {
+            if (s <= 0) return;
+            let scores = JSON.parse(localStorage.getItem('tulip_tetris_scores')) || [];
+            scores.push({ score: s, date: new Date().toLocaleDateString() });
+            scores.sort((a,b) => b.score - a.score);
+            scores = scores.slice(0, 10);
+            localStorage.setItem('tulip_tetris_scores', JSON.stringify(scores));
+            if (scores[0] && scores[0].score > highscore) {
+                highscore = scores[0].score;
+                document.getElementById('highscore').innerText = highscore;
+            }
+        }
+
+        function renderScores() {
+            const container = document.getElementById('scores-container');
+            container.innerHTML = '';
+            const scores = JSON.parse(localStorage.getItem('tulip_tetris_scores')) || [];
+            if (scores.length === 0) {
+                container.innerHTML = '<div style="font-size:0.7rem;text-align:center;padding:10px;">Sem recordes ainda</div>';
+                return;
+            }
+            scores.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = `score-item ${index === 0 ? 'top' : ''}`;
+                div.innerHTML = `<span>#${index+1} - ${item.date}</span><span>${item.score} pts</span>`;
+                container.appendChild(div);
+            });
+        }
+
+        function clearScores() {
+            localStorage.removeItem('tulip_tetris_scores');
+            highscore = 0;
+            document.getElementById('highscore').innerText = '0';
+            renderScores();
+        }
+
+        function rewindTime() {
+            // Implementação simplificada para fins de demonstração estrutural
+            triggerVibrate(20);
+        }
+
+        function update(time = 0) {
+            const deltaTime = time - lastTime;
+            lastTime = time;
+
+            if (!isPaused && !gameOver && !isMenuOpen && !isScoresOpen) {
+                if (startTime !== null) {
+                    elapsedGameTime = time - startTime;
+                    document.getElementById('sr-timer').innerText = formatTime(elapsedGameTime);
+                }
+                
+                dropCounter += deltaTime;
+                if (dropCounter > dropInterval) {
+                    playerDrop();
+                }
+            }
+
+            draw();
+            requestAnimationFrame(update);
+        }
+
+        // Setup dos listeners de controle via D-Pad
+        document.getElementById('btn-left').addEventListener('click', () => playerMove(-1));
+        document.getElementById('btn-right').addEventListener('click', () => playerMove(1));
+        document.getElementById('btn-down').addEventListener('click', () => playerDrop());
+        document.getElementById('btn-rotate').addEventListener('click', () => { playerRotate(); triggerVibrate(10); });
+        document.getElementById('btn-hard-drop').addEventListener('click', () => playerHardDrop());
+        document.getElementById('btn-hold-action').addEventListener('click', () => playerHold());
+
+        // Suporte aos comandos via teclado físico desktop
+        document.addEventListener('keydown', event => {
+            if (event.key === 'ArrowLeft' || event.key === 'a') playerMove(-1);
+            else if (event.key === 'ArrowRight' || event.key === 'd') playerMove(1);
+            else if (event.key === 'ArrowDown' || event.key === 's') playerDrop();
+            else if (event.key === 'ArrowUp' || event.key === 'w') { playerRotate(); }
+            else if (event.key === ' ' || event.key === 'Enter') playerHardDrop();
+            else if (event.key === 'h' || event.key === 'Shift') playerHold();
+            else if (event.key === 'p' || event.key === 'Escape') togglePause();
+        });
+
+        // Inicialização do ciclo principal da aplicação
+        const savedScores = JSON.parse(localStorage.getItem('tulip_tetris_scores')) || [];
+        if (savedScores[0]) highscore = savedScores[0].score;
+        document.getElementById('highscore').innerText = highscore;
+
+        applyThemeStyles();
+        resetGame();
+        update();
+    </script>
 </body>
 </html>
