@@ -69,7 +69,7 @@
             padding: 6px 12px;
             border-radius: 20px;
             cursor: pointer;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 600;
             color: var(--text-dark);
         }
@@ -83,13 +83,13 @@
         .game-container {
             flex: 1;
             display: grid;
-            grid-template-columns: 1fr auto 1.3fr;
-            gap: 8px;
+            grid-template-columns: 1fr auto 1.2fr;
+            gap: 6px;
             width: 100%;
             max-width: 500px;
             margin: 0 auto;
             align-items: center;
-            min-height: 0; /* Permite encolhimento no flex container */
+            min-height: 0;
         }
 
         .sidebar {
@@ -105,7 +105,7 @@
             background: var(--panel-bg);
             border: 1px solid var(--border-color);
             border-radius: 10px;
-            padding: 6px;
+            padding: 5px;
             text-align: center;
             box-shadow: 0 2px 5px rgba(0,0,0,0.02);
             display: flex;
@@ -115,7 +115,7 @@
         }
 
         .panel-title {
-            font-size: 10px;
+            font-size: 9px;
             font-weight: bold;
             color: var(--text-red);
             text-transform: uppercase;
@@ -124,14 +124,14 @@
         }
 
         .panel-value {
-            font-size: 15px;
+            font-size: 14px;
             font-weight: bold;
         }
 
         /* Display de Peças */
         .box-display {
-            width: 55px;
-            height: 55px;
+            width: 50px;
+            height: 50px;
             margin-top: 2px;
             background: #FFFBFB;
             border: 1px dashed var(--border-color);
@@ -181,21 +181,21 @@
         }
 
         .timer {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
             font-variant-numeric: tabular-nums;
         }
 
         .toggle-mode {
             background: #FFF0F2;
             border: 1px solid var(--border-color);
-            padding: 2px 8px;
+            padding: 2px 6px;
             border-radius: 10px;
-            font-size: 9px;
+            font-size: 8px;
             font-weight: bold;
             cursor: pointer;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
             display: inline-block;
             text-transform: uppercase;
         }
@@ -203,13 +203,13 @@
         .pb-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 10px;
+            font-size: 9px;
             text-align: left;
         }
 
         .pb-table th {
             color: var(--text-dark);
-            font-size: 9px;
+            font-size: 8px;
             font-weight: bold;
             padding-bottom: 2px;
             text-transform: uppercase;
@@ -224,7 +224,7 @@
         }
 
         .pb-table td {
-            padding: 3px 0;
+            padding: 2px 0;
             font-weight: 600;
             font-variant-numeric: tabular-nums;
         }
@@ -279,12 +279,12 @@
         }
 
         .btn-action-round {
-            width: 64px;
-            height: 64px;
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
             border: none;
             color: white;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: bold;
             text-transform: uppercase;
             cursor: pointer;
@@ -320,7 +320,7 @@
             <div class="panel" id="hold-panel-box" title="Clique aqui para Guardar">
                 <div class="panel-title">Guardar</div>
                 <div class="box-display">
-                    <canvas id="canvas-hold" class="preview-canvas" width="55" height="55"></canvas>
+                    <canvas id="canvas-hold" class="preview-canvas" width="50" height="50"></canvas>
                 </div>
             </div>
             <div class="panel">
@@ -374,7 +374,7 @@
             <div class="panel">
                 <div class="panel-title">Próximo</div>
                 <div class="box-display">
-                    <canvas id="canvas-next" class="preview-canvas" width="55" height="55"></canvas>
+                    <canvas id="canvas-next" class="preview-canvas" width="50" height="50"></canvas>
                 </div>
             </div>
 
@@ -510,9 +510,8 @@
 
         function resizeCanvas() {
             const wrapper = document.querySelector('.board-wrapper');
-            const availableHeight = wrapper.clientHeight - 4; 
+            const availableHeight = wrapper.clientHeight - 4;
             const calculatedWidth = availableHeight / 2;
-            
             canvas.height = availableHeight;
             canvas.width = calculatedWidth;
             BLOCK_SIZE = canvas.height / ROWS;
@@ -539,18 +538,14 @@
             hasHeld = false;
             dropInterval = 1000;
             particles = [];
-            
             runConquistas.score = { 75000: null, 150000: null, 225000: null, 300000: null };
             runConquistas.lines = { 35: null, 70: null, 105: null, 140: null };
-            
             elapsedMs = 0;
             startTime = Date.now();
             clearInterval(timerInterval);
             timerInterval = setInterval(updateTimer, 100);
-
             nextPiece = getRandomPiece();
             spawnPiece();
-            
             updateUI();
             updatePBDisplay();
             drawPreview(ctxHold, null);
@@ -568,7 +563,6 @@
             currentPiece = nextPiece;
             nextPiece = getRandomPiece();
             hasHeld = false;
-
             if (collide(grid, currentPiece)) {
                 gameOver = true;
                 clearInterval(timerInterval);
@@ -609,7 +603,6 @@
         function clearLines() {
             let cleared = 0;
             let newGrid = [];
-
             for (let r = ROWS - 1; r >= 0; r--) {
                 if (grid[r].every(val => val !== 0)) {
                     for (let c = 0; c < COLS; c++) {
@@ -620,92 +613,179 @@
                     newGrid.unshift([...grid[r]]);
                 }
             }
-
             while (newGrid.length < ROWS) {
                 newGrid.unshift(Array(COLS).fill(0));
             }
+            grid = newGrid;
 
             if (cleared > 0) {
-                grid = newGrid;
                 lines += cleared;
-                const basePoints = [0, 200, 500, 900, 1500]; 
-                score += basePoints[cleared] * level;
-
+                const pointsMap = [0, 100, 300, 500, 800];
+                score += (pointsMap[cleared] || 800) * level;
                 level = Math.floor(lines / 10) + 1;
-                dropInterval = Math.max(150, 1000 - (level - 1) * 50);
-
-                checkSpeedrunMilestones();
+                dropInterval = Math.max(100, 1000 - (level - 1) * 90);
+                verificarMetasSpeedrun();
                 updateUI();
             }
         }
 
-        function createBlockParticles(gridX, gridY, type) {
-            const color = COLORS[type] || '#FFF';
-            const startX = gridX * BLOCK_SIZE + BLOCK_SIZE / 2;
-            const startY = gridY * BLOCK_SIZE + BLOCK_SIZE / 2;
-            
-            for (let i = 0; i < 4; i++) {
+        function verificarMetasSpeedrun() {
+            const metasScore = [75000, 150000, 225000, 300000];
+            metasScore.forEach(m => {
+                if (score >= m && !runConquistas.score[m]) {
+                    runConquistas.score[m] = elapsedMs;
+                    const pbAtual = pbsPorPeriodo[periodoAtivo].rawTimes.score[m];
+                    if (pbAtual === null || elapsedMs < pbAtual) {
+                        pbsPorPeriodo[periodoAtivo].rawTimes.score[m] = elapsedMs;
+                        pbsPorPeriodo[periodoAtivo].score[m] = formatTime(elapsedMs);
+                    }
+                }
+            });
+
+            const metasLines = [35, 70, 105, 140];
+            metasLines.forEach(m => {
+                if (lines >= m && !runConquistas.lines[m]) {
+                    runConquistas.lines[m] = elapsedMs;
+                    const pbAtual = pbsPorPeriodo[periodoAtivo].rawTimes.lines[m];
+                    if (pbAtual === null || elapsedMs < pbAtual) {
+                        pbsPorPeriodo[periodoAtivo].rawTimes.lines[m] = elapsedMs;
+                        pbsPorPeriodo[periodoAtivo].lines[m] = formatTime(elapsedMs);
+                    }
+                }
+            });
+
+            if (score > pbsPorPeriodo[periodoAtivo].maxScore) pbsPorPeriodo[periodoAtivo].maxScore = score;
+            if (lines > pbsPorPeriodo[periodoAtivo].maxLines) pbsPorPeriodo[periodoAtivo].maxLines = lines;
+
+            localStorage.setItem('tulip_tetris_multiy_pbs', JSON.stringify(pbsPorPeriodo));
+            updateLiveRunColumn();
+        }
+
+        function updateUI() {
+            document.getElementById('current-score').textContent = score;
+            document.getElementById('current-lines').textContent = lines;
+            document.getElementById('game-level').textContent = level;
+            document.getElementById('best-score').textContent = pbsPorPeriodo[periodoAtivo].maxScore;
+            document.getElementById('best-lines').textContent = pbsPorPeriodo[periodoAtivo].maxLines;
+            document.body.style.backgroundColor = LEVEL_BACKGROUNDS[(level - 1) % LEVEL_BACKGROUNDS.length];
+        }
+
+        function updatePBDisplay() {
+            const metasScore = [75000, 150000, 225000, 300000];
+            metasScore.forEach(m => {
+                const t = pbsPorPeriodo[periodoAtivo].score[m];
+                document.getElementById(`pb-${m/1000}k`).textContent = t ? t : "00:00.0";
+            });
+
+            const metasLines = [35, 70, 105, 140];
+            metasLines.forEach(m => {
+                const t = pbsPorPeriodo[periodoAtivo].lines[m];
+                document.getElementById(`pb-${m}l`).textContent = t ? t : "00:00.0";
+            });
+            updateUI();
+        }
+
+        function updateLiveRunColumn() {
+            const metasScore = [75000, 150000, 225000, 300000];
+            metasScore.forEach(m => {
+                const celula = document.getElementById(`run-${m}`);
+                const tempoRun = runConquistas.score[m];
+                if (tempoRun) {
+                    celula.textContent = formatTime(tempoRun);
+                    const tempoPB = pbsPorPeriodo[periodoAtivo].rawTimes.score[m];
+                    celula.className = (tempoRun <= tempoPB) ? "run-completed-better" : "run-completed-worse";
+                } else {
+                    celula.textContent = ""; celula.className = "";
+                }
+            });
+
+            const metasLines = [35, 70, 105, 140];
+            metasLines.forEach(m => {
+                const celula = document.getElementById(`run-${m}l`);
+                const tempoRun = runConquistas.lines[m];
+                if (tempoRun) {
+                    celula.textContent = formatTime(tempoRun);
+                    const tempoPB = pbsPorPeriodo[periodoAtivo].rawTimes.lines[m];
+                    celula.className = (tempoRun <= tempoPB) ? "run-completed-better" : "run-completed-worse";
+                } else {
+                    celula.textContent = ""; celula.className = "";
+                }
+            });
+        }
+
+        function updateTimer() {
+            if (!gameOver && !isPaused && startTime !== null) {
+                elapsedMs = Date.now() - startTime;
+                document.getElementById('game-timer').textContent = formatTime(elapsedMs);
+            }
+        }
+
+        function createBlockParticles(x, y, color) {
+            const px = x * BLOCK_SIZE + BLOCK_SIZE / 2;
+            const py = y * BLOCK_SIZE + BLOCK_SIZE / 2;
+            for (let i = 0; i < 6; i++) {
                 particles.push({
-                    x: startX, y: startY,
-                    size: Math.random() * 3 + 3,
-                    vx: (Math.random() - 0.5) * 5,
-                    vy: (Math.random() - 0.7) * 4 - 1,
-                    alpha: 1, color: color
+                    x: px, y: py,
+                    vx: (Math.random() - 0.5) * 4,
+                    vy: (Math.random() - 0.5) * 4,
+                    alpha: 1, color: color,
+                    size: Math.random() * 4 + 3
                 });
             }
         }
 
-        function updateParticles(deltaTime) {
-            const gravity = 0.2;
+        function updateParticles() {
             for (let i = particles.length - 1; i >= 0; i--) {
                 let p = particles[i];
-                p.x += p.vx; p.y += p.vy; p.vy += gravity; p.alpha -= 0.05;
+                p.x += p.vx; p.y += p.vy; p.alpha -= 0.04;
                 if (p.alpha <= 0) particles.splice(i, 1);
             }
         }
 
-        function checkSpeedrunMilestones() {
-            const timeStr = formatTime(elapsedMs);
-            let pbChanged = false;
-            const pbAtual = pbsPorPeriodo[periodoAtivo];
-            
-            [75000, 150000, 225000, 300000].forEach(target => {
-                if (score >= target && !runConquistas.score[target]) {
-                    runConquistas.score[target] = elapsedMs;
-                    if (!pbAtual.rawTimes.score[target] || elapsedMs < pbAtual.rawTimes.score[target]) {
-                        pbAtual.score[target] = timeStr;
-                        pbAtual.rawTimes.score[target] = elapsedMs;
-                        pbChanged = true;
-                    }
+        function handleHold() {
+            if (gameOver || isPaused || hasHeld) return;
+            if (!holdPiece) {
+                holdPiece = new Piece(currentPiece.type);
+                spawnPiece();
+            } else {
+                const temp = currentPiece.type;
+                currentPiece = new Piece(holdPiece.type);
+                holdPiece = new Piece(temp);
+                hasHeld = true;
+            }
+            drawPreview(ctxHold, holdPiece);
+        }
+
+        function rotate(matrix) {
+            const n = matrix.length;
+            let res = Array.from({length: n}, () => Array(n).fill(0));
+            for (let r = 0; r < n; r++) {
+                for (let c = 0; c < n; c++) {
+                    res[c][n - 1 - r] = matrix[r][c];
                 }
-            });
+            }
+            return res;
+        }
 
-            [35, 70, 105, 140].forEach(target => {
-                if (lines >= target && !runConquistas.lines[target]) {
-                    runConquistas.lines[target] = elapsedMs;
-                    if (!pbAtual.rawTimes.lines[target] || elapsedMs < pbAtual.rawTimes.lines[target]) {
-                        pbAtual.lines[target] = timeStr;
-                        pbAtual.rawTimes.lines[target] = elapsedMs;
-                        pbChanged = true;
-                    }
-                }
-            });
-
-            if (score > pbAtual.maxScore) pbAtual.maxScore = score;
-            if (lines > pbAtual.maxLines) pbAtual.maxLines = lines;
-
-            if (pbChanged || score > pbAtual.maxScore || lines > pbAtual.maxLines) {
-                localStorage.setItem('tulip_tetris_multiy_pbs', JSON.stringify(pbsPorPeriodo));
-                updatePBDisplay();
+        function playerRotate() {
+            if (!currentPiece) return;
+            const oldMatrix = currentPiece.matrix;
+            currentPiece.matrix = rotate(currentPiece.matrix);
+            if (collide(grid, currentPiece)) {
+                currentPiece.matrix = oldMatrix;
             }
         }
 
         function move(dir) {
+            if (!currentPiece) return;
             currentPiece.x += dir;
-            if (collide(grid, currentPiece)) currentPiece.x -= dir;
+            if (collide(grid, currentPiece)) {
+                currentPiece.x -= dir;
+            }
         }
 
-        function playerDrop() {
+        function drop() {
+            if (!currentPiece || gameOver || isPaused) return;
             currentPiece.y++;
             if (collide(grid, currentPiece)) {
                 currentPiece.y--;
@@ -717,6 +797,7 @@
         }
 
         function hardDrop() {
+            if (!currentPiece || gameOver || isPaused) return;
             while (!collide(grid, currentPiece)) {
                 currentPiece.y++;
             }
@@ -727,257 +808,114 @@
             dropCounter = 0;
         }
 
-        function rotate() {
-            const matrix = currentPiece.matrix;
-            const n = matrix.length;
-            let temp = Array.from({length: n}, () => Array(n).fill(0));
-            
-            for (let r = 0; r < n; r++) {
-                for (let c = 0; c < n; c++) {
-                    temp[c][n - 1 - r] = matrix[r][c];
+        function drawBlock(context, x, y, color, size = BLOCK_SIZE) {
+            context.fillStyle = color;
+            context.fillRect(x * size, y * size, size, size);
+            context.strokeStyle = 'rgba(255,255,255,0.3)';
+            context.lineWidth = 1.5;
+            context.strokeRect(x * size + 1, y * size + 1, size - 2, size - 2);
+            context.fillStyle = 'rgba(255,255,255,0.15)';
+            context.fillRect(x * size + 1, y * size + 1, size - 2, size / 4);
+        }
+
+        function drawPreview(context, piece) {
+            context.clearRect(0, 0, context.canvas.width, context.canvas.height);
+            if (!piece) return;
+            const m = piece.matrix;
+            let minX = 4, maxX = 0, minY = 4, maxY = 0;
+            for (let r = 0; r < m.length; r++) {
+                for (let c = 0; c < m[r].length; c++) {
+                    if (m[r][c]) {
+                        if (c < minX) minX = c; if (c > maxX) maxX = c;
+                        if (r < minY) minY = r; if (r > maxY) maxY = r;
+                    }
                 }
             }
-
-            const originMatrix = currentPiece.matrix;
-            currentPiece.matrix = temp;
-            
-            let offset = 1;
-            const startX = currentPiece.x;
-            while (collide(grid, currentPiece)) {
-                currentPiece.x += offset;
-                offset = -(offset + (offset > 0 ? 1 : -1));
-                if (Math.abs(offset) > matrix[0].length) {
-                    currentPiece.matrix = originMatrix;
-                    currentPiece.x = startX;
-                    return;
+            const pWidth = (maxX - minX + 1);
+            const pHeight = (maxY - minY + 1);
+            const size = 10;
+            const offsetX = (context.canvas.width - pWidth * size) / 2 - minX * size;
+            const offsetY = (context.canvas.height - pHeight * size) / 2 - minY * size;
+            context.save();
+            context.translate(offsetX, offsetY);
+            for (let r = 0; r < m.length; r++) {
+                for (let c = 0; c < m[r].length; c++) {
+                    if (m[r][c]) drawBlock(context, c, r, COLORS[piece.type], size);
                 }
             }
-        }
-
-        function handleHold() {
-            if (hasHeld || gameOver || isPaused) return;
-            
-            const currentType = currentPiece.type;
-            if (holdPiece === null) {
-                holdPiece = new Piece(currentType);
-                spawnPiece();
-            } else {
-                const temp = holdPiece.type;
-                holdPiece = new Piece(currentType);
-                currentPiece = new Piece(temp);
-            }
-            
-            hasHeld = true;
-            drawPreview(ctxHold, holdPiece);
-        }
-
-        function getGhostPosition() {
-            if (!currentPiece) return 0;
-            let ghostY = currentPiece.y;
-            let tempPiece = { matrix: currentPiece.matrix, x: currentPiece.x, y: ghostY };
-            while (!collide(grid, tempPiece)) {
-                tempPiece.y++;
-            }
-            return tempPiece.y - 1;
-        }
-
-        function drawBlock(context, x, y, type, isGhost = false) {
-            if (isGhost) {
-                context.strokeStyle = COLORS[type];
-                context.lineWidth = 1.5;
-                context.setLineDash([4, 4]);
-                context.strokeRect(x * BLOCK_SIZE + 1, y * BLOCK_SIZE + 1, BLOCK_SIZE - 2, BLOCK_SIZE - 2);
-                context.setLineDash([]);
-            } else {
-                context.fillStyle = COLORS[type] || '#FFF';
-                context.fillRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE - 0.5, BLOCK_SIZE - 0.5);
-                context.strokeStyle = 'rgba(255,255,255,0.2)';
-                context.strokeRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE - 0.5, BLOCK_SIZE - 0.5);
-            }
+            context.restore();
         }
 
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
             grid.forEach((row, r) => {
                 row.forEach((value, c) => {
-                    if (value !== 0) drawBlock(ctx, c, r, value);
+                    if (value) drawBlock(ctx, c, r, COLORS[value]);
                 });
             });
 
             if (currentPiece) {
-                const ghostY = getGhostPosition();
-                if (ghostY > currentPiece.y) {
-                    currentPiece.matrix.forEach((row, r) => {
-                        row.forEach((value, c) => {
-                            if (value !== 0 && r + ghostY >= 0) {
-                                drawBlock(ctx, c + currentPiece.x, r + ghostY, currentPiece.type, true);
-                            }
-                        });
-                    });
-                }
-
                 currentPiece.matrix.forEach((row, r) => {
                     row.forEach((value, c) => {
-                        if (value !== 0 && r + currentPiece.y >= 0) {
-                            drawBlock(ctx, c + currentPiece.x, r + currentPiece.y, currentPiece.type);
+                        if (value) {
+                            if (r + currentPiece.y >= 0) {
+                                drawBlock(ctx, c + currentPiece.x, r + currentPiece.y, COLORS[currentPiece.type]);
+                            }
                         }
                     });
                 });
             }
 
             particles.forEach(p => {
-                ctx.save();
-                ctx.globalAlpha = p.alpha;
-                ctx.fillStyle = p.color;
-                ctx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
-                ctx.restore();
-            });
-        }
-
-        function drawPreview(context, piece) {
-            context.clearRect(0, 0, 55, 55);
-            if (!piece) return;
-            
-            const matrix = piece.matrix;
-            const size = 11; 
-            const offsetX = (55 - matrix[0].length * size) / 2;
-            const offsetY = (55 - matrix.length * size) / 2;
-
-            matrix.forEach((row, r) => {
-                row.forEach((value, c) => {
-                    if (value !== 0) {
-                        context.fillStyle = COLORS[piece.type];
-                        context.fillRect(offsetX + c * size, offsetY + r * size, size - 1, size - 1);
-                    }
-                });
+                ctx.save(); ctx.globalAlpha = p.alpha; ctx.fillStyle = COLORS[p.color] || '#FFF';
+                ctx.fillRect(p.x - p.size/2, p.y - p.size/2, p.size, p.size); ctx.restore();
             });
         }
 
         function gameLoop(time = 0) {
             if (gameOver || isPaused) return;
-
-            const deltaTime = time - lastTime;
-            lastTime = time;
-
+            const deltaTime = time - lastTime; lastTime = time;
             dropCounter += deltaTime;
-            if (dropCounter > dropInterval) playerDrop();
-
-            updateParticles(deltaTime);
-            draw();
-            requestAnimationFrame(gameLoop);
+            if (dropCounter > dropInterval) { drop(); }
+            updateParticles(); draw(); requestAnimationFrame(gameLoop);
         }
 
-        function updateTimer() {
-            if (isPaused || gameOver) return;
-            elapsedMs = Date.now() - startTime;
-            document.getElementById('game-timer').textContent = formatTime(elapsedMs);
-            updateLiveRunColumn();
-        }
-
-        function updateLiveRunColumn() {
-            const pbAtual = pbsPorPeriodo[periodoAtivo];
-
-            [75000, 150000, 225000, 300000].forEach(target => {
-                const elRun = document.getElementById(`run-${target}`);
-                if (!elRun) return;
-                const tempoConquistado = runConquistas.score[target];
-                const tempoPB = pbAtual.rawTimes.score[target];
-
-                if (tempoConquistado !== null) {
-                    elRun.textContent = formatTime(tempoConquistado);
-                    elRun.className = (tempoPB && tempoConquistado >= tempoPB) ? "run-completed-worse" : "run-completed-better";
-                } else {
-                    elRun.textContent = ""; elRun.className = "";
-                }
-            });
-
-            [35, 70, 105, 140].forEach(target => {
-                const elRun = document.getElementById(`run-${target}l`);
-                if (!elRun) return;
-                const tempoConquistado = runConquistas.lines[target];
-                const tempoPB = pbAtual.rawTimes.lines[target];
-
-                if (tempoConquistado !== null) {
-                    elRun.textContent = formatTime(tempoConquistado);
-                    elRun.className = (tempoPB && tempoConquistado >= tempoPB) ? "run-completed-worse" : "run-completed-better";
-                } else {
-                    elRun.textContent = ""; elRun.className = "";
-                }
-            });
-        }
-
-        function updatePBDisplay() {
-            const pbAtual = pbsPorPeriodo[periodoAtivo];
-            
-            [75000, 150000, 225000, 300000].forEach(target => {
-                const el = document.getElementById(`pb-${target / 1000}k`);
-                if (el) el.textContent = pbAtual.score[target] || "00:00.0";
-            });
-
-            [35, 70, 105, 140].forEach(target => {
-                const el = document.getElementById(`pb-${target}l`);
-                if (el) el.textContent = pbAtual.lines[target] || "00:00.0";
-            });
-
-            document.getElementById('best-score').textContent = pbAtual.maxScore || 0;
-            document.getElementById('best-lines').textContent = pbAtual.maxLines || 0;
-        }
-
-        function updateUI() {
-            document.getElementById('game-level').textContent = level;
-            document.getElementById('current-score').textContent = score;
-            document.getElementById('current-lines').textContent = lines;
-
-            const bgIndex = (level - 1) % LEVEL_BACKGROUNDS.length;
-            document.body.style.backgroundColor = LEVEL_BACKGROUNDS[bgIndex];
-        }
-
-        // Teclado
-        document.addEventListener('keydown', event => {
+        // Eventos Teclado
+        document.addEventListener('keydown', e => {
             if (gameOver || isPaused) return;
-            switch (event.keyCode) {
-                case 37: move(-1); break;
-                case 39: move(1); break;
-                case 40: playerDrop(); break;
-                case 38: rotate(); break;
-                case 32: hardDrop(); break;
-                case 72: handleHold(); break;
-            }
+            if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') move(-1);
+            else if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') move(1);
+            else if (e.key === 'ArrowDown' || e.key.toLowerCase() === 's') drop();
+            else if (e.key === 'ArrowUp' || e.key.toLowerCase() === 'w') playerRotate();
+            else if (e.key === ' ' || e.key.toLowerCase() === 'spacebar') hardDrop();
+            else if (e.key.toLowerCase() === 'h') handleHold();
         });
 
-        // Evento de clique na caixa de Hold da Sidebar
+        // Controles Touch de clique
+        document.getElementById('ctrl-left').addEventListener('click', () => move(-1));
+        document.getElementById('ctrl-right').addEventListener('click', () => move(1));
+        document.getElementById('ctrl-down').addEventListener('click', () => drop());
+        document.getElementById('ctrl-up').addEventListener('click', () => playerRotate());
+        document.getElementById('ctrl-rotate').addEventListener('click', () => playerRotate());
+        document.getElementById('ctrl-drop').addEventListener('click', () => hardDrop());
         document.getElementById('hold-panel-box').addEventListener('click', handleHold);
 
-        // Controles Mobile / Touchscreen
-        document.getElementById('ctrl-up').addEventListener('click', () => { if (!gameOver && !isPaused) rotate(); });
-        document.getElementById('ctrl-left').addEventListener('click', () => { if (!gameOver && !isPaused) move(-1); });
-        document.getElementById('ctrl-down').addEventListener('click', () => { if (!gameOver && !isPaused) playerDrop(); });
-        document.getElementById('ctrl-right').addEventListener('click', () => { if (!gameOver && !isPaused) move(1); });
-        document.getElementById('ctrl-drop').addEventListener('click', () => { if (!gameOver && !isPaused) hardDrop(); });
-        document.getElementById('ctrl-rotate').addEventListener('click', () => { if (!gameOver && !isPaused) rotate(); });
-
-        // Modos e Menus
         document.getElementById('btn-mode').addEventListener('click', () => {
             const index = sequenciaPeriodos.indexOf(periodoAtivo);
             const nextIndex = (index + 1) % sequenciaPeriodos.length;
             periodoAtivo = sequenciaPeriodos[nextIndex];
-            document.getElementById('btn-mode').textContent = `☀️ ${periodoAtivo.toUpperCase()}`;
-            updatePBDisplay();
-            updateLiveRunColumn();
+            document.getElementById('btn-mode').textContent = `☀️ ${periodoAtivo.toUpperCase()}`;;
+            updatePBDisplay(); updateLiveRunColumn();
         });
 
         const btnPause = document.getElementById('btn-pause');
         btnPause.addEventListener('click', () => {
             isPaused = !isPaused;
             if (isPaused) {
-                btnPause.textContent = "Continuar";
-                clearInterval(timerInterval);
+                btnPause.textContent = "Continuar"; clearInterval(timerInterval);
             } else {
-                btnPause.textContent = "Pausar";
-                startTime = Date.now() - elapsedMs;
-                timerInterval = setInterval(updateTimer, 100);
-                lastTime = performance.now();
+                btnPause.textContent = "Pausar"; startTime = Date.now() - elapsedMs;
+                timerInterval = setInterval(updateTimer, 100); lastTime = performance.now();
                 requestAnimationFrame(gameLoop);
             }
         });
@@ -993,11 +931,9 @@
         });
 
         window.addEventListener('resize', () => {
-            resizeCanvas();
-            draw();
+            resizeCanvas(); draw();
         });
 
-        // Inicialização automática
         init();
     </script>
 </body>
