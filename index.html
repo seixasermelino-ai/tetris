@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Tulip Tetris</title>
     <style>
         :root {
@@ -24,16 +24,19 @@
             padding: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
         }
 
         body {
             background-color: var(--bg-color);
             color: var(--text-dark);
-            height: 100vh;
+            height: 100dvh;
             display: flex;
             flex-direction: column;
             overflow: hidden;
             transition: background-color 0.5s ease;
+            padding: 8px;
         }
 
         /* Header */
@@ -41,12 +44,14 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 40px;
             width: 100%;
+            max-width: 500px;
+            margin: 0 auto 8px;
+            flex-shrink: 0;
         }
 
         .logo {
-            font-size: 24px;
+            font-size: 20px;
             font-weight: bold;
         }
 
@@ -55,16 +60,16 @@
 
         .header-buttons {
             display: flex;
-            gap: 10px;
+            gap: 6px;
         }
 
         .btn-small {
             background: var(--panel-bg);
             border: 1px solid var(--border-color);
-            padding: 6px 14px;
+            padding: 6px 12px;
             border-radius: 20px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 12px;
             font-weight: 600;
             color: var(--text-dark);
         }
@@ -77,90 +82,120 @@
         /* Main Game Area */
         .game-container {
             flex: 1;
-            display: flex;
-            justify-content: center;
+            display: grid;
+            grid-template-columns: 1fr auto 1.3fr;
+            gap: 8px;
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
             align-items: center;
-            gap: 20px;
-            padding: 10px;
-            position: relative;
+            min-height: 0; /* Permite encolhimento no flex container */
         }
 
         .sidebar {
             display: flex;
             flex-direction: column;
-            gap: 15px;
-            width: 140px;
+            gap: 6px;
+            height: 100%;
+            justify-content: space-between;
+            min-height: 0;
         }
 
         .panel {
             background: var(--panel-bg);
             border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 10px;
+            border-radius: 10px;
+            padding: 6px;
             text-align: center;
             box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
 
         .panel-title {
-            font-size: 11px;
+            font-size: 10px;
             font-weight: bold;
             color: var(--text-red);
             text-transform: uppercase;
-            margin-bottom: 5px;
+            margin-bottom: 2px;
             letter-spacing: 0.5px;
         }
 
         .panel-value {
-            font-size: 18px;
+            font-size: 15px;
             font-weight: bold;
         }
 
         /* Display de Peças */
         .box-display {
-            width: 70px;
-            height: 70px;
-            margin: 5px auto 0;
+            width: 55px;
+            height: 55px;
+            margin-top: 2px;
             background: #FFFBFB;
             border: 1px dashed var(--border-color);
             border-radius: 8px;
             position: relative;
         }
 
+        /* Caixa de Hold clicável */
+        #hold-panel-box {
+            cursor: pointer;
+            transition: transform 0.1s ease;
+        }
+        #hold-panel-box:active {
+            transform: scale(0.95);
+        }
+
         /* Tabuleiro Principal */
         .board-wrapper {
             background: #FFFFFF;
             border: 2px solid var(--border-color);
-            border-radius: 16px;
+            border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 4px 15px rgba(255, 210, 215, 0.4);
+            box-shadow: 0 4px 15px rgba(255, 210, 215, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            max-height: 100%;
         }
 
-        canvas {
+        canvas #game-board {
             display: block;
             background: #FFFDFD;
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
         }
 
-        /* Painel Speedrun customizado */
+        /* Painel Speedrun */
         .speedrun-panel {
-            width: 210px;
+            justify-content: flex-start;
+            gap: 4px;
+        }
+
+        .speedrun-panel .panel:first-child {
+            flex: 1;
+            justify-content: flex-start;
         }
 
         .timer {
-            font-size: 22px;
+            font-size: 18px;
             font-weight: bold;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
             font-variant-numeric: tabular-nums;
         }
 
         .toggle-mode {
             background: #FFF0F2;
             border: 1px solid var(--border-color);
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 9px;
             font-weight: bold;
             cursor: pointer;
-            margin-bottom: 12px;
+            margin-bottom: 6px;
             display: inline-block;
             text-transform: uppercase;
         }
@@ -168,15 +203,15 @@
         .pb-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 12px;
+            font-size: 10px;
             text-align: left;
         }
 
         .pb-table th {
             color: var(--text-dark);
-            font-size: 11px;
+            font-size: 9px;
             font-weight: bold;
-            padding-bottom: 6px;
+            padding-bottom: 2px;
             text-transform: uppercase;
         }
 
@@ -189,66 +224,48 @@
         }
 
         .pb-table td {
-            padding: 5px 0;
+            padding: 3px 0;
             font-weight: 600;
             font-variant-numeric: tabular-nums;
         }
 
-        .pb-table td:first-child {
-            color: var(--text-dark);
-        }
-
-        .pb-table td:nth-child(2) {
-            color: #554044;
-        }
-
         /* Classes de Status da Run Atual */
-        .run-ahead {
-            color: var(--status-red) !important;
-        }
-        
-        .run-behind {
-            color: var(--status-red) !important;
-        }
-
-        .run-completed-better {
-            color: var(--status-green) !important;
-        }
-
-        .run-completed-worse {
-            color: var(--status-red) !important;
-        }
+        .run-completed-better { color: var(--status-green) !important; }
+        .run-completed-worse { color: var(--status-red) !important; }
 
         /* Controles Mobile */
         .controls-container {
             width: 100%;
-            padding: 15px 40px 25px;
+            max-width: 500px;
+            margin: 8px auto 0;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
         }
 
         .control-group-left {
             display: grid;
             grid-template-areas: 
                 ". up ."
-                "left down right"
-                "hold hold hold";
-            gap: 8px;
+                "left down right";
+            gap: 6px;
+            flex: 1;
         }
 
         .control-group-right {
             display: flex;
-            gap: 15px;
+            gap: 8px;
+            align-items: center;
         }
 
         .btn-ctrl {
             background: #FFFFFF;
             border: 1px solid var(--border-color);
-            border-radius: 12px;
-            width: 54px;
-            height: 48px;
-            font-size: 18px;
+            border-radius: 10px;
+            height: 42px;
+            font-size: 16px;
             font-weight: bold;
             cursor: pointer;
             display: flex;
@@ -261,23 +278,13 @@
             background: #F5E6E8;
         }
 
-        .btn-ctrl.hold-btn {
-            grid-area: hold;
-            width: auto;
-            height: 40px;
-            background: var(--btn-blue);
-            color: white;
-            font-size: 12px;
-            text-transform: uppercase;
-        }
-
         .btn-action-round {
-            width: 75px;
-            height: 75px;
+            width: 64px;
+            height: 64px;
             border-radius: 50%;
             border: none;
             color: white;
-            font-size: 14px;
+            font-size: 12px;
             font-weight: bold;
             text-transform: uppercase;
             cursor: pointer;
@@ -310,16 +317,16 @@
 
     <div class="game-container">
         <div class="sidebar">
-            <div class="panel">
-                <div class="panel-title">Guardar (H)</div>
+            <div class="panel" id="hold-panel-box" title="Clique aqui para Guardar">
+                <div class="panel-title">Guardar</div>
                 <div class="box-display">
-                    <canvas id="canvas-hold" class="preview-canvas" width="70" height="70"></canvas>
+                    <canvas id="canvas-hold" class="preview-canvas" width="55" height="55"></canvas>
                 </div>
             </div>
             <div class="panel">
                 <div class="panel-title">🏆 Recorde Pts</div>
                 <div class="panel-value" id="best-score">0</div>
-                <div class="panel-title" style="margin-top: 10px;">📊 Recorde Linhas</div>
+                <div class="panel-title" style="margin-top: 4px;">📊 Linhas</div>
                 <div class="panel-value" id="best-lines">0</div>
             </div>
             <div class="panel">
@@ -343,30 +350,23 @@
                         <tr>
                             <th>META</th>
                             <th>PB</th>
-                            <th>ESTA RUN</th>
+                            <th>RUN</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr id="row-75000"><td class="meta-label">75k</td><td id="pb-75k">00:00.0</td><td id="run-75000"></td></tr>
-                        <tr id="row-150000"><td class="meta-label">150k</td><td id="pb-150k">00:00.0</td><td id="run-150000"></td></tr>
-                        <tr id="row-225000"><td class="meta-label">225k</td><td id="pb-225k">00:00.0</td><td id="run-225000"></td></tr>
-                        <tr id="row-300000"><td class="meta-label">300k</td><td id="pb-300k">00:00.0</td><td id="run-300000"></td></tr>
+                        <tr id="row-75000"><td>75k</td><td id="pb-75k">00:00.0</td><td id="run-75000"></td></tr>
+                        <tr id="row-150000"><td>150k</td><td id="pb-150k">00:00.0</td><td id="run-150000"></td></tr>
+                        <tr id="row-225000"><td>225k</td><td id="pb-225k">00:00.0</td><td id="run-225000"></td></tr>
+                        <tr id="row-300000"><td>300k</td><td id="pb-300k">00:00.0</td><td id="run-300000"></td></tr>
                     </tbody>
                 </table>
 
-                <table class="pb-table" style="margin-top: 12px; border-top: 1px dashed var(--border-color); padding-top: 8px;">
-                    <thead>
-                        <tr>
-                            <th>META</th>
-                            <th>PB</th>
-                            <th>ESTA RUN</th>
-                        </tr>
-                    </thead>
+                <table class="pb-table" style="margin-top: 4px; border-top: 1px dashed var(--border-color); padding-top: 4px;">
                     <tbody>
-                        <tr id="row-35l"><td class="meta-label">35 L</td><td id="pb-35l">00:00.0</td><td id="run-35l"></td></tr>
-                        <tr id="row-70l"><td class="meta-label">70 L</td><td id="pb-70l">00:00.0</td><td id="run-70l"></td></tr>
-                        <tr id="row-105l"><td class="meta-label">105 L</td><td id="pb-105l">00:00.0</td><td id="run-105l"></td></tr>
-                        <tr id="row-140l"><td class="meta-label">140 L</td><td id="pb-140l">00:00.0</td><td id="run-140l"></td></tr>
+                        <tr id="row-35l"><td>35 L</td><td id="pb-35l">00:00.0</td><td id="run-35l"></td></tr>
+                        <tr id="row-70l"><td>70 L</td><td id="pb-70l">00:00.0</td><td id="run-70l"></td></tr>
+                        <tr id="row-105l"><td>105 L</td><td id="pb-105l">00:00.0</td><td id="run-105l"></td></tr>
+                        <tr id="row-140l"><td>140 L</td><td id="pb-140l">00:00.0</td><td id="run-140l"></td></tr>
                     </tbody>
                 </table>
             </div>
@@ -374,7 +374,7 @@
             <div class="panel">
                 <div class="panel-title">Próximo</div>
                 <div class="box-display">
-                    <canvas id="canvas-next" class="preview-canvas" width="70" height="70"></canvas>
+                    <canvas id="canvas-next" class="preview-canvas" width="55" height="55"></canvas>
                 </div>
             </div>
 
@@ -396,7 +396,6 @@
             <button class="btn-ctrl" style="grid-area: left;" id="ctrl-left">←</button>
             <button class="btn-ctrl" style="grid-area: down;" id="ctrl-down">↓</button>
             <button class="btn-ctrl" style="grid-area: right;" id="ctrl-right">→</button>
-            <button class="btn-ctrl hold-btn" id="ctrl-hold">Hold</button>
         </div>
 
         <div class="control-group-right">
@@ -408,7 +407,7 @@
     <script>
         const COLS = 10;
         const ROWS = 20;
-        const BLOCK_SIZE = 30;
+        let BLOCK_SIZE = 30;
 
         const canvas = document.getElementById('game-board');
         const ctx = canvas.getContext('2d');
@@ -458,7 +457,6 @@
         let lastTime = 0;
 
         let particles = [];
-
         let periodoAtivo = 'dia'; 
         const sequenciaPeriodos = ['dia', 'semana', 'mes'];
 
@@ -470,8 +468,7 @@
                     score: { 75000: null, 150000: null, 225000: null, 300000: null },
                     lines: { 35: null, 70: null, 105: null, 140: null }
                 },
-                maxScore: 0,
-                maxLines: 0
+                maxScore: 0, maxLines: 0
             },
             semana: {
                 score: { 75000: null, 150000: null, 225000: null, 300000: null },
@@ -480,8 +477,7 @@
                     score: { 75000: null, 150000: null, 225000: null, 300000: null },
                     lines: { 35: null, 70: null, 105: null, 140: null }
                 },
-                maxScore: 0,
-                maxLines: 0
+                maxScore: 0, maxLines: 0
             },
             mes: {
                 score: { 75000: null, 150000: null, 225000: null, 300000: null },
@@ -490,8 +486,7 @@
                     score: { 75000: null, 150000: null, 225000: null, 300000: null },
                     lines: { 35: null, 70: null, 105: null, 140: null }
                 },
-                maxScore: 0,
-                maxLines: 0
+                maxScore: 0, maxLines: 0
             }
         };
 
@@ -513,6 +508,16 @@
             }
         }
 
+        function resizeCanvas() {
+            const wrapper = document.querySelector('.board-wrapper');
+            const availableHeight = wrapper.clientHeight - 4; 
+            const calculatedWidth = availableHeight / 2;
+            
+            canvas.height = availableHeight;
+            canvas.width = calculatedWidth;
+            BLOCK_SIZE = canvas.height / ROWS;
+        }
+
         function formatTime(ms) {
             if (ms === null || ms === undefined) return "00:00.0";
             const totalSeconds = ms / 1000;
@@ -523,6 +528,7 @@
         }
 
         function init() {
+            resizeCanvas();
             grid = Array.from({length: ROWS}, () => Array(COLS).fill(0));
             score = 0;
             lines = 0;
@@ -547,6 +553,7 @@
             
             updateUI();
             updatePBDisplay();
+            drawPreview(ctxHold, null);
             lastTime = performance.now();
             requestAnimationFrame(gameLoop);
         }
@@ -639,13 +646,11 @@
             
             for (let i = 0; i < 4; i++) {
                 particles.push({
-                    x: startX,
-                    y: startY,
-                    size: Math.random() * 4 + 4,
-                    vx: (Math.random() - 0.5) * 6,
-                    vy: (Math.random() - 0.7) * 5 - 2,
-                    alpha: 1,
-                    color: color
+                    x: startX, y: startY,
+                    size: Math.random() * 3 + 3,
+                    vx: (Math.random() - 0.5) * 5,
+                    vy: (Math.random() - 0.7) * 4 - 1,
+                    alpha: 1, color: color
                 });
             }
         }
@@ -654,14 +659,8 @@
             const gravity = 0.2;
             for (let i = particles.length - 1; i >= 0; i--) {
                 let p = particles[i];
-                p.x += p.vx;
-                p.y += p.vy;
-                p.vy += gravity;
-                p.alpha -= 0.04;
-                
-                if (p.alpha <= 0) {
-                    particles.splice(i, 1);
-                }
+                p.x += p.vx; p.y += p.vy; p.vy += gravity; p.alpha -= 0.05;
+                if (p.alpha <= 0) particles.splice(i, 1);
             }
         }
 
@@ -673,7 +672,6 @@
             [75000, 150000, 225000, 300000].forEach(target => {
                 if (score >= target && !runConquistas.score[target]) {
                     runConquistas.score[target] = elapsedMs;
-                    
                     if (!pbAtual.rawTimes.score[target] || elapsedMs < pbAtual.rawTimes.score[target]) {
                         pbAtual.score[target] = timeStr;
                         pbAtual.rawTimes.score[target] = elapsedMs;
@@ -685,7 +683,6 @@
             [35, 70, 105, 140].forEach(target => {
                 if (lines >= target && !runConquistas.lines[target]) {
                     runConquistas.lines[target] = elapsedMs;
-                    
                     if (!pbAtual.rawTimes.lines[target] || elapsedMs < pbAtual.rawTimes.lines[target]) {
                         pbAtual.lines[target] = timeStr;
                         pbAtual.rawTimes.lines[target] = elapsedMs;
@@ -705,9 +702,7 @@
 
         function move(dir) {
             currentPiece.x += dir;
-            if (collide(grid, currentPiece)) {
-                currentPiece.x -= dir;
-            }
+            if (collide(grid, currentPiece)) currentPiece.x -= dir;
         }
 
         function playerDrop() {
@@ -760,7 +755,7 @@
         }
 
         function handleHold() {
-            if (hasHeld) return;
+            if (hasHeld || gameOver || isPaused) return;
             
             const currentType = currentPiece.type;
             if (holdPiece === null) {
@@ -779,11 +774,7 @@
         function getGhostPosition() {
             if (!currentPiece) return 0;
             let ghostY = currentPiece.y;
-            let tempPiece = {
-                matrix: currentPiece.matrix,
-                x: currentPiece.x,
-                y: ghostY
-            };
+            let tempPiece = { matrix: currentPiece.matrix, x: currentPiece.x, y: ghostY };
             while (!collide(grid, tempPiece)) {
                 tempPiece.y++;
             }
@@ -793,15 +784,15 @@
         function drawBlock(context, x, y, type, isGhost = false) {
             if (isGhost) {
                 context.strokeStyle = COLORS[type];
-                context.lineWidth = 2;
+                context.lineWidth = 1.5;
                 context.setLineDash([4, 4]);
-                context.strokeRect(x * BLOCK_SIZE + 1, y * BLOCK_SIZE + 1, BLOCK_SIZE - 3, BLOCK_SIZE - 3);
+                context.strokeRect(x * BLOCK_SIZE + 1, y * BLOCK_SIZE + 1, BLOCK_SIZE - 2, BLOCK_SIZE - 2);
                 context.setLineDash([]);
             } else {
                 context.fillStyle = COLORS[type] || '#FFF';
-                context.fillRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE - 1, BLOCK_SIZE - 1);
-                context.strokeStyle = 'rgba(255,255,255,0.3)';
-                context.strokeRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE - 1, BLOCK_SIZE - 1);
+                context.fillRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE - 0.5, BLOCK_SIZE - 0.5);
+                context.strokeStyle = 'rgba(255,255,255,0.2)';
+                context.strokeRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE - 0.5, BLOCK_SIZE - 0.5);
             }
         }
 
@@ -810,9 +801,7 @@
             
             grid.forEach((row, r) => {
                 row.forEach((value, c) => {
-                    if (value !== 0) {
-                        drawBlock(ctx, c, r, value);
-                    }
+                    if (value !== 0) drawBlock(ctx, c, r, value);
                 });
             });
 
@@ -847,13 +836,13 @@
         }
 
         function drawPreview(context, piece) {
-            context.clearRect(0, 0, 70, 70);
+            context.clearRect(0, 0, 55, 55);
             if (!piece) return;
             
             const matrix = piece.matrix;
-            const size = 14; 
-            const offsetX = (70 - matrix[0].length * size) / 2;
-            const offsetY = (70 - matrix.length * size) / 2;
+            const size = 11; 
+            const offsetX = (55 - matrix[0].length * size) / 2;
+            const offsetY = (55 - matrix.length * size) / 2;
 
             matrix.forEach((row, r) => {
                 row.forEach((value, c) => {
@@ -872,9 +861,7 @@
             lastTime = time;
 
             dropCounter += deltaTime;
-            if (dropCounter > dropInterval) {
-                playerDrop();
-            }
+            if (dropCounter > dropInterval) playerDrop();
 
             updateParticles(deltaTime);
             draw();
@@ -885,56 +872,37 @@
             if (isPaused || gameOver) return;
             elapsedMs = Date.now() - startTime;
             document.getElementById('game-timer').textContent = formatTime(elapsedMs);
-
             updateLiveRunColumn();
         }
 
         function updateLiveRunColumn() {
             const pbAtual = pbsPorPeriodo[periodoAtivo];
 
-            // 1. Processamento de Pontos
             [75000, 150000, 225000, 300000].forEach(target => {
                 const elRun = document.getElementById(`run-${target}`);
                 if (!elRun) return;
-
                 const tempoConquistado = runConquistas.score[target];
                 const tempoPB = pbAtual.rawTimes.score[target];
 
                 if (tempoConquistado !== null) {
                     elRun.textContent = formatTime(tempoConquistado);
-                    if (tempoPB && tempoConquistado < tempoPB) {
-                        elRun.className = "run-completed-better";
-                    } else if (tempoPB && tempoConquistado >= tempoPB) {
-                        elRun.className = "run-completed-worse";
-                    } else {
-                        elRun.className = "run-completed-better";
-                    }
+                    elRun.className = (tempoPB && tempoConquistado >= tempoPB) ? "run-completed-worse" : "run-completed-better";
                 } else {
-                    elRun.textContent = "";
-                    elRun.className = "";
+                    elRun.textContent = ""; elRun.className = "";
                 }
             });
 
-            // 2. Processamento de Linhas
             [35, 70, 105, 140].forEach(target => {
                 const elRun = document.getElementById(`run-${target}l`);
                 if (!elRun) return;
-
                 const tempoConquistado = runConquistas.lines[target];
                 const tempoPB = pbAtual.rawTimes.lines[target];
 
                 if (tempoConquistado !== null) {
                     elRun.textContent = formatTime(tempoConquistado);
-                    if (tempoPB && tempoConquistado < tempoPB) {
-                        elRun.className = "run-completed-better";
-                    } else if (tempoPB && tempoConquistado >= tempoPB) {
-                        elRun.className = "run-completed-worse";
-                    } else {
-                        elRun.className = "run-completed-better";
-                    }
+                    elRun.className = (tempoPB && tempoConquistado >= tempoPB) ? "run-completed-worse" : "run-completed-better";
                 } else {
-                    elRun.textContent = "";
-                    elRun.className = "";
+                    elRun.textContent = ""; elRun.className = "";
                 }
             });
         }
@@ -965,7 +933,7 @@
             document.body.style.backgroundColor = LEVEL_BACKGROUNDS[bgIndex];
         }
 
-        // Eventos e Controles por Teclado
+        // Teclado
         document.addEventListener('keydown', event => {
             if (gameOver || isPaused) return;
             switch (event.keyCode) {
@@ -978,16 +946,18 @@
             }
         });
 
-        // Controles de Clique / Touchscreen Mobile
+        // Evento de clique na caixa de Hold da Sidebar
+        document.getElementById('hold-panel-box').addEventListener('click', handleHold);
+
+        // Controles Mobile / Touchscreen
         document.getElementById('ctrl-up').addEventListener('click', () => { if (!gameOver && !isPaused) rotate(); });
         document.getElementById('ctrl-left').addEventListener('click', () => { if (!gameOver && !isPaused) move(-1); });
         document.getElementById('ctrl-down').addEventListener('click', () => { if (!gameOver && !isPaused) playerDrop(); });
         document.getElementById('ctrl-right').addEventListener('click', () => { if (!gameOver && !isPaused) move(1); });
-        document.getElementById('ctrl-hold').addEventListener('click', () => { if (!gameOver && !isPaused) handleHold(); });
         document.getElementById('ctrl-drop').addEventListener('click', () => { if (!gameOver && !isPaused) hardDrop(); });
         document.getElementById('ctrl-rotate').addEventListener('click', () => { if (!gameOver && !isPaused) rotate(); });
 
-        // Botões do Painel Superior / Menus
+        // Modos e Menus
         document.getElementById('btn-mode').addEventListener('click', () => {
             const index = sequenciaPeriodos.indexOf(periodoAtivo);
             const nextIndex = (index + 1) % sequenciaPeriodos.length;
@@ -1012,9 +982,7 @@
             }
         });
 
-        document.getElementById('btn-menu').addEventListener('click', () => {
-            init();
-        });
+        document.getElementById('btn-menu').addEventListener('click', init);
 
         document.getElementById('btn-10s').addEventListener('click', () => {
             if (!gameOver && !isPaused) {
@@ -1024,7 +992,12 @@
             }
         });
 
-        // Inicia o App automaticamente
+        window.addEventListener('resize', () => {
+            resizeCanvas();
+            draw();
+        });
+
+        // Inicialização automática
         init();
     </script>
 </body>
