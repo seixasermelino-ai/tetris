@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
-  <title>Tulip Tetris</title>
+  <meta name="theme-color" content="#fff7f8" />
+  <title>Tulip Tetris Mobile</title>
   <style>
     :root {
       color-scheme: light;
@@ -14,19 +15,20 @@
       --pink: #ed2d63;
       --pink-2: #ff4772;
       --pink-soft: #ffd9df;
-      --pink-line: rgba(255, 121, 143, 0.22);
       --green: #00aa74;
-      --green-2: #11c38b;
+      --green-2: #12c68e;
       --ink: #301c21;
-      --muted: #7c666b;
+      --muted: #806a6f;
       --orange: #ffad1b;
-      --yellow: #ffd91c;
-      --shadow: 0 18px 42px rgba(69, 38, 44, 0.08);
-      --shadow-soft: 0 10px 28px rgba(238, 45, 99, 0.08);
-      --radius-lg: 28px;
-      --radius-md: 22px;
-      --radius-sm: 16px;
+      --safe-top: env(safe-area-inset-top, 0px);
       --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --board-w: 176px;
+      --board-h: 352px;
+      --left-w: 66px;
+      --right-w: 102px;
+      --main-gap: 6px;
+      --shadow-soft: 0 10px 30px rgba(238, 45, 99, 0.08);
+      --shadow-board: 0 0 0 4px rgba(255, 210, 216, 0.5) inset, 0 0 24px rgba(237, 45, 99, 0.24), 0 18px 42px rgba(71, 24, 35, 0.14);
     }
 
     * {
@@ -42,39 +44,42 @@
     html,
     body {
       width: 100%;
-      min-height: 100%;
-      background: radial-gradient(circle at 50% 0%, #ffffff 0, #fffafa 46%, #fff4f6 100%);
+      height: 100%;
+      overflow: hidden;
+      background: radial-gradient(circle at 50% 0%, #ffffff 0, #fffafa 50%, #fff4f6 100%);
       color: var(--ink);
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      overflow: hidden;
     }
 
     body {
       height: 100dvh;
+      overscroll-behavior: none;
     }
 
     button {
       font: inherit;
       color: inherit;
+      border: 0;
+      cursor: pointer;
     }
 
     .app {
-      width: min(100%, 1440px);
+      width: min(100%, 1180px);
       height: 100dvh;
+      min-height: 100svh;
       margin: 0 auto;
-      padding: clamp(10px, 1.5vw, 20px) clamp(12px, 2vw, 28px) calc(clamp(10px, 1.5vw, 20px) + var(--safe-bottom));
+      padding: calc(7px + var(--safe-top)) 8px calc(7px + var(--safe-bottom));
       display: grid;
       grid-template-rows: auto minmax(0, 1fr) auto;
-      gap: clamp(10px, 1.35vh, 16px);
+      gap: 8px;
       overflow: hidden;
     }
 
     .topbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      min-height: clamp(50px, 7dvh, 74px);
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 7px;
+      min-height: 0;
       position: relative;
       z-index: 4;
     }
@@ -82,23 +87,23 @@
     .brand {
       display: flex;
       align-items: center;
-      gap: clamp(10px, 1.4vw, 16px);
-      white-space: nowrap;
+      gap: 8px;
       min-width: 0;
+      white-space: nowrap;
     }
 
     .tulip-logo {
-      width: clamp(40px, 4.2vw, 58px);
-      height: clamp(40px, 4.2vw, 58px);
+      width: clamp(30px, 9vw, 40px);
+      height: clamp(30px, 9vw, 40px);
       flex: 0 0 auto;
       filter: drop-shadow(0 8px 12px rgba(237, 45, 99, 0.12));
     }
 
     .brand-title {
-      font-size: clamp(28px, 3.2vw, 48px);
-      line-height: 0.98;
+      font-size: clamp(26px, 8vw, 36px);
+      line-height: 0.95;
       font-weight: 950;
-      letter-spacing: 0.045em;
+      letter-spacing: 0.025em;
       text-transform: uppercase;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -108,97 +113,92 @@
     .brand-title .green { color: var(--green); }
 
     .top-actions {
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
-      gap: clamp(8px, 1.3vw, 18px);
-      flex: 0 0 auto;
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
     }
 
     .pill-btn,
-    .ghost-btn,
     .control-btn,
     .big-action,
-    .mode-toggle {
+    .mode-toggle,
+    .ghost-btn {
       border: 1px solid var(--pink-soft);
       background: var(--surface);
       border-radius: 999px;
-      cursor: pointer;
-      transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease, border-color 120ms ease;
+      box-shadow: var(--shadow-soft);
+      transition: transform 110ms ease, filter 110ms ease, background 110ms ease;
     }
 
     .pill-btn {
-      min-height: clamp(42px, 5.5dvh, 54px);
-      padding: 0 clamp(14px, 1.6vw, 24px);
+      min-height: 34px;
+      padding: 0 6px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 10px;
-      font-weight: 850;
-      font-size: clamp(13px, 1.25vw, 18px);
+      gap: 4px;
+      color: var(--ink);
+      font-size: clamp(10px, 2.8vw, 12px);
+      font-weight: 900;
       text-transform: uppercase;
-      box-shadow: var(--shadow-soft);
       white-space: nowrap;
     }
 
     .pill-btn.primary {
       color: var(--pink);
-      border-color: rgba(237, 45, 99, 0.36);
+      border-color: rgba(237, 45, 99, 0.35);
     }
 
     .pill-btn:active,
-    .ghost-btn:active,
     .control-btn:active,
     .big-action:active,
     .mode-toggle:active,
+    .ghost-btn:active,
     .panel.clickable:active {
-      transform: translateY(1px) scale(0.98);
+      transform: scale(0.985) translateY(1px);
+      filter: brightness(0.98);
     }
 
     .game-layout {
       min-height: 0;
-      height: 100%;
       display: grid;
-      grid-template-columns: clamp(170px, 15vw, 230px) minmax(245px, clamp(285px, 27vw, 390px)) clamp(270px, 23vw, 340px);
-      align-items: stretch;
+      grid-template-columns: var(--left-w) var(--board-w) var(--right-w);
+      align-items: center;
       justify-content: center;
-      gap: clamp(16px, 2vw, 30px);
-      position: relative;
-      z-index: 2;
+      gap: var(--main-gap);
       overflow: visible;
     }
 
     .side {
+      height: var(--board-h);
       min-height: 0;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      gap: clamp(9px, 1.25vh, 16px);
+      display: grid;
+      gap: 6px;
     }
 
     .left-side {
-      display: grid;
-      grid-template-rows: 1.15fr 1.15fr 0.78fr 0.78fr 0.78fr;
-      align-content: stretch;
+      grid-template-rows: 1.16fr 0.95fr 0.95fr 0.95fr;
     }
 
     .right-side {
-      justify-content: stretch;
+      grid-template-rows: 1fr;
     }
 
     .panel {
       width: 100%;
+      min-width: 0;
       min-height: 0;
       background: var(--surface);
       border: 1px solid var(--pink-soft);
-      border-radius: var(--radius-lg);
+      border-radius: 16px;
       box-shadow: var(--shadow-soft);
-      padding: clamp(12px, 1.45vw, 20px);
+      padding: 6px 4px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: clamp(7px, 1vh, 12px);
+      gap: 5px;
       position: relative;
       overflow: hidden;
     }
@@ -207,61 +207,54 @@
       content: "";
       position: absolute;
       inset: 0;
+      background: linear-gradient(145deg, rgba(255,255,255,0.56), rgba(255,255,255,0));
       pointer-events: none;
-      background: linear-gradient(145deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0));
     }
 
-    .panel > * {
-      position: relative;
-      z-index: 1;
-    }
+    .panel > * { position: relative; z-index: 1; }
 
     .panel-title {
       color: var(--pink);
-      font-size: clamp(12px, 1.05vw, 17px);
+      font-size: clamp(8px, 2.15vw, 11px);
+      line-height: 1;
       font-weight: 950;
-      letter-spacing: 0.045em;
+      letter-spacing: 0.03em;
       text-transform: uppercase;
       text-align: center;
     }
 
     .panel-value {
       color: var(--ink);
-      font-size: clamp(26px, 3vw, 44px);
-      line-height: 1;
+      font-size: clamp(22px, 7.3vw, 30px);
+      line-height: 0.95;
       font-weight: 950;
       font-variant-numeric: tabular-nums;
-      letter-spacing: -0.04em;
+      letter-spacing: -0.05em;
       text-align: center;
-    }
-
-    .piece-panel,
-    .stat-panel {
-      min-height: 0;
     }
 
     .stat-title-row {
       display: flex;
-      gap: 9px;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
+      gap: 2px;
     }
 
     .mini-icon {
-      font-size: clamp(15px, 1.6vw, 21px);
+      font-size: 13px;
       line-height: 1;
     }
 
     .box-display {
-      width: clamp(66px, 7.8vw, 104px);
+      width: min(48px, calc(var(--left-w) - 18px));
       aspect-ratio: 1;
-      border-radius: var(--radius-md);
+      border-radius: 13px;
       background: linear-gradient(180deg, #fff, #fff8f9);
-      border: 2px dashed rgba(255, 89, 120, 0.5);
+      border: 1.5px dashed rgba(255, 89, 120, 0.54);
       display: grid;
       place-items: center;
       overflow: hidden;
-      flex: 0 0 auto;
     }
 
     .preview-canvas {
@@ -271,131 +264,108 @@
     }
 
     .center-stage {
+      width: var(--board-w);
+      height: var(--board-h);
       min-height: 0;
-      height: 100%;
       display: grid;
-      grid-template-rows: minmax(0, 1fr) auto;
-      justify-items: center;
-      align-items: stretch;
-      align-content: stretch;
-      gap: clamp(8px, 1.3vh, 14px);
+      place-items: center;
       position: relative;
     }
 
     .board-frame {
-      height: 100%;
-      max-height: 100%;
-      min-height: 0;
-      width: auto;
-      max-width: 100%;
-      aspect-ratio: 1 / 2;
-      padding: clamp(6px, 0.65vw, 10px);
-      border-radius: clamp(20px, 2.4vw, 34px);
+      width: var(--board-w);
+      height: var(--board-h);
+      padding: 5px;
+      border-radius: 20px;
       background: #ffffff;
       border: 2px solid var(--pink-soft);
-      box-shadow:
-        0 0 0 4px rgba(255, 210, 216, 0.5) inset,
-        0 0 22px rgba(237, 45, 99, 0.22),
-        0 18px 48px rgba(71, 24, 35, 0.12);
+      box-shadow: var(--shadow-board);
       position: relative;
       overflow: hidden;
-      align-self: stretch;
     }
 
     .board-frame::after {
       content: "";
       position: absolute;
-      inset: 9px;
-      border-radius: clamp(16px, 2vw, 27px);
-      border: 2px solid rgba(255, 118, 140, 0.42);
+      inset: 7px;
+      border-radius: 15px;
+      border: 1.5px solid rgba(255, 118, 140, 0.46);
       pointer-events: none;
+      z-index: 2;
     }
 
     #game-board {
       width: 100%;
       height: 100%;
       display: block;
-      border-radius: clamp(14px, 1.7vw, 25px);
+      border-radius: 14px;
       background: var(--grid-bg);
-    }
-
-    .under-board-btn {
-      width: min(280px, 100%);
-      min-height: clamp(44px, 5.8dvh, 60px);
-      border-radius: 22px;
-      background: var(--surface);
-      border: 1px solid var(--pink-soft);
-      box-shadow: var(--shadow-soft);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: clamp(28px, 3.2vw, 40px);
-      font-weight: 900;
-      cursor: pointer;
     }
 
     .speedrun {
       height: 100%;
-      min-height: 0;
-      align-items: stretch;
       justify-content: flex-start;
-      padding: clamp(14px, 1.7vw, 24px);
-      border-left: 4px solid var(--green);
-      gap: clamp(8px, 1.1vh, 14px);
+      align-items: stretch;
+      padding: 7px 4px 6px 7px;
+      border-left: 3px solid var(--green);
+      gap: 5px;
+      border-radius: 16px;
     }
 
     .speedrun-head {
       flex: 0 0 auto;
       display: grid;
       justify-items: center;
-      gap: clamp(8px, 1.2vh, 13px);
-      margin-bottom: clamp(3px, 0.8vh, 8px);
+      gap: 4px;
     }
 
     .timer-icon {
-      width: clamp(48px, 5.8vw, 76px);
-      height: clamp(48px, 5.8vw, 76px);
+      width: 30px;
+      height: 30px;
       border-radius: 999px;
       background: #ffe8ed;
       display: grid;
       place-items: center;
       color: var(--pink);
-      box-shadow: inset 0 0 0 13px rgba(237, 45, 99, 0.06);
+      box-shadow: inset 0 0 0 7px rgba(237, 45, 99, 0.06);
     }
 
     .timer-icon svg {
-      width: 54%;
-      height: 54%;
+      width: 56%;
+      height: 56%;
       display: block;
     }
 
     .timer {
-      font-size: clamp(34px, 3.9vw, 52px);
-      line-height: 1;
+      font-size: clamp(19px, 6.1vw, 25px);
+      line-height: 0.96;
       font-weight: 950;
       letter-spacing: -0.07em;
       font-variant-numeric: tabular-nums;
       text-align: center;
+      white-space: nowrap;
     }
 
     .mode-toggle {
-      min-height: clamp(36px, 4.8dvh, 46px);
-      padding: 0 clamp(14px, 1.4vw, 22px);
+      min-height: 25px;
+      padding: 0 7px;
       display: inline-flex;
       align-items: center;
-      gap: 10px;
+      justify-content: center;
+      gap: 4px;
       color: var(--ink);
-      font-size: clamp(13px, 1.2vw, 17px);
-      font-weight: 850;
+      font-size: 10px;
+      font-weight: 900;
       background: #fff7f8;
+      box-shadow: none;
     }
 
     .dot {
-      width: 18px;
-      height: 18px;
+      width: 12px;
+      height: 12px;
       border-radius: 999px;
       background: radial-gradient(circle at 35% 30%, #ffe898 0 20%, var(--orange) 48%, #e96b00 100%);
-      box-shadow: 0 2px 8px rgba(255, 135, 0, 0.3);
+      box-shadow: 0 2px 8px rgba(255, 135, 0, 0.28);
       flex: 0 0 auto;
     }
 
@@ -403,11 +373,10 @@
       width: 100%;
       min-height: 0;
       flex: 1 1 auto;
-      border: 1px solid rgba(255, 210, 216, 0.78);
-      border-radius: 22px;
+      border: 1px solid rgba(255, 210, 216, 0.82);
+      border-radius: 12px;
       overflow: hidden;
-      background: rgba(255, 255, 255, 0.78);
-      margin-top: 2px;
+      background: rgba(255, 255, 255, 0.75);
     }
 
     .pb-table {
@@ -418,11 +387,18 @@
       font-variant-numeric: tabular-nums;
     }
 
+    .pb-table col:nth-child(1) { width: 34%; }
+    .pb-table col:nth-child(2) { width: 43%; }
+    .pb-table col:nth-child(3) { width: 23%; }
+
     .pb-table th,
     .pb-table td {
-      padding: clamp(6px, 0.85vh, 12px) clamp(7px, 0.9vw, 14px);
-      font-size: clamp(12px, 1.05vw, 16px);
+      padding: 3px 2px;
+      font-size: clamp(8px, 2.25vw, 10px);
+      line-height: 1.04;
       border-bottom: 1px solid rgba(255, 210, 216, 0.72);
+      overflow: hidden;
+      white-space: nowrap;
     }
 
     .pb-table th {
@@ -430,12 +406,12 @@
       font-weight: 950;
       text-transform: uppercase;
       text-align: left;
-      background: rgba(255, 240, 243, 0.62);
+      background: rgba(255, 240, 243, 0.7);
     }
 
     .pb-table td {
       color: #1e1719;
-      font-weight: 600;
+      font-weight: 700;
     }
 
     .pb-table th:nth-child(2),
@@ -445,7 +421,7 @@
     .pb-table td:last-child { text-align: right; }
 
     .pb-table tr.divider td {
-      padding: 8px 0;
+      padding: 4px 0;
       border-bottom: 0;
       position: relative;
       background: #fff;
@@ -454,67 +430,96 @@
     .pb-table tr.divider td::before {
       content: "";
       position: absolute;
-      left: 14px;
-      right: 14px;
+      left: 5px;
+      right: 5px;
       top: 50%;
-      border-top: 2px dashed rgba(255, 121, 143, 0.45);
+      border-top: 1.5px dashed rgba(255, 121, 143, 0.48);
     }
 
     .pb-table tr:last-child td { border-bottom: 0; }
 
-    .run-better { color: var(--green) !important; font-weight: 900 !important; }
-    .run-worse { color: var(--pink) !important; font-weight: 900 !important; }
+    .run-better { color: var(--green) !important; font-weight: 950 !important; }
+    .run-worse { color: var(--pink) !important; font-weight: 950 !important; }
 
     .controls {
-      min-height: 0;
+      width: 100%;
+      max-width: 560px;
+      margin: 0 auto;
       display: grid;
-      grid-template-columns: minmax(240px, 460px) minmax(250px, 430px);
-      align-items: center;
-      justify-content: center;
-      gap: clamp(14px, 2.4vw, 28px);
+      grid-template-rows: 54px 78px;
+      gap: 8px;
+      padding: 8px;
+      border: 1px solid rgba(255, 210, 216, 0.86);
+      border-radius: 22px;
+      background: rgba(255, 250, 251, 0.92);
+      box-shadow: 0 12px 28px rgba(69, 38, 44, 0.09);
+      backdrop-filter: blur(14px);
       position: relative;
-      z-index: 3;
+      z-index: 8;
     }
 
     .move-controls {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: clamp(10px, 1.4vw, 20px);
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
     }
 
     .control-btn {
-      height: clamp(54px, 7.2dvh, 78px);
-      border-radius: clamp(16px, 1.8vw, 24px);
+      height: 100%;
+      border-radius: 17px;
       background: var(--surface-strong);
-      font-size: clamp(26px, 3vw, 42px);
-      font-weight: 850;
-      box-shadow: var(--shadow-soft);
+      font-size: 34px;
+      line-height: 1;
+      font-weight: 900;
     }
 
     .action-controls {
       display: grid;
-      grid-template-columns: repeat(2, minmax(110px, 1fr));
-      gap: clamp(12px, 1.7vw, 22px);
+      grid-template-columns: 0.95fr 1.2fr 1.05fr;
+      gap: 8px;
     }
 
     .big-action {
-      height: clamp(76px, 10.5dvh, 112px);
-      border-radius: clamp(18px, 2.4vw, 30px);
+      height: 100%;
+      border-radius: 19px;
       color: #fff;
-      border: 0;
       display: grid;
       place-items: center;
-      gap: 0;
-      font-size: clamp(18px, 2.35vw, 30px);
+      align-content: center;
+      gap: 1px;
+      font-size: clamp(13px, 4.2vw, 20px);
       line-height: 0.95;
       font-weight: 950;
       text-transform: uppercase;
-      box-shadow: 0 16px 30px rgba(30, 24, 24, 0.16), inset 0 0 0 7px rgba(255, 255, 255, 0.12);
+      box-shadow: 0 13px 24px rgba(30, 24, 24, 0.14), inset 0 0 0 6px rgba(255, 255, 255, 0.12);
+      overflow: hidden;
     }
 
     .big-action .arrow {
-      font-size: clamp(30px, 3.4vw, 48px);
+      font-size: clamp(22px, 8vw, 34px);
       line-height: 0.78;
+      display: block;
+    }
+
+    .big-action.hold {
+      background: linear-gradient(145deg, #ffffff, #fff7f8);
+      color: var(--pink);
+      border: 1px solid var(--pink-soft);
+      box-shadow: var(--shadow-soft);
+      grid-template-columns: 1fr;
+      gap: 2px;
+      padding: 4px;
+    }
+
+    .hold-preview {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 10px;
+      border: 1.5px dashed rgba(255, 89, 120, 0.55);
+      background: #fff;
+      order: -1;
     }
 
     .big-action.drop {
@@ -527,413 +532,212 @@
 
     .status-overlay {
       position: absolute;
-      inset: 12px;
+      inset: 10px;
       z-index: 5;
       display: grid;
       place-items: center;
-      background: rgba(255, 255, 255, 0.72);
-      border-radius: clamp(16px, 2vw, 25px);
+      background: rgba(255, 255, 255, 0.74);
+      border-radius: 16px;
       backdrop-filter: blur(5px);
       text-align: center;
-      padding: 24px;
+      padding: 12px;
     }
 
     .status-overlay.hidden { display: none; }
 
     .status-card {
-      width: min(92%, 280px);
-      padding: 24px 20px;
-      border-radius: 24px;
+      width: min(92%, 240px);
+      padding: 20px 16px;
+      border-radius: 22px;
       border: 1px solid var(--pink-soft);
       background: #fff;
-      box-shadow: var(--shadow);
+      box-shadow: 0 18px 42px rgba(69, 38, 44, 0.12);
       display: grid;
-      gap: 14px;
+      gap: 12px;
       justify-items: center;
     }
 
     .status-card h2 {
       color: var(--pink);
-      font-size: 28px;
+      font-size: 25px;
       line-height: 1;
       text-transform: uppercase;
     }
 
     .status-card p {
       color: var(--muted);
-      font-weight: 650;
+      font-size: 14px;
+      font-weight: 700;
     }
 
     .ghost-btn {
-      min-height: 44px;
-      padding: 0 20px;
+      min-height: 40px;
+      padding: 0 18px;
       color: var(--pink);
-      font-weight: 850;
+      font-weight: 900;
       text-transform: uppercase;
       background: #fff7f8;
     }
 
     .kbd-hints {
-      position: fixed;
-      left: 16px;
-      bottom: 10px;
-      color: rgba(48, 28, 33, 0.42);
-      font-size: 12px;
-      font-weight: 650;
-      pointer-events: none;
-      z-index: 1;
+      display: none;
     }
 
-    @media (max-width: 1180px) and (min-width: 901px) {
-      .app {
-        max-width: 100%;
+    @media (max-height: 700px) {
+      .app { gap: 6px; padding-top: calc(5px + var(--safe-top)); padding-bottom: calc(5px + var(--safe-bottom)); }
+      .brand-title { font-size: clamp(22px, 7vw, 30px); }
+      .tulip-logo { width: 30px; height: 30px; }
+      .pill-btn { min-height: 30px; font-size: 10px; }
+      .controls { grid-template-rows: 48px 68px; gap: 6px; padding: 6px; border-radius: 18px; }
+      .control-btn { font-size: 30px; border-radius: 15px; }
+      .big-action { border-radius: 16px; }
+      .panel-title { font-size: 8px; }
+      .panel-value { font-size: 22px; }
+      .timer { font-size: 19px; }
+      .timer-icon { display: none; }
+      .pb-table th, .pb-table td { padding-top: 2px; padding-bottom: 2px; }
+    }
+
+    @media (min-width: 700px) {
+      :root {
+        --main-gap: 18px;
       }
-      .game-layout {
-        grid-template-columns: minmax(150px, 190px) minmax(245px, 330px) minmax(245px, 300px);
+
+      .app {
+        padding: 18px 24px calc(18px + var(--safe-bottom));
         gap: 14px;
       }
-      .brand-title { font-size: clamp(25px, 3vw, 38px); }
-      .pill-btn { padding: 0 13px; }
-      .speedrun { padding: 14px; }
-    }
-
-    @media (max-width: 900px) {
-      html,
-      body {
-        overflow: auto;
-      }
-
-      body {
-        height: auto;
-        min-height: 100dvh;
-      }
-
-      .app {
-        width: 100%;
-        height: auto;
-        min-height: 100dvh;
-        display: grid;
-        grid-template-areas:
-          "topbar"
-          "center"
-          "controls"
-          "left"
-          "right";
-        grid-template-rows: auto auto auto auto auto;
-        padding: 10px 12px calc(12px + var(--safe-bottom));
-        gap: 12px;
-        overflow: visible;
-      }
 
       .topbar {
-        grid-area: topbar;
-        min-height: 0;
-        align-items: flex-start;
-        flex-wrap: wrap;
-        gap: 10px;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        gap: 18px;
       }
 
-      .brand {
-        width: 100%;
-      }
-
-      .brand-title {
-        font-size: clamp(24px, 8.2vw, 36px);
-        letter-spacing: 0.025em;
-      }
-
-      .tulip-logo {
-        width: clamp(36px, 10vw, 44px);
-        height: clamp(36px, 10vw, 44px);
-      }
+      .brand { gap: 14px; }
+      .tulip-logo { width: 52px; height: 52px; }
+      .brand-title { font-size: clamp(34px, 4vw, 52px); letter-spacing: 0.045em; }
 
       .top-actions {
-        width: 100%;
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 8px;
+        width: auto;
+        grid-template-columns: repeat(3, auto);
+        gap: 14px;
       }
 
       .pill-btn {
-        min-height: 42px;
-        padding: 0 8px;
-        font-size: clamp(11px, 3vw, 13px);
-        gap: 6px;
+        min-height: 48px;
+        padding: 0 22px;
+        font-size: 16px;
+        gap: 9px;
       }
 
       .game-layout {
-        height: auto;
-        display: contents;
-      }
-
-      .center-stage { 
-        grid-area: center;
-        height: auto;
-        grid-template-rows: auto auto;
-      }
-      .left-side { grid-area: left; }
-      .right-side { grid-area: right; }
-
-      .board-frame {
-        height: min(56dvh, 620px);
-        min-height: 330px;
-        max-height: none;
-        align-self: center;
-      }
-
-      .under-board-btn {
-        min-height: 48px;
-        width: min(260px, 70vw);
-        border-radius: 18px;
-      }
-
-      .left-side {
-        height: auto;
-        display: grid;
-        grid-template-columns: repeat(5, minmax(0, 1fr));
-        grid-template-rows: none;
-        gap: 8px;
-      }
-
-      .panel {
-        border-radius: 18px;
-        padding: 10px;
-      }
-
-      .piece-panel,
-      .stat-panel {
-        min-height: 88px;
-      }
-
-      .box-display {
-        width: min(70px, 16vw);
-        border-radius: 16px;
-      }
-
-      .panel-title {
-        font-size: 10px;
-      }
-
-      .panel-value {
-        font-size: clamp(24px, 8vw, 34px);
-      }
-
-      .stat-title-row {
-        gap: 5px;
-      }
-
-      .mini-icon {
-        font-size: 13px;
-      }
-
-      .right-side,
-      .speedrun {
-        height: auto;
-      }
-
-      .speedrun {
-        border-left-width: 3px;
-      }
-
-      .speedrun-head {
-        grid-template-columns: 1fr auto 1fr;
-        align-items: center;
-        margin-bottom: 10px;
-      }
-
-      .speedrun-head .panel-title { justify-self: start; }
-      .timer-icon { display: none; }
-      .timer { font-size: clamp(34px, 10vw, 48px); }
-      .mode-toggle { justify-self: end; min-height: 38px; padding: 0 14px; }
-      .pb-wrap { flex: none; }
-      .pb-table { height: auto; }
-      .pb-table th,
-      .pb-table td { font-size: clamp(12px, 3.6vw, 16px); padding: 9px 10px; }
-
-      .controls {
-        grid-area: controls;
-        position: sticky;
-        bottom: calc(8px + var(--safe-bottom));
-        z-index: 30;
-        width: 100%;
-        max-width: 720px;
-        margin: 0 auto;
-        padding: 10px;
-        grid-template-columns: 1fr;
-        gap: 9px;
-        border: 1px solid rgba(255, 210, 216, 0.85);
-        border-radius: 24px;
-        background: rgba(255, 250, 251, 0.9);
-        backdrop-filter: blur(14px);
-        box-shadow: 0 10px 28px rgba(69, 38, 44, 0.08);
-      }
-
-      .move-controls,
-      .action-controls {
-        gap: 8px;
-      }
-
-      .control-btn {
-        height: 48px;
-        min-height: 0;
-        font-size: 28px;
-        border-radius: 16px;
-      }
-
-      .big-action {
-        height: 62px;
-        min-height: 0;
-        border-radius: 18px;
-        font-size: 19px;
-      }
-
-      .big-action .arrow {
-        font-size: 28px;
-      }
-
-      .kbd-hints { display: none; }
-    }
-
-    @media (max-width: 560px) {
-      .app {
-        padding: 8px 10px calc(10px + var(--safe-bottom));
-        gap: 10px;
-      }
-
-      .topbar {
-        gap: 8px;
-      }
-
-      .board-frame {
-        height: min(51dvh, 560px);
-        min-height: 310px;
-        border-radius: 22px;
-      }
-
-      .left-side {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
-
-      .piece-panel {
-        min-height: 92px;
-      }
-
-      .stat-panel {
-        min-height: 78px;
-      }
-
-      .speedrun-head {
-        grid-template-columns: 1fr 1fr;
-        gap: 8px;
-      }
-
-      .speedrun-head .panel-title {
-        grid-column: 1 / -1;
-        justify-self: center;
-      }
-
-      .timer {
-        justify-self: start;
-        font-size: clamp(30px, 10vw, 42px);
-      }
-
-      .mode-toggle {
-        justify-self: end;
-      }
-
-      .controls {
-        padding: 8px;
-        border-radius: 20px;
-      }
-
-      .control-btn {
-        height: 44px;
-      }
-
-      .big-action {
-        height: 58px;
-        font-size: 18px;
-      }
-    }
-
-    @media (max-height: 760px) and (min-width: 901px) {
-      .app {
-        gap: 8px;
-        padding-top: 8px;
-        padding-bottom: calc(8px + var(--safe-bottom));
-      }
-
-      .topbar {
-        min-height: 46px;
-      }
-
-      .brand-title {
-        font-size: clamp(24px, 2.7vw, 38px);
-      }
-
-      .tulip-logo {
-        width: 40px;
-        height: 40px;
-      }
-
-      .pill-btn {
-        min-height: 38px;
+        gap: var(--main-gap);
       }
 
       .side {
-        gap: 8px;
+        gap: 14px;
+      }
+
+      .left-side {
+        grid-template-rows: 1.15fr 0.85fr 0.85fr 0.85fr;
       }
 
       .panel {
-        padding: 10px;
-        border-radius: 20px;
+        border-radius: 26px;
+        padding: 16px;
+        gap: 10px;
       }
 
-      .box-display {
-        width: 62px;
+      .panel-title { font-size: 15px; }
+      .panel-value { font-size: 40px; }
+      .mini-icon { font-size: 20px; }
+      .box-display { width: min(96px, calc(var(--left-w) - 56px)); border-radius: 20px; border-width: 2px; }
+      .stat-title-row { flex-direction: row; gap: 8px; }
+
+      .board-frame {
+        padding: 9px;
+        border-radius: 32px;
       }
 
-      .panel-value {
-        font-size: 28px;
+      .board-frame::after {
+        inset: 12px;
+        border-radius: 24px;
+        border-width: 2px;
       }
 
-      .timer-icon {
-        width: 46px;
-        height: 46px;
-      }
-
-      .timer {
-        font-size: 34px;
-      }
+      #game-board { border-radius: 22px; }
 
       .speedrun {
-        padding: 12px;
+        border-left-width: 4px;
+        border-radius: 28px;
+        padding: 22px;
+        gap: 14px;
       }
 
-      .pb-table th,
-      .pb-table td {
-        padding: 5px 8px;
-        font-size: 12px;
+      .speedrun-head { gap: 12px; }
+      .timer-icon { width: 72px; height: 72px; box-shadow: inset 0 0 0 13px rgba(237,45,99,0.06); }
+      .timer { font-size: 48px; }
+      .mode-toggle { min-height: 43px; padding: 0 20px; font-size: 16px; gap: 9px; }
+      .dot { width: 17px; height: 17px; }
+      .pb-wrap { border-radius: 20px; }
+      .pb-table th, .pb-table td { font-size: 15px; padding: 8px 10px; }
+      .pb-table tr.divider td { padding: 8px 0; }
+
+      .controls {
+        max-width: 900px;
+        grid-template-columns: minmax(260px, 1fr) minmax(360px, 1.35fr);
+        grid-template-rows: 96px;
+        gap: 18px;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+        backdrop-filter: none;
       }
 
-      .under-board-btn {
-        min-height: 40px;
+      .move-controls {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
       }
 
       .control-btn {
-        height: 46px;
+        border-radius: 24px;
+        font-size: 42px;
+      }
+
+      .action-controls {
+        grid-template-columns: 0.9fr 1.15fr 1.05fr;
+        gap: 16px;
       }
 
       .big-action {
-        height: 58px;
-        font-size: 18px;
+        border-radius: 28px;
+        font-size: 26px;
+        box-shadow: 0 16px 30px rgba(30, 24, 24, 0.16), inset 0 0 0 7px rgba(255, 255, 255, 0.12);
+      }
+
+      .big-action .arrow { font-size: 44px; }
+      .hold-preview { width: 46px; height: 46px; border-radius: 14px; }
+
+      .kbd-hints {
+        display: block;
+        position: fixed;
+        left: 16px;
+        bottom: 10px;
+        color: rgba(48, 28, 33, 0.38);
+        font-size: 12px;
+        font-weight: 700;
+        pointer-events: none;
+        z-index: 1;
       }
     }
-</style>
+  </style>
 </head>
 <body>
-  <div class="app">
-    <header class="topbar" aria-label="Topo do jogo">
+  <div class="app" id="app">
+    <header class="topbar" id="topbar" aria-label="Topo do jogo">
       <div class="brand" aria-label="Tulip Tetris">
         <svg class="tulip-logo" viewBox="0 0 64 64" aria-hidden="true">
           <defs>
@@ -962,13 +766,8 @@
       </nav>
     </header>
 
-    <main class="game-layout">
+    <main class="game-layout" id="game-layout">
       <aside class="side left-side" aria-label="Informações da partida">
-        <section class="panel piece-panel clickable" id="hold-panel-box" title="Guardar peça" aria-label="Guardar peça">
-          <div class="panel-title">Guardar</div>
-          <div class="box-display"><canvas class="preview-canvas" id="canvas-hold"></canvas></div>
-        </section>
-
         <section class="panel piece-panel" aria-label="Próxima peça">
           <div class="panel-title">Próximo</div>
           <div class="box-display"><canvas class="preview-canvas" id="canvas-next"></canvas></div>
@@ -1001,7 +800,6 @@
             </div>
           </div>
         </div>
-        <button class="under-board-btn" id="ctrl-rotate-mini" type="button" aria-label="Girar peça">↻</button>
       </section>
 
       <aside class="side right-side" aria-label="Speedrun e recordes">
@@ -1024,12 +822,9 @@
 
           <div class="pb-wrap">
             <table class="pb-table" aria-label="Tabela de metas, recordes e run atual">
+              <colgroup><col /><col /><col /></colgroup>
               <thead>
-                <tr>
-                  <th>Meta</th>
-                  <th>PB</th>
-                  <th>Run</th>
-                </tr>
+                <tr><th>Meta</th><th>PB</th><th>Run</th></tr>
               </thead>
               <tbody>
                 <tr><td>75k</td><td id="pb-75k">00:00.0</td><td id="run-75000">—</td></tr>
@@ -1048,20 +843,23 @@
       </aside>
     </main>
 
-    <section class="controls" aria-label="Controles do jogo">
+    <section class="controls" id="controls" aria-label="Controles do jogo">
       <div class="move-controls">
         <button class="control-btn" id="ctrl-left" type="button" aria-label="Mover para esquerda">←</button>
-        <button class="control-btn" id="ctrl-down" type="button" aria-label="Descer peça">↓</button>
         <button class="control-btn" id="ctrl-right" type="button" aria-label="Mover para direita">→</button>
       </div>
       <div class="action-controls">
+        <button class="big-action hold" id="hold-panel-box" type="button" title="Guardar peça" aria-label="Guardar peça">
+          <span class="hold-preview"><canvas class="preview-canvas" id="canvas-hold"></canvas></span>
+          <span>Guardar</span>
+        </button>
         <button class="big-action drop" id="ctrl-drop" type="button" aria-label="Drop"><span class="arrow">↓</span><span>Drop</span></button>
         <button class="big-action rotate" id="ctrl-rotate" type="button" aria-label="Girar"><span class="arrow">↻</span><span>Girar</span></button>
       </div>
     </section>
   </div>
 
-  <div class="kbd-hints">Teclado: ← → ↓ / ↑ ou W gira / espaço drop / H guarda / P pausa / R reinicia</div>
+  <div class="kbd-hints">Teclado: ← → / ↓ soft drop / ↑ ou W gira / espaço drop / H guarda / P pausa / R reinicia</div>
 
   <script>
     const COLS = 10;
@@ -1069,9 +867,13 @@
     const STORAGE_KEY = "tulip_tetris_ui_v2_pbs";
     const LEGACY_STORAGE_KEY = "tulip_tetris_multiy_pbs";
 
+    const appEl = document.getElementById("app");
+    const topbarEl = document.getElementById("topbar");
+    const controlsEl = document.getElementById("controls");
+    const layoutEl = document.getElementById("game-layout");
+    const boardFrame = document.getElementById("board-frame");
     const canvas = document.getElementById("game-board");
     const ctx = canvas.getContext("2d");
-    const boardFrame = document.getElementById("board-frame");
     const canvasNext = document.getElementById("canvas-next");
     const ctxNext = canvasNext.getContext("2d");
     const canvasHold = document.getElementById("canvas-hold");
@@ -1111,7 +913,7 @@
     const SCORE_GOALS = [75000, 150000, 225000, 300000];
     const LINE_GOALS = [35, 70, 105, 140];
     const PERIODS = ["dia", "semana", "mes"];
-    const PERIOD_LABEL = { dia: "DIA", semana: "SEMANA", mes: "MÊS" };
+    const PERIOD_LABEL = { dia: "DIA", semana: "SEM", mes: "MÊS" };
 
     let boardWidth = 300;
     let boardHeight = 600;
@@ -1142,6 +944,7 @@
     let activePeriod = "dia";
     let pbsByPeriod = loadPBs();
     let runMarks;
+    let resizeRaf = null;
 
     class Piece {
       constructor(type) {
@@ -1150,6 +953,10 @@
         this.x = Math.floor((COLS - this.matrix[0].length) / 2);
         this.y = type === "I" ? -1 : 0;
       }
+    }
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
     }
 
     function makeEmptyGrid() {
@@ -1186,16 +993,12 @@
         base[period].maxScore = Number(incoming.maxScore || 0);
         base[period].maxLines = Number(incoming.maxLines || 0);
         SCORE_GOALS.forEach(goal => {
-          const stringTime = incoming.score?.[goal] ?? null;
-          const rawTime = incoming.rawTimes?.score?.[goal] ?? null;
-          base[period].score[goal] = stringTime;
-          base[period].rawTimes.score[goal] = rawTime;
+          base[period].score[goal] = incoming.score?.[goal] ?? null;
+          base[period].rawTimes.score[goal] = incoming.rawTimes?.score?.[goal] ?? null;
         });
         LINE_GOALS.forEach(goal => {
-          const stringTime = incoming.lines?.[goal] ?? null;
-          const rawTime = incoming.rawTimes?.lines?.[goal] ?? null;
-          base[period].lines[goal] = stringTime;
-          base[period].rawTimes.lines[goal] = rawTime;
+          base[period].lines[goal] = incoming.lines?.[goal] ?? null;
+          base[period].rawTimes.lines[goal] = incoming.rawTimes?.lines?.[goal] ?? null;
         });
       });
       return base;
@@ -1237,11 +1040,52 @@
       return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}.${tenths}`;
     }
 
+    function fitLayout() {
+      const vw = window.innerWidth || document.documentElement.clientWidth;
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      const mobile = vw < 700;
+
+      const appStyles = getComputedStyle(appEl);
+      const padX = parseFloat(appStyles.paddingLeft) + parseFloat(appStyles.paddingRight);
+      const padY = parseFloat(appStyles.paddingTop) + parseFloat(appStyles.paddingBottom);
+      const rowGap = parseFloat(appStyles.rowGap || appStyles.gap || 8) || 8;
+
+      const contentW = Math.max(300, appEl.clientWidth - padX);
+      const topH = topbarEl.offsetHeight;
+      const controlsH = controlsEl.offsetHeight;
+      const availableH = Math.max(280, vh - topH - controlsH - padY - rowGap * 2);
+
+      let leftW;
+      let rightW;
+      let mainGap;
+
+      if (mobile) {
+        leftW = clamp(Math.round(vw * 0.18), 60, 74);
+        rightW = clamp(Math.round(vw * 0.285), 96, 118);
+        mainGap = clamp(Math.round(vw * 0.016), 5, 7);
+      } else {
+        leftW = clamp(Math.round(vw * 0.155), 175, 235);
+        rightW = clamp(Math.round(vw * 0.23), 285, 360);
+        mainGap = clamp(Math.round(vw * 0.018), 16, 28);
+      }
+
+      const availableBoardW = contentW - leftW - rightW - mainGap * 2;
+      const maxBoardByHeight = availableH / 2;
+      const boardW = Math.floor(clamp(Math.min(availableBoardW, maxBoardByHeight), mobile ? 150 : 240, mobile ? 230 : 430));
+      const boardH = boardW * 2;
+
+      document.documentElement.style.setProperty("--left-w", `${leftW}px`);
+      document.documentElement.style.setProperty("--right-w", `${rightW}px`);
+      document.documentElement.style.setProperty("--main-gap", `${mainGap}px`);
+      document.documentElement.style.setProperty("--board-w", `${boardW}px`);
+      document.documentElement.style.setProperty("--board-h", `${boardH}px`);
+    }
+
     function setupCanvasSize() {
       dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, 2.5));
-      const rect = boardFrame.getBoundingClientRect();
-      boardWidth = Math.max(220, Math.floor(rect.width));
-      boardHeight = Math.max(440, Math.floor(rect.height));
+      const rect = canvas.getBoundingClientRect();
+      boardWidth = Math.max(150, Math.floor(rect.width));
+      boardHeight = Math.max(300, Math.floor(rect.height));
       canvas.width = Math.round(boardWidth * dpr);
       canvas.height = Math.round(boardHeight * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -1253,11 +1097,19 @@
       draw();
     }
 
+    function relayout() {
+      if (resizeRaf) cancelAnimationFrame(resizeRaf);
+      resizeRaf = requestAnimationFrame(() => {
+        fitLayout();
+        requestAnimationFrame(setupCanvasSize);
+      });
+    }
+
     function setupPreviewCanvas(context) {
       const c = context.canvas;
       const rect = c.getBoundingClientRect();
-      const w = Math.max(40, Math.floor(rect.width));
-      const h = Math.max(40, Math.floor(rect.height));
+      const w = Math.max(26, Math.floor(rect.width));
+      const h = Math.max(26, Math.floor(rect.height));
       c.width = Math.round(w * dpr);
       c.height = Math.round(h * dpr);
       context.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -1299,6 +1151,7 @@
     function init() {
       if (animationId) cancelAnimationFrame(animationId);
       clearInterval(timerId);
+      fitLayout();
 
       grid = makeEmptyGrid();
       score = 0;
@@ -1319,7 +1172,7 @@
       setOverlay("hidden");
       spawnPiece();
       startTimer();
-      setupCanvasSize();
+      requestAnimationFrame(setupCanvasSize);
       updateUI();
       updatePBDisplay();
       updateRunColumn();
@@ -1364,9 +1217,7 @@
       nextPiece = randPiece();
       hasHeld = false;
       drawPreview(ctxNext, nextPiece);
-      if (collide(grid, currentPiece)) {
-        endGame();
-      }
+      if (collide(grid, currentPiece)) endGame();
     }
 
     function endGame() {
@@ -1393,9 +1244,7 @@
     function merge(board, piece) {
       piece.matrix.forEach((row, r) => {
         row.forEach((value, c) => {
-          if (value && piece.y + r >= 0) {
-            board[piece.y + r][piece.x + c] = piece.type;
-          }
+          if (value && piece.y + r >= 0) board[piece.y + r][piece.x + c] = piece.type;
         });
       });
     }
@@ -1404,9 +1253,7 @@
       const n = matrix.length;
       const result = Array.from({ length: n }, () => Array(n).fill(0));
       for (let r = 0; r < n; r++) {
-        for (let c = 0; c < n; c++) {
-          result[c][n - 1 - r] = matrix[r][c];
-        }
+        for (let c = 0; c < n; c++) result[c][n - 1 - r] = matrix[r][c];
       }
       return result;
     }
@@ -1443,9 +1290,7 @@
 
     function hardDrop() {
       if (!canAct()) return;
-      while (!collide(grid, currentPiece)) {
-        currentPiece.y += 1;
-      }
+      while (!collide(grid, currentPiece)) currentPiece.y += 1;
       currentPiece.y -= 1;
       lockPiece();
       dropCounter = 0;
@@ -1485,14 +1330,8 @@
     function updatePBsMaxOnly() {
       const period = pbsByPeriod[activePeriod];
       let changed = false;
-      if (score > period.maxScore) {
-        period.maxScore = score;
-        changed = true;
-      }
-      if (lines > period.maxLines) {
-        period.maxLines = lines;
-        changed = true;
-      }
+      if (score > period.maxScore) { period.maxScore = score; changed = true; }
+      if (lines > period.maxLines) { period.maxLines = lines; changed = true; }
       if (changed) {
         savePBs();
         updatePBDisplay();
@@ -1527,14 +1366,8 @@
         }
       });
 
-      if (score > period.maxScore) {
-        period.maxScore = score;
-        changed = true;
-      }
-      if (lines > period.maxLines) {
-        period.maxLines = lines;
-        changed = true;
-      }
+      if (score > period.maxScore) { period.maxScore = score; changed = true; }
+      if (lines > period.maxLines) { period.maxLines = lines; changed = true; }
       if (changed) savePBs();
       updatePBDisplay();
       updateRunColumn();
@@ -1559,11 +1392,7 @@
     }
 
     function getGhostY() {
-      const ghost = {
-        matrix: currentPiece.matrix,
-        x: currentPiece.x,
-        y: currentPiece.y
-      };
+      const ghost = { matrix: currentPiece.matrix, x: currentPiece.x, y: currentPiece.y };
       while (!collide(grid, ghost)) ghost.y += 1;
       return ghost.y - 1;
     }
@@ -1621,7 +1450,7 @@
     function drawBackgroundGrid() {
       ctx.clearRect(0, 0, boardWidth, boardHeight);
       ctx.fillStyle = "#fffdfd";
-      roundedRect(ctx, 0, 0, boardWidth, boardHeight, 24);
+      roundedRect(ctx, 0, 0, boardWidth, boardHeight, 16);
       ctx.fill();
 
       ctx.save();
@@ -1659,18 +1488,14 @@
         if (ghostY > currentPiece.y) {
           currentPiece.matrix.forEach((row, r) => {
             row.forEach((value, c) => {
-              if (value && r + ghostY >= 0) {
-                drawGhostCell(ctx, c + currentPiece.x, r + ghostY, COLORS[currentPiece.type]);
-              }
+              if (value && r + ghostY >= 0) drawGhostCell(ctx, c + currentPiece.x, r + ghostY, COLORS[currentPiece.type]);
             });
           });
         }
 
         currentPiece.matrix.forEach((row, r) => {
           row.forEach((value, c) => {
-            if (value && r + currentPiece.y >= 0) {
-              drawCell(ctx, c + currentPiece.x, r + currentPiece.y, COLORS[currentPiece.type]);
-            }
+            if (value && r + currentPiece.y >= 0) drawCell(ctx, c + currentPiece.x, r + currentPiece.y, COLORS[currentPiece.type]);
           });
         });
       }
@@ -1703,7 +1528,7 @@
 
       const pieceW = maxX - minX + 1;
       const pieceH = maxY - minY + 1;
-      const available = Math.max(26, Math.min(w, h) - 18);
+      const available = Math.max(20, Math.min(w, h) - 10);
       const size = Math.min(available / pieceW, available / pieceH);
       const offsetX = (w - pieceW * size) / 2 - minX * size;
       const offsetY = (h - pieceH * size) / 2 - minY * size;
@@ -1785,12 +1610,8 @@
 
     function updateRunColumn() {
       const p = pbsByPeriod[activePeriod];
-      SCORE_GOALS.forEach(goal => {
-        updateRunCell(`run-${goal}`, runMarks.score[goal], p.rawTimes.score[goal]);
-      });
-      LINE_GOALS.forEach(goal => {
-        updateRunCell(`run-${goal}l`, runMarks.lines[goal], p.rawTimes.lines[goal]);
-      });
+      SCORE_GOALS.forEach(goal => updateRunCell(`run-${goal}`, runMarks.score[goal], p.rawTimes.score[goal]));
+      LINE_GOALS.forEach(goal => updateRunCell(`run-${goal}l`, runMarks.lines[goal], p.rawTimes.lines[goal]));
     }
 
     function cyclePeriod() {
@@ -1803,11 +1624,7 @@
 
     function hexToRgb(hex) {
       const clean = hex.replace("#", "");
-      return {
-        r: parseInt(clean.slice(0, 2), 16),
-        g: parseInt(clean.slice(2, 4), 16),
-        b: parseInt(clean.slice(4, 6), 16)
-      };
+      return { r: parseInt(clean.slice(0, 2), 16), g: parseInt(clean.slice(2, 4), 16), b: parseInt(clean.slice(4, 6), 16) };
     }
 
     function rgbToHex({ r, g, b }) {
@@ -1837,20 +1654,17 @@
         event.preventDefault();
         action();
         clear();
-        delayId = setTimeout(() => {
-          repeatId = setInterval(action, interval);
-        }, delay);
+        try { element.setPointerCapture(event.pointerId); } catch (error) {}
+        delayId = setTimeout(() => { repeatId = setInterval(action, interval); }, delay);
       });
       ["pointerup", "pointercancel", "pointerleave", "lostpointercapture"].forEach(type => element.addEventListener(type, clear));
     }
 
     bindRepeatButton(document.getElementById("ctrl-left"), () => move(-1));
     bindRepeatButton(document.getElementById("ctrl-right"), () => move(1));
-    bindRepeatButton(document.getElementById("ctrl-down"), () => softDrop(), 90, 42);
 
     document.getElementById("ctrl-drop").addEventListener("click", hardDrop);
     document.getElementById("ctrl-rotate").addEventListener("click", rotatePiece);
-    document.getElementById("ctrl-rotate-mini").addEventListener("click", rotatePiece);
     document.getElementById("hold-panel-box").addEventListener("click", holdCurrentPiece);
     document.getElementById("btn-pause").addEventListener("click", togglePause);
     document.getElementById("btn-restart").addEventListener("click", init);
@@ -1860,9 +1674,7 @@
 
     document.addEventListener("keydown", event => {
       const key = event.key.toLowerCase();
-      if (["arrowleft", "arrowright", "arrowdown", "arrowup", " ", "spacebar"].includes(key)) {
-        event.preventDefault();
-      }
+      if (["arrowleft", "arrowright", "arrowdown", "arrowup", " ", "spacebar"].includes(key)) event.preventDefault();
       if (key === "p") return togglePause();
       if (key === "r") return init();
       if (key === "h" || key === "c") return holdCurrentPiece();
@@ -1874,13 +1686,8 @@
       else if (key === " " || key === "spacebar") hardDrop();
     });
 
-    window.addEventListener("resize", () => {
-      window.requestAnimationFrame(setupCanvasSize);
-    });
-
-    window.addEventListener("orientationchange", () => {
-      setTimeout(setupCanvasSize, 150);
-    });
+    window.addEventListener("resize", relayout);
+    window.addEventListener("orientationchange", () => setTimeout(relayout, 180));
 
     document.addEventListener("visibilitychange", () => {
       if (document.hidden && !isPaused && !gameOver) pauseGame();
