@@ -818,6 +818,37 @@
             context.fillRect(x * size + 1, y * size + 1, size - 2, size / 4);
         }
 
+        // Função para desenhar o bloco fantasma (silhueta pontilhada)
+        function drawGhostBlock(context, x, y, color, size = BLOCK_SIZE) {
+            context.save();
+            context.strokeStyle = color;
+            context.lineWidth = 2;
+            // Define o padrão pontilhado/tracejado [tamanho_traço, tamanho_espaço]
+            context.setLineDash([4, 4]); 
+            context.strokeRect(x * size + 1, y * size + 1, size - 2, size - 2);
+            
+            // Um leve fundo semitransparente para ajudar na visibilidade
+            context.fillStyle = color + '1A'; // Adiciona transparência de ~10% no formato HEX
+            context.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
+            context.restore();
+        }
+
+        // Retorna a posição Y exata de onde a peça cairia
+        function getGhostPosition() {
+            if (!currentPiece) return 0;
+            let ghostY = currentPiece.y;
+            // Cria um objeto temporário simulando a peça caindo
+            let tempPiece = {
+                matrix: currentPiece.matrix,
+                x: currentPiece.x,
+                y: ghostY
+            };
+            while (!collide(grid, tempPiece)) {
+                tempPiece.y++;
+            }
+            return tempPiece.y - 1;
+        }
+
         function drawPreview(context, piece) {
             context.clearRect(0, 0, context.canvas.width, context.canvas.height);
             if (!piece) return;
@@ -848,12 +879,32 @@
 
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 1. Desenha os blocos já fixados na grade
             grid.forEach((row, r) => {
                 row.forEach((value, c) => {
                     if (value) drawBlock(ctx, c, r, COLORS[value]);
                 });
             });
 
+            // 2. Desenha a Silhueta/Peça Fantasma (Ghost Piece) primeiro, para ficar por baixo da peça ativa
+            if (currentPiece) {
+                const ghostY = getGhostPosition();
+                // Apenas desenha se a silhueta estiver abaixo da peça atual (evita sobreposição visual esquisita)
+                if (ghostY > currentPiece.y) {
+                    currentPiece.matrix.forEach((row, r) => {
+                        row.forEach((value, c) => {
+                            if (value) {
+                                if (r + ghostY >= 0) {
+                                    drawGhostBlock(ctx, c + currentPiece.x, r + ghostY, COLORS[currentPiece.type]);
+                                }
+                            }
+                        });
+                    });
+                }
+            }
+
+            // 3. Desenha a Peça Atual controlada pelo jogador
             if (currentPiece) {
                 currentPiece.matrix.forEach((row, r) => {
                     row.forEach((value, c) => {
@@ -866,6 +917,7 @@
                 });
             }
 
+            // 4. Partículas
             particles.forEach(p => {
                 ctx.save(); ctx.globalAlpha = p.alpha; ctx.fillStyle = COLORS[p.color] || '#FFF';
                 ctx.fillRect(p.x - p.size/2, p.y - p.size/2, p.size, p.size); ctx.restore();
