@@ -827,15 +827,15 @@
                 <tr><th>Meta</th><th>PB</th><th>Run</th></tr>
               </thead>
               <tbody>
-<tr><td>25k</td><td id="pb-25k">00:00.0</td><td id="run-25000">—</td></tr>
-<tr><td>50k</td><td id="pb-50k">00:00.0</td><td id="run-50000">—</td></tr>
-<tr><td>75k</td><td id="pb-75k">00:00.0</td><td id="run-75000">—</td></tr>
-<tr><td>100k</td><td id="pb-100k">00:00.0</td><td id="run-100000">—</td></tr>
-
-<tr><td>25 L</td><td id="pb-25l">00:00.0</td><td id="run-25l">—</td></tr>
-<tr><td>50 L</td><td id="pb-50l">00:00.0</td><td id="run-50l">—</td></tr>
-<tr><td>75 L</td><td id="pb-75l">00:00.0</td><td id="run-75l">—</td></tr>
-<tr><td>100 L</td><td id="pb-100l">00:00.0</td><td id="run-100l">—</td></tr>
+                <tr><td>25k</td><td id="pb-25k">00:00.0</td><td id="run-25000">—</td></tr>
+                <tr><td>50k</td><td id="pb-50k">00:00.0</td><td id="run-50000">—</td></tr>
+                <tr><td>75k</td><td id="pb-75k">00:00.0</td><td id="run-75000">—</td></tr>
+                <tr><td>100k</td><td id="pb-100k">00:00.0</td><td id="run-100000">—</td></tr>
+                <tr class="divider"><td colspan="3"></td></tr>
+                <tr><td>25 L</td><td id="pb-25l">00:00.0</td><td id="run-25l">—</td></tr>
+                <tr><td>50 L</td><td id="pb-50l">00:00.0</td><td id="run-50l">—</td></tr>
+                <tr><td>75 L</td><td id="pb-75l">00:00.0</td><td id="run-75l">—</td></tr>
+                <tr><td>100 L</td><td id="pb-100l">00:00.0</td><td id="run-100l">—</td></tr>
               </tbody>
             </table>
           </div>
@@ -910,8 +910,8 @@
       L: [[0,0,1],[1,1,1],[0,0,0]]
     };
 
-const SCORE_GOALS = [25000, 50000, 75000, 100000];
-const LINE_GOALS = [25, 50, 75, 100];
+    const SCORE_GOALS = [25000, 50000, 75000, 100000];
+    const LINE_GOALS = [25, 50, 75, 100];
     const PERIODS = ["dia", "semana", "mes"];
     const PERIOD_LABEL = { dia: "DIA", semana: "SEM", mes: "MÊS" };
 
@@ -965,18 +965,18 @@ const LINE_GOALS = [25, 50, 75, 100];
 
     function makeEmptyMarks() {
       return {
-score: { 25000: null, 50000: null, 75000: null, 100000: null },
-lines: { 25: null, 50: null, 75: null, 100: null }
+        score: { 25000: null, 50000: null, 75000: null, 100000: null },
+        lines: { 25: null, 50: null, 75: null, 100: null }
       };
     }
 
     function makePBTemplate() {
       const period = () => ({
-score: { 25000: null, 50000: null, 75000: null, 100000: null },
-lines: { 25: null, 50: null, 75: null, 100: null }
+        score: { 25000: null, 50000: null, 75000: null, 100000: null },
+        lines: { 25: null, 50: null, 75: null, 100: null },
         rawTimes: {
-score: { 25000: null, 50000: null, 75000: null, 100000: null },
-lines: { 25: null, 50: null, 75: null, 100: null }
+          score: { 25000: null, 50000: null, 75000: null, 100000: null },
+          lines: { 25: null, 50: null, 75: null, 100: null }
         },
         maxScore: 0,
         maxLines: 0
