@@ -760,7 +760,7 @@
         <h1 class="brand-title"><span class="pink">TULIP</span> <span class="green">TETRIS</span></h1>
       </div>
       <nav class="top-actions" aria-label="Ações rápidas">
-        <button class="pill-btn" id="btn-10s" type="button" title="Voltar 10 segundos no timer">↶ <span>10s</span></button>
+        <button class="pill-btn" id="btn-10s" type="button" title="Voltar 5 segundos no jogo">↶ <span>5s</span></button>
         <button class="pill-btn primary" id="btn-pause" type="button">Ⅱ <span>Pausar</span></button>
         <button class="pill-btn" id="btn-restart" type="button">↻ <span>Reiniciar</span></button>
       </nav>
@@ -914,6 +914,9 @@
     const LINE_GOALS = [25, 50, 75, 100];
     const PERIODS = ["dia", "semana", "mes"];
     const PERIOD_LABEL = { dia: "DIA", semana: "SEM", mes: "MÊS" };
+    const REWIND_MS = 5000;
+    const SNAPSHOT_INTERVAL_MS = 180;
+    const SNAPSHOT_BUFFER_MS = REWIND_MS + 1400;
 
     let boardWidth = 300;
     let boardHeight = 600;
@@ -944,6 +947,8 @@
     let activePeriod = "dia";
     let pbsByPeriod = loadPBs();
     let runMarks;
+    let rewindSnapshots = [];
+    let lastSnapshotElapsed = -Infinity;
     let resizeRaf = null;
 
     class Piece {
@@ -1020,6 +1025,112 @@
 
     function cloneMatrix(matrix) {
       return matrix.map(row => row.slice());
+    }
+
+    function clonePiece(piece) {
+      if (!piece) return null;
+      return {
+        type: piece.type,
+        matrix: cloneMatrix(piece.matrix),
+        x: piece.x,
+        y: piece.y
+      };
+    }
+
+    function cloneGrid(sourceGrid) {
+      return sourceGrid.map(row => row.slice());
+    }
+
+    function cloneRunMarks(sourceMarks) {
+      return {
+        score: { ...sourceMarks.score },
+        lines: { ...sourceMarks.lines }
+      };
+    }
+
+    function cloneParticles(sourceParticles) {
+      return sourceParticles.map(p => ({ ...p }));
+    }
+
+    function captureSnapshot(force = false) {
+      if (!grid || !currentPiece) return;
+      if (!force && elapsedMs - lastSnapshotElapsed < SNAPSHOT_INTERVAL_MS) return;
+
+      rewindSnapshots.push({
+        elapsedMs,
+        grid: cloneGrid(grid),
+        score,
+        lines,
+        level,
+        currentPiece: clonePiece(currentPiece),
+        nextPiece: clonePiece(nextPiece),
+        holdPiece: clonePiece(holdPiece),
+        hasHeld,
+        gameOver,
+        isPaused,
+        particles: cloneParticles(particles),
+        dropCounter,
+        dropInterval,
+        runMarks: cloneRunMarks(runMarks),
+        activePeriod
+      });
+
+      lastSnapshotElapsed = elapsedMs;
+      const minElapsed = Math.max(0, elapsedMs - SNAPSHOT_BUFFER_MS);
+      rewindSnapshots = rewindSnapshots.filter(snapshot => snapshot.elapsedMs >= minElapsed);
+    }
+
+    function restoreSnapshot(snapshot) {
+      if (!snapshot) return;
+
+      if (animationId) cancelAnimationFrame(animationId);
+      clearInterval(timerId);
+
+      grid = cloneGrid(snapshot.grid);
+      score = snapshot.score;
+      lines = snapshot.lines;
+      level = snapshot.level;
+      currentPiece = clonePiece(snapshot.currentPiece);
+      nextPiece = clonePiece(snapshot.nextPiece);
+      holdPiece = clonePiece(snapshot.holdPiece);
+      hasHeld = snapshot.hasHeld;
+      gameOver = snapshot.gameOver;
+      isPaused = snapshot.isPaused;
+      particles = cloneParticles(snapshot.particles || []);
+      dropCounter = snapshot.dropCounter || 0;
+      dropInterval = snapshot.dropInterval || 1000;
+      runMarks = cloneRunMarks(snapshot.runMarks);
+      activePeriod = snapshot.activePeriod || activePeriod;
+      elapsedMs = snapshot.elapsedMs;
+      elapsedBeforePause = elapsedMs;
+      runStart = performance.now();
+      lastFrame = performance.now();
+      lastSnapshotElapsed = elapsedMs;
+
+      rewindSnapshots = rewindSnapshots.filter(item => item.elapsedMs <= elapsedMs);
+      captureSnapshot(true);
+
+      modeLabel.textContent = PERIOD_LABEL[activePeriod];
+      timerEl.textContent = formatTime(elapsedMs);
+      pauseBtn.innerHTML = isPaused ? "▶ <span>Continuar</span>" : "Ⅱ <span>Pausar</span>";
+      updateUI();
+      updatePBDisplay();
+      updateRunColumn();
+      drawPreview(ctxNext, nextPiece);
+      drawPreview(ctxHold, holdPiece);
+
+      if (gameOver) {
+        setOverlay("gameover");
+        draw();
+      } else if (isPaused) {
+        setOverlay("pause");
+        draw();
+      } else {
+        setOverlay("hidden");
+        timerId = setInterval(updateTimer, 50);
+        draw();
+        animationId = requestAnimationFrame(gameLoop);
+      }
     }
 
     function randPiece() {
@@ -1168,6 +1279,8 @@
       dropInterval = 1000;
       lastFrame = performance.now();
       runMarks = makeEmptyMarks();
+      rewindSnapshots = [];
+      lastSnapshotElapsed = -Infinity;
       pauseBtn.innerHTML = "Ⅱ <span>Pausar</span>";
       setOverlay("hidden");
       spawnPiece();
@@ -1176,16 +1289,19 @@
       updateUI();
       updatePBDisplay();
       updateRunColumn();
+      captureSnapshot(true);
       animationId = requestAnimationFrame(gameLoop);
     }
 
     function pauseGame() {
       if (gameOver) return;
+      captureSnapshot(true);
       isPaused = true;
       elapsedBeforePause = elapsedMs;
       clearInterval(timerId);
       pauseBtn.innerHTML = "▶ <span>Continuar</span>";
       setOverlay("pause");
+      captureSnapshot(true);
     }
 
     function resumeGame() {
@@ -1204,12 +1320,20 @@
       isPaused ? resumeGame() : pauseGame();
     }
 
-    function rewind10s() {
-      if (gameOver) return;
-      elapsedMs = Math.max(0, elapsedMs - 10000);
-      elapsedBeforePause = elapsedMs;
-      runStart = performance.now();
-      timerEl.textContent = formatTime(elapsedMs);
+    function rewind5s() {
+      if (!rewindSnapshots.length) return;
+
+      const currentElapsed = isPaused || gameOver ? elapsedMs : elapsedBeforePause + (performance.now() - runStart);
+      elapsedMs = currentElapsed;
+      captureSnapshot(true);
+
+      const targetElapsed = Math.max(0, currentElapsed - REWIND_MS);
+      let snapshot = rewindSnapshots[0];
+      for (const candidate of rewindSnapshots) {
+        if (candidate.elapsedMs <= targetElapsed) snapshot = candidate;
+        else break;
+      }
+      restoreSnapshot(snapshot);
     }
 
     function spawnPiece() {
@@ -1577,6 +1701,7 @@
       dropCounter += delta;
       if (dropCounter > dropInterval) softDrop();
       updateParticles();
+      captureSnapshot();
       draw();
       animationId = requestAnimationFrame(gameLoop);
     }
@@ -1668,7 +1793,7 @@
     document.getElementById("hold-panel-box").addEventListener("click", holdCurrentPiece);
     document.getElementById("btn-pause").addEventListener("click", togglePause);
     document.getElementById("btn-restart").addEventListener("click", init);
-    document.getElementById("btn-10s").addEventListener("click", rewind10s);
+    document.getElementById("btn-10s").addEventListener("click", rewind5s);
     document.getElementById("btn-mode").addEventListener("click", cyclePeriod);
     statusAction.addEventListener("click", () => gameOver ? init() : resumeGame());
 
