@@ -233,6 +233,25 @@
       text-align: center;
     }
 
+    .panel-record {
+      font-size: clamp(8px, 1.8vw, 10px);
+      color: var(--muted);
+      font-weight: 700;
+      margin-top: 1px;
+      white-space: nowrap;
+      text-transform: uppercase;
+      display: flex;
+      gap: 3px;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.85;
+    }
+
+    .record-date {
+      font-weight: 500;
+      color: rgba(48, 28, 33, 0.6);
+    }
+
     .stat-title-row {
       display: flex;
       flex-direction: column;
@@ -593,6 +612,7 @@
       .big-action { border-radius: 16px; }
       .panel-title { font-size: 8px; }
       .panel-value { font-size: 22px; }
+      .panel-record { font-size: 8px; }
       .timer { font-size: 19px; }
       .timer-icon { display: none; }
       .pb-table th, .pb-table td { padding-top: 2px; padding-bottom: 2px; }
@@ -651,6 +671,7 @@
 
       .panel-title { font-size: 15px; }
       .panel-value { font-size: 40px; }
+      .panel-record { font-size: 12px; margin-top: 4px; }
       .mini-icon { font-size: 20px; }
       .box-display { width: min(96px, calc(var(--left-w) - 56px)); border-radius: 20px; border-width: 2px; }
       .stat-title-row { flex-direction: row; gap: 8px; }
@@ -776,6 +797,7 @@
         <section class="panel stat-panel" aria-label="Pontos">
           <div class="stat-title-row"><span class="mini-icon">🏆</span><div class="panel-title">Pontos</div></div>
           <div class="panel-value" id="current-score">0</div>
+          <div class="panel-record">Rec: <span id="record-score">0</span>&nbsp;<span class="record-date" id="record-score-date"></span></div>
         </section>
 
         <section class="panel stat-panel" aria-label="Nível">
@@ -786,6 +808,7 @@
         <section class="panel stat-panel" aria-label="Linhas">
           <div class="stat-title-row"><span class="mini-icon">▦</span><div class="panel-title">Linhas</div></div>
           <div class="panel-value" id="current-lines">0</div>
+          <div class="panel-record">Rec: <span id="record-lines">0</span>&nbsp;<span class="record-date" id="record-lines-date"></span></div>
         </section>
       </aside>
 
@@ -864,8 +887,8 @@
   <script>
     const COLS = 10;
     const ROWS = 20;
-    const STORAGE_KEY = "tulip_tetris_ui_v2_pbs";
-    const LEGACY_STORAGE_KEY = "tulip_tetris_multiy_pbs";
+    const STORAGE_KEY = "tulip_tetris_ui_v3_pbs";
+    const LEGACY_STORAGE_KEY = "tulip_tetris_ui_v2_pbs";
 
     const appEl = document.getElementById("app");
     const topbarEl = document.getElementById("topbar");
@@ -983,27 +1006,60 @@
           score: { 25000: null, 50000: null, 75000: null, 100000: null },
           lines: { 25: null, 50: null, 75: null, 100: null }
         },
+        dates: {
+          score: { 25000: null, 50000: null, 75000: null, 100000: null },
+          lines: { 25: null, 50: null, 75: null, 100: null }
+        },
         maxScore: 0,
         maxLines: 0
       });
-      return { dia: period(), semana: period(), mes: period() };
+      return { 
+        dia: period(), 
+        semana: period(), 
+        mes: period(),
+        history: {
+          maxScore: 0,
+          maxScoreDate: null,
+          maxLines: 0,
+          maxLinesDate: null
+        }
+      };
     }
 
     function normalizePBs(source) {
       const base = makePBTemplate();
       if (!source || typeof source !== "object") return base;
+
+      if (source.history) {
+        base.history.maxScore = Number(source.history.maxScore || 0);
+        base.history.maxScoreDate = source.history.maxScoreDate || null;
+        base.history.maxLines = Number(source.history.maxLines || 0);
+        base.history.maxLinesDate = source.history.maxLinesDate || null;
+      } else {
+        base.history.maxScore = Math.max(Number(source.dia?.maxScore || 0), Number(source.semana?.maxScore || 0), Number(source.mes?.maxScore || 0));
+        base.history.maxLines = Math.max(Number(source.dia?.maxLines || 0), Number(source.semana?.maxLines || 0), Number(source.mes?.maxLines || 0));
+        const dtStr = new Date().toLocaleDateString("pt-BR", { day: '2-digit', month: '2-digit', year: '2-digit' });
+        base.history.maxScoreDate = base.history.maxScore > 0 ? dtStr : null;
+        base.history.maxLinesDate = base.history.maxLines > 0 ? dtStr : null;
+      }
+
       PERIODS.forEach(period => {
         const incoming = source[period];
         if (!incoming) return;
         base[period].maxScore = Number(incoming.maxScore || 0);
         base[period].maxLines = Number(incoming.maxLines || 0);
+
+        const incomingDates = incoming.dates || { score: {}, lines: {} };
+
         SCORE_GOALS.forEach(goal => {
           base[period].score[goal] = incoming.score?.[goal] ?? null;
           base[period].rawTimes.score[goal] = incoming.rawTimes?.score?.[goal] ?? null;
+          base[period].dates.score[goal] = incomingDates.score?.[goal] ?? null;
         });
         LINE_GOALS.forEach(goal => {
           base[period].lines[goal] = incoming.lines?.[goal] ?? null;
           base[period].rawTimes.lines[goal] = incoming.rawTimes?.lines?.[goal] ?? null;
+          base[period].dates.lines[goal] = incomingDates.lines?.[goal] ?? null;
         });
       });
       return base;
@@ -1012,7 +1068,52 @@
     function loadPBs() {
       try {
         const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
-        return normalizePBs(saved ? JSON.parse(saved) : null);
+        let base = normalizePBs(saved ? JSON.parse(saved) : null);
+        
+        const now = new Date();
+        const isSameDay = (d1, d2) => d1.getFullYear() === d2.getFullYear() && d1.getMonth() === d2.getMonth() && d1.getDate() === d2.getDate();
+        const isSameWeek = (d1, d2) => {
+          const sw = (d) => {
+            const dt = new Date(d);
+            dt.setDate(dt.getDate() - dt.getDay());
+            dt.setHours(0,0,0,0);
+            return dt.getTime();
+          };
+          return sw(d1) === sw(d2);
+        };
+        const isSameMonth = (d1, d2) => d1.getFullYear() === d2.getFullYear() && d1.getMonth() === d2.getMonth();
+
+        PERIODS.forEach(pName => {
+          const period = base[pName];
+          
+          SCORE_GOALS.forEach(goal => {
+            const t = period.dates.score[goal];
+            if (t) {
+              const d = new Date(t);
+              let valid = (pName === "dia") ? isSameDay(d, now) : (pName === "semana" ? isSameWeek(d, now) : isSameMonth(d, now));
+              if (!valid) {
+                period.score[goal] = null;
+                period.rawTimes.score[goal] = null;
+                period.dates.score[goal] = null;
+              }
+            }
+          });
+
+          LINE_GOALS.forEach(goal => {
+            const t = period.dates.lines[goal];
+            if (t) {
+              const d = new Date(t);
+              let valid = (pName === "dia") ? isSameDay(d, now) : (pName === "semana" ? isSameWeek(d, now) : isSameMonth(d, now));
+              if (!valid) {
+                period.lines[goal] = null;
+                period.rawTimes.lines[goal] = null;
+                period.dates.lines[goal] = null;
+              }
+            }
+          });
+        });
+
+        return base;
       } catch (error) {
         console.warn("Não foi possível carregar PBs", error);
         return makePBTemplate();
@@ -1116,6 +1217,7 @@
       updateUI();
       updatePBDisplay();
       updateRunColumn();
+      updateHistoryDisplay();
       drawPreview(ctxNext, nextPiece);
       drawPreview(ctxHold, holdPiece);
 
@@ -1289,6 +1391,7 @@
       updateUI();
       updatePBDisplay();
       updateRunColumn();
+      updateHistoryDisplay();
       captureSnapshot(true);
       animationId = requestAnimationFrame(gameLoop);
     }
@@ -1452,49 +1555,103 @@
     }
 
     function updatePBsMaxOnly() {
-      const period = pbsByPeriod[activePeriod];
       let changed = false;
-      if (score > period.maxScore) { period.maxScore = score; changed = true; }
-      if (lines > period.maxLines) { period.maxLines = lines; changed = true; }
+      const curDtStr = new Date().toLocaleDateString("pt-BR", { day: '2-digit', month: '2-digit', year: '2-digit' });
+
+      PERIODS.forEach(pName => {
+        const period = pbsByPeriod[pName];
+        if (score > (period.maxScore || 0)) { period.maxScore = score; changed = true; }
+        if (lines > (period.maxLines || 0)) { period.maxLines = lines; changed = true; }
+      });
+
+      if (score > pbsByPeriod.history.maxScore) {
+        pbsByPeriod.history.maxScore = score;
+        pbsByPeriod.history.maxScoreDate = curDtStr;
+        changed = true;
+      }
+      if (lines > pbsByPeriod.history.maxLines) {
+        pbsByPeriod.history.maxLines = lines;
+        pbsByPeriod.history.maxLinesDate = curDtStr;
+        changed = true;
+      }
+
       if (changed) {
         savePBs();
         updatePBDisplay();
+        updateHistoryDisplay();
       }
     }
 
     function checkSpeedrunGoals() {
-      const period = pbsByPeriod[activePeriod];
+      const nowTimestamp = Date.now();
+      const curDtStr = new Date().toLocaleDateString("pt-BR", { day: '2-digit', month: '2-digit', year: '2-digit' });
       let changed = false;
 
       SCORE_GOALS.forEach(goal => {
         if (score >= goal && runMarks.score[goal] === null) {
           runMarks.score[goal] = elapsedMs;
-          const pb = period.rawTimes.score[goal];
-          if (pb === null || elapsedMs < pb) {
-            period.rawTimes.score[goal] = elapsedMs;
-            period.score[goal] = formatTime(elapsedMs);
-            changed = true;
-          }
         }
       });
 
       LINE_GOALS.forEach(goal => {
         if (lines >= goal && runMarks.lines[goal] === null) {
           runMarks.lines[goal] = elapsedMs;
-          const pb = period.rawTimes.lines[goal];
-          if (pb === null || elapsedMs < pb) {
-            period.rawTimes.lines[goal] = elapsedMs;
-            period.lines[goal] = formatTime(elapsedMs);
-            changed = true;
-          }
         }
       });
 
-      if (score > period.maxScore) { period.maxScore = score; changed = true; }
-      if (lines > period.maxLines) { period.maxLines = lines; changed = true; }
-      if (changed) savePBs();
-      updatePBDisplay();
+      PERIODS.forEach(pName => {
+        const period = pbsByPeriod[pName];
+
+        SCORE_GOALS.forEach(goal => {
+          if (runMarks.score[goal] !== null) {
+            const pb = period.rawTimes.score[goal];
+            if (pb === null || elapsedMs < pb) {
+              period.rawTimes.score[goal] = runMarks.score[goal];
+              period.score[goal] = formatTime(runMarks.score[goal]);
+              period.dates.score[goal] = nowTimestamp;
+              changed = true;
+            }
+          }
+        });
+
+        LINE_GOALS.forEach(goal => {
+          if (runMarks.lines[goal] !== null) {
+            const pb = period.rawTimes.lines[goal];
+            if (pb === null || elapsedMs < pb) {
+              period.rawTimes.lines[goal] = runMarks.lines[goal];
+              period.lines[goal] = formatTime(runMarks.lines[goal]);
+              period.dates.lines[goal] = nowTimestamp;
+              changed = true;
+            }
+          }
+        });
+      });
+
+      if (score > pbsByPeriod.history.maxScore) {
+        pbsByPeriod.history.maxScore = score;
+        pbsByPeriod.history.maxScoreDate = curDtStr;
+        changed = true;
+      }
+      if (lines > pbsByPeriod.history.maxLines) {
+        pbsByPeriod.history.maxLines = lines;
+        pbsByPeriod.history.maxLinesDate = curDtStr;
+        changed = true;
+      }
+
+      if (changed) {
+        savePBs();
+        updatePBDisplay();
+        updateHistoryDisplay();
+      }
       updateRunColumn();
+    }
+
+    function updateHistoryDisplay() {
+      const h = pbsByPeriod.history;
+      document.getElementById("record-score").textContent = formatNumber(h.maxScore || 0);
+      document.getElementById("record-score-date").textContent = h.maxScoreDate ? `(${h.maxScoreDate})` : "";
+      document.getElementById("record-lines").textContent = formatNumber(h.maxLines || 0);
+      document.getElementById("record-lines-date").textContent = h.maxLinesDate ? `(${h.maxLinesDate})` : "";
     }
 
     function holdCurrentPiece() {
