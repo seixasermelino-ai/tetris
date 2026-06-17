@@ -1085,6 +1085,7 @@
 
         PERIODS.forEach(pName => {
           const period = base[pName];
+          let periodValid = true;
           
           SCORE_GOALS.forEach(goal => {
             const t = period.dates.score[goal];
@@ -1095,6 +1096,7 @@
                 period.score[goal] = null;
                 period.rawTimes.score[goal] = null;
                 period.dates.score[goal] = null;
+                periodValid = false;
               }
             }
           });
@@ -1108,9 +1110,15 @@
                 period.lines[goal] = null;
                 period.rawTimes.lines[goal] = null;
                 period.dates.lines[goal] = null;
+                periodValid = false;
               }
             }
           });
+
+          if (!periodValid) {
+            period.maxScore = 0;
+            period.maxLines = 0;
+          }
         });
 
         return base;
@@ -1564,6 +1572,11 @@
         if (lines > (period.maxLines || 0)) { period.maxLines = lines; changed = true; }
       });
 
+      if (pbsByPeriod.semana.maxScore < pbsByPeriod.dia.maxScore) pbsByPeriod.semana.maxScore = pbsByPeriod.dia.maxScore;
+      if (pbsByPeriod.mes.maxScore < pbsByPeriod.semana.maxScore) pbsByPeriod.mes.maxScore = pbsByPeriod.semana.maxScore;
+      if (pbsByPeriod.semana.maxLines < pbsByPeriod.dia.maxLines) pbsByPeriod.semana.maxLines = pbsByPeriod.dia.maxLines;
+      if (pbsByPeriod.mes.maxLines < pbsByPeriod.semana.maxLines) pbsByPeriod.mes.maxLines = pbsByPeriod.semana.maxLines;
+
       if (score > pbsByPeriod.history.maxScore) {
         pbsByPeriod.history.maxScore = score;
         pbsByPeriod.history.maxScoreDate = curDtStr;
@@ -1626,6 +1639,17 @@
           }
         });
       });
+
+      PERIODS.forEach(pName => {
+        const period = pbsByPeriod[pName];
+        if (score > (period.maxScore || 0)) { period.maxScore = score; changed = true; }
+        if (lines > (period.maxLines || 0)) { period.maxLines = lines; changed = true; }
+      });
+
+      if (pbsByPeriod.semana.maxScore < pbsByPeriod.dia.maxScore) pbsByPeriod.semana.maxScore = pbsByPeriod.dia.maxScore;
+      if (pbsByPeriod.mes.maxScore < pbsByPeriod.semana.maxScore) pbsByPeriod.mes.maxScore = pbsByPeriod.semana.maxScore;
+      if (pbsByPeriod.semana.maxLines < pbsByPeriod.dia.maxLines) pbsByPeriod.semana.maxLines = pbsByPeriod.dia.maxLines;
+      if (pbsByPeriod.mes.maxLines < pbsByPeriod.semana.maxLines) pbsByPeriod.mes.maxLines = pbsByPeriod.semana.maxLines;
 
       if (score > pbsByPeriod.history.maxScore) {
         pbsByPeriod.history.maxScore = score;
