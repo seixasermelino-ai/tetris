@@ -406,9 +406,10 @@
       font-variant-numeric: tabular-nums;
     }
 
-    .pb-table col:nth-child(1) { width: 34%; }
-    .pb-table col:nth-child(2) { width: 43%; }
-    .pb-table col:nth-child(3) { width: 23%; }
+    .pb-table col:nth-child(1) { width: 18%; }
+    .pb-table col:nth-child(2) { width: 25%; }
+    .pb-table col:nth-child(3) { width: 19%; }
+    .pb-table col:nth-child(4) { width: 38%; }
 
     .pb-table th,
     .pb-table td {
@@ -434,10 +435,16 @@
     }
 
     .pb-table th:nth-child(2),
-    .pb-table td:nth-child(2) { text-align: center; }
+    .pb-table td:nth-child(2),
+    .pb-table th:nth-child(3),
+    .pb-table td:nth-child(3) { text-align: center; }
 
     .pb-table th:last-child,
-    .pb-table td:last-child { text-align: right; }
+    .pb-table td:last-child {
+      text-align: right;
+      font-size: clamp(7px, 1.75vw, 10px);
+      letter-spacing: -0.02em;
+    }
 
     .pb-table tr.divider td {
       padding: 4px 0;
@@ -702,7 +709,8 @@
       .mode-toggle { min-height: 43px; padding: 0 20px; font-size: 16px; gap: 9px; }
       .dot { width: 17px; height: 17px; }
       .pb-wrap { border-radius: 20px; }
-      .pb-table th, .pb-table td { font-size: 15px; padding: 8px 10px; }
+      .pb-table th, .pb-table td { font-size: 15px; padding: 8px 6px; }
+      .pb-table th:last-child, .pb-table td:last-child { font-size: 12px; padding-left: 2px; padding-right: 7px; }
       .pb-table tr.divider td { padding: 8px 0; }
 
       .controls {
@@ -845,20 +853,20 @@
 
           <div class="pb-wrap">
             <table class="pb-table" aria-label="Tabela de metas, recordes e run atual">
-              <colgroup><col /><col /><col /></colgroup>
+              <colgroup><col /><col /><col /><col /></colgroup>
               <thead>
-                <tr><th>Meta</th><th>PB</th><th>Run</th></tr>
+                <tr><th>Meta</th><th>PB</th><th>Run</th><th>Data/hora</th></tr>
               </thead>
               <tbody>
-                <tr><td>25k</td><td id="pb-25k">00:00.0</td><td id="run-25000">—</td></tr>
-                <tr><td>50k</td><td id="pb-50k">00:00.0</td><td id="run-50000">—</td></tr>
-                <tr><td>75k</td><td id="pb-75k">00:00.0</td><td id="run-75000">—</td></tr>
-                <tr><td>100k</td><td id="pb-100k">00:00.0</td><td id="run-100000">—</td></tr>
-                <tr class="divider"><td colspan="3"></td></tr>
-                <tr><td>25 L</td><td id="pb-25l">00:00.0</td><td id="run-25l">—</td></tr>
-                <tr><td>50 L</td><td id="pb-50l">00:00.0</td><td id="run-50l">—</td></tr>
-                <tr><td>75 L</td><td id="pb-75l">00:00.0</td><td id="run-75l">—</td></tr>
-                <tr><td>100 L</td><td id="pb-100l">00:00.0</td><td id="run-100l">—</td></tr>
+                <tr><td>25k</td><td id="pb-25k">00:00.0</td><td id="run-25000">—</td><td id="date-25k">—</td></tr>
+                <tr><td>50k</td><td id="pb-50k">00:00.0</td><td id="run-50000">—</td><td id="date-50k">—</td></tr>
+                <tr><td>75k</td><td id="pb-75k">00:00.0</td><td id="run-75000">—</td><td id="date-75k">—</td></tr>
+                <tr><td>100k</td><td id="pb-100k">00:00.0</td><td id="run-100000">—</td><td id="date-100k">—</td></tr>
+                <tr class="divider"><td colspan="4"></td></tr>
+                <tr><td>25 L</td><td id="pb-25l">00:00.0</td><td id="run-25l">—</td><td id="date-25l">—</td></tr>
+                <tr><td>50 L</td><td id="pb-50l">00:00.0</td><td id="run-50l">—</td><td id="date-50l">—</td></tr>
+                <tr><td>75 L</td><td id="pb-75l">00:00.0</td><td id="run-75l">—</td><td id="date-75l">—</td></tr>
+                <tr><td>100 L</td><td id="pb-100l">00:00.0</td><td id="run-100l">—</td><td id="date-100l">—</td></tr>
               </tbody>
             </table>
           </div>
@@ -887,8 +895,8 @@
   <script>
     const COLS = 10;
     const ROWS = 20;
-    const STORAGE_KEY = "tulip_tetris_ui_v3_pbs";
-    const LEGACY_STORAGE_KEY = "tulip_tetris_ui_v2_pbs";
+    const STORAGE_KEY = "tulip_tetris_ui_v4_pbs";
+    const LEGACY_STORAGE_KEYS = ["tulip_tetris_ui_v3_pbs", "tulip_tetris_ui_v2_pbs"];
 
     const appEl = document.getElementById("app");
     const topbarEl = document.getElementById("topbar");
@@ -935,8 +943,9 @@
 
     const SCORE_GOALS = [25000, 50000, 75000, 100000];
     const LINE_GOALS = [25, 50, 75, 100];
-    const PERIODS = ["dia", "semana", "mes"];
-    const PERIOD_LABEL = { dia: "DIA", semana: "SEM", mes: "MÊS" };
+    const ROLLING_PERIODS = ["dia", "semana", "mes"];
+    const PERIODS = [...ROLLING_PERIODS, "historico"];
+    const PERIOD_LABEL = { dia: "DIA", semana: "SEM", mes: "MÊS", historico: "HISTÓRICO" };
     const REWIND_MS = 5000;
     const SNAPSHOT_INTERVAL_MS = 180;
     const SNAPSHOT_BUFFER_MS = REWIND_MS + 1400;
@@ -973,6 +982,7 @@
     let rewindSnapshots = [];
     let lastSnapshotElapsed = -Infinity;
     let resizeRaf = null;
+    let lastPeriodBoundaryCheck = 0;
 
     class Piece {
       constructor(type) {
@@ -998,8 +1008,8 @@
       };
     }
 
-    function makePBTemplate() {
-      const period = () => ({
+    function makePeriodData() {
+      return {
         score: { 25000: null, 50000: null, 75000: null, 100000: null },
         lines: { 25: null, 50: null, 75: null, 100: null },
         rawTimes: {
@@ -1011,12 +1021,17 @@
           lines: { 25: null, 50: null, 75: null, 100: null }
         },
         maxScore: 0,
-        maxLines: 0
-      });
-      return { 
-        dia: period(), 
-        semana: period(), 
-        mes: period(),
+        maxLines: 0,
+        periodKey: null
+      };
+    }
+
+    function makePBTemplate() {
+      return {
+        dia: makePeriodData(),
+        semana: makePeriodData(),
+        mes: makePeriodData(),
+        historico: makePeriodData(),
         history: {
           maxScore: 0,
           maxScoreDate: null,
@@ -1026,9 +1041,76 @@
       };
     }
 
+    function parseFormattedTime(value) {
+      if (typeof value !== "string") return null;
+      const match = value.trim().match(/^(\d+):(\d{2})(?:\.(\d))?$/);
+      if (!match) return null;
+      return (Number(match[1]) * 60 + Number(match[2])) * 1000 + Number(match[3] || 0) * 100;
+    }
+
+    function getPeriodKey(periodName, dateValue = new Date()) {
+      const date = new Date(dateValue);
+      if (Number.isNaN(date.getTime())) return null;
+      const pad = value => String(value).padStart(2, "0");
+      if (periodName === "dia") {
+        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+      }
+      if (periodName === "semana") {
+        const weekStart = new Date(date);
+        weekStart.setHours(0, 0, 0, 0);
+        weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+        return `${weekStart.getFullYear()}-${pad(weekStart.getMonth() + 1)}-${pad(weekStart.getDate())}`;
+      }
+      if (periodName === "mes") {
+        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}`;
+      }
+      return "historico";
+    }
+
+    function inferPeriodKey(period, periodName, now = new Date()) {
+      const timestamps = [];
+      SCORE_GOALS.forEach(goal => {
+        const value = period.dates.score[goal];
+        if (value && !Number.isNaN(new Date(value).getTime())) timestamps.push(new Date(value).getTime());
+      });
+      LINE_GOALS.forEach(goal => {
+        const value = period.dates.lines[goal];
+        if (value && !Number.isNaN(new Date(value).getTime())) timestamps.push(new Date(value).getTime());
+      });
+      return timestamps.length ? getPeriodKey(periodName, Math.max(...timestamps)) : getPeriodKey(periodName, now);
+    }
+
+    function copyBestRecord(target, source, category, goal) {
+      const sourceRaw = source.rawTimes?.[category]?.[goal] ?? parseFormattedTime(source[category]?.[goal]);
+      if (sourceRaw === null || sourceRaw === undefined || !Number.isFinite(Number(sourceRaw))) return;
+      const targetRaw = target.rawTimes[category][goal];
+      if (targetRaw === null || Number(sourceRaw) < Number(targetRaw)) {
+        target.rawTimes[category][goal] = Number(sourceRaw);
+        target[category][goal] = formatTime(Number(sourceRaw));
+        target.dates[category][goal] = source.dates?.[category]?.[goal] ?? null;
+      }
+    }
+
+    function seedHistoricalRecords(base) {
+      const historical = base.historico;
+      ROLLING_PERIODS.forEach(periodName => {
+        const source = base[periodName];
+        SCORE_GOALS.forEach(goal => copyBestRecord(historical, source, "score", goal));
+        LINE_GOALS.forEach(goal => copyBestRecord(historical, source, "lines", goal));
+        historical.maxScore = Math.max(historical.maxScore || 0, source.maxScore || 0);
+        historical.maxLines = Math.max(historical.maxLines || 0, source.maxLines || 0);
+      });
+      historical.periodKey = "historico";
+    }
+
     function normalizePBs(source) {
       const base = makePBTemplate();
-      if (!source || typeof source !== "object") return base;
+      if (!source || typeof source !== "object") {
+        const now = new Date();
+        ROLLING_PERIODS.forEach(periodName => { base[periodName].periodKey = getPeriodKey(periodName, now); });
+        base.historico.periodKey = "historico";
+        return base;
+      }
 
       if (source.history) {
         base.history.maxScore = Number(source.history.maxScore || 0);
@@ -1038,93 +1120,95 @@
       } else {
         base.history.maxScore = Math.max(Number(source.dia?.maxScore || 0), Number(source.semana?.maxScore || 0), Number(source.mes?.maxScore || 0));
         base.history.maxLines = Math.max(Number(source.dia?.maxLines || 0), Number(source.semana?.maxLines || 0), Number(source.mes?.maxLines || 0));
-        const dtStr = new Date().toLocaleDateString("pt-BR", { day: '2-digit', month: '2-digit', year: '2-digit' });
+        const dtStr = new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit" });
         base.history.maxScoreDate = base.history.maxScore > 0 ? dtStr : null;
         base.history.maxLinesDate = base.history.maxLines > 0 ? dtStr : null;
       }
 
-      PERIODS.forEach(period => {
-        const incoming = source[period];
+      PERIODS.forEach(periodName => {
+        const incoming = source[periodName];
         if (!incoming) return;
-        base[period].maxScore = Number(incoming.maxScore || 0);
-        base[period].maxLines = Number(incoming.maxLines || 0);
-
+        const target = base[periodName];
+        target.maxScore = Number(incoming.maxScore || 0);
+        target.maxLines = Number(incoming.maxLines || 0);
+        target.periodKey = incoming.periodKey || null;
         const incomingDates = incoming.dates || { score: {}, lines: {} };
 
         SCORE_GOALS.forEach(goal => {
-          base[period].score[goal] = incoming.score?.[goal] ?? null;
-          base[period].rawTimes.score[goal] = incoming.rawTimes?.score?.[goal] ?? null;
-          base[period].dates.score[goal] = incomingDates.score?.[goal] ?? null;
+          const formatted = incoming.score?.[goal] ?? null;
+          const raw = incoming.rawTimes?.score?.[goal] ?? parseFormattedTime(formatted);
+          target.score[goal] = formatted || (raw !== null ? formatTime(Number(raw)) : null);
+          target.rawTimes.score[goal] = raw !== null && raw !== undefined ? Number(raw) : null;
+          target.dates.score[goal] = incomingDates.score?.[goal] ?? null;
         });
         LINE_GOALS.forEach(goal => {
-          base[period].lines[goal] = incoming.lines?.[goal] ?? null;
-          base[period].rawTimes.lines[goal] = incoming.rawTimes?.lines?.[goal] ?? null;
-          base[period].dates.lines[goal] = incomingDates.lines?.[goal] ?? null;
+          const formatted = incoming.lines?.[goal] ?? null;
+          const raw = incoming.rawTimes?.lines?.[goal] ?? parseFormattedTime(formatted);
+          target.lines[goal] = formatted || (raw !== null ? formatTime(Number(raw)) : null);
+          target.rawTimes.lines[goal] = raw !== null && raw !== undefined ? Number(raw) : null;
+          target.dates.lines[goal] = incomingDates.lines?.[goal] ?? null;
         });
       });
+
+      seedHistoricalRecords(base);
+      base.history.maxScore = Math.max(base.history.maxScore || 0, base.historico.maxScore || 0);
+      base.history.maxLines = Math.max(base.history.maxLines || 0, base.historico.maxLines || 0);
       return base;
+    }
+
+    function refreshPeriodsIfNeeded(shouldSave = true, target = pbsByPeriod) {
+      const now = new Date();
+      let changed = false;
+
+      seedHistoricalRecords(target);
+
+      ROLLING_PERIODS.forEach(periodName => {
+        const expectedKey = getPeriodKey(periodName, now);
+        const period = target[periodName];
+        const storedKey = period.periodKey || inferPeriodKey(period, periodName, now);
+
+        if (storedKey !== expectedKey) {
+          target[periodName] = makePeriodData();
+          target[periodName].periodKey = expectedKey;
+          changed = true;
+          return;
+        }
+
+        if (period.periodKey !== expectedKey) {
+          period.periodKey = expectedKey;
+          changed = true;
+        }
+      });
+
+      if (changed && shouldSave) {
+        savePBs();
+        updatePBDisplay();
+        updateRunColumn();
+      }
+      return changed;
     }
 
     function loadPBs() {
       try {
-        const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
-        let base = normalizePBs(saved ? JSON.parse(saved) : null);
-        
-        const now = new Date();
-        const isSameDay = (d1, d2) => d1.getFullYear() === d2.getFullYear() && d1.getMonth() === d2.getMonth() && d1.getDate() === d2.getDate();
-        const isSameWeek = (d1, d2) => {
-          const sw = (d) => {
-            const dt = new Date(d);
-            dt.setDate(dt.getDate() - dt.getDay());
-            dt.setHours(0,0,0,0);
-            return dt.getTime();
-          };
-          return sw(d1) === sw(d2);
-        };
-        const isSameMonth = (d1, d2) => d1.getFullYear() === d2.getFullYear() && d1.getMonth() === d2.getMonth();
-
-        PERIODS.forEach(pName => {
-          const period = base[pName];
-          let periodValid = true;
-          
-          SCORE_GOALS.forEach(goal => {
-            const t = period.dates.score[goal];
-            if (t) {
-              const d = new Date(t);
-              let valid = (pName === "dia") ? isSameDay(d, now) : (pName === "semana" ? isSameWeek(d, now) : isSameMonth(d, now));
-              if (!valid) {
-                period.score[goal] = null;
-                period.rawTimes.score[goal] = null;
-                period.dates.score[goal] = null;
-                periodValid = false;
-              }
-            }
-          });
-
-          LINE_GOALS.forEach(goal => {
-            const t = period.dates.lines[goal];
-            if (t) {
-              const d = new Date(t);
-              let valid = (pName === "dia") ? isSameDay(d, now) : (pName === "semana" ? isSameWeek(d, now) : isSameMonth(d, now));
-              if (!valid) {
-                period.lines[goal] = null;
-                period.rawTimes.lines[goal] = null;
-                period.dates.lines[goal] = null;
-                periodValid = false;
-              }
-            }
-          });
-
-          if (!periodValid) {
-            period.maxScore = 0;
-            period.maxLines = 0;
+        let saved = localStorage.getItem(STORAGE_KEY);
+        if (!saved) {
+          for (const legacyKey of LEGACY_STORAGE_KEYS) {
+            saved = localStorage.getItem(legacyKey);
+            if (saved) break;
           }
-        });
+        }
 
+        const base = normalizePBs(saved ? JSON.parse(saved) : null);
+        refreshPeriodsIfNeeded(false, base);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(base));
         return base;
       } catch (error) {
         console.warn("Não foi possível carregar PBs", error);
-        return makePBTemplate();
+        const fallback = makePBTemplate();
+        const now = new Date();
+        ROLLING_PERIODS.forEach(periodName => { fallback[periodName].periodKey = getPeriodKey(periodName, now); });
+        fallback.historico.periodKey = "historico";
+        return fallback;
       }
     }
 
@@ -1348,8 +1432,13 @@
 
     function updateTimer() {
       if (gameOver || isPaused) return;
-      elapsedMs = elapsedBeforePause + (performance.now() - runStart);
+      const now = performance.now();
+      elapsedMs = elapsedBeforePause + (now - runStart);
       timerEl.textContent = formatTime(elapsedMs);
+      if (now - lastPeriodBoundaryCheck >= 30000) {
+        lastPeriodBoundaryCheck = now;
+        refreshPeriodsIfNeeded();
+      }
     }
 
     function setOverlay(type) {
@@ -1563,6 +1652,7 @@
     }
 
     function updatePBsMaxOnly() {
+      refreshPeriodsIfNeeded();
       let changed = false;
       const curDtStr = new Date().toLocaleDateString("pt-BR", { day: '2-digit', month: '2-digit', year: '2-digit' });
 
@@ -1596,6 +1686,7 @@
     }
 
     function checkSpeedrunGoals() {
+      refreshPeriodsIfNeeded();
       const nowTimestamp = Date.now();
       const curDtStr = new Date().toLocaleDateString("pt-BR", { day: '2-digit', month: '2-digit', year: '2-digit' });
       let changed = false;
@@ -1617,9 +1708,10 @@
 
         SCORE_GOALS.forEach(goal => {
           if (runMarks.score[goal] !== null) {
+            const runTime = runMarks.score[goal];
             const pb = period.rawTimes.score[goal];
-            if (pb === null || elapsedMs < pb) {
-              period.rawTimes.score[goal] = runMarks.score[goal];
+            if (pb === null || runTime < pb) {
+              period.rawTimes.score[goal] = runTime;
               period.score[goal] = formatTime(runMarks.score[goal]);
               period.dates.score[goal] = nowTimestamp;
               changed = true;
@@ -1629,9 +1721,10 @@
 
         LINE_GOALS.forEach(goal => {
           if (runMarks.lines[goal] !== null) {
+            const runTime = runMarks.lines[goal];
             const pb = period.rawTimes.lines[goal];
-            if (pb === null || elapsedMs < pb) {
-              period.rawTimes.lines[goal] = runMarks.lines[goal];
+            if (pb === null || runTime < pb) {
+              period.rawTimes.lines[goal] = runTime;
               period.lines[goal] = formatTime(runMarks.lines[goal]);
               period.dates.lines[goal] = nowTimestamp;
               changed = true;
@@ -1893,13 +1986,24 @@
       levelEl.textContent = formatNumber(level);
     }
 
+    function formatRecordDate(timestamp) {
+      if (timestamp === null || timestamp === undefined || timestamp === "") return "—";
+      const date = new Date(timestamp);
+      if (Number.isNaN(date.getTime())) return "—";
+      const datePart = date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit" });
+      const timePart = date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", hour12: false });
+      return `${datePart} ${timePart}`;
+    }
+
     function updatePBDisplay() {
       const p = pbsByPeriod[activePeriod];
       SCORE_GOALS.forEach(goal => {
         document.getElementById(`pb-${goal / 1000}k`).textContent = p.score[goal] || "00:00.0";
+        document.getElementById(`date-${goal / 1000}k`).textContent = formatRecordDate(p.dates.score[goal]);
       });
       LINE_GOALS.forEach(goal => {
         document.getElementById(`pb-${goal}l`).textContent = p.lines[goal] || "00:00.0";
+        document.getElementById(`date-${goal}l`).textContent = formatRecordDate(p.dates.lines[goal]);
       });
     }
 
@@ -1921,6 +2025,7 @@
     }
 
     function cyclePeriod() {
+      refreshPeriodsIfNeeded();
       const index = PERIODS.indexOf(activePeriod);
       activePeriod = PERIODS[(index + 1) % PERIODS.length];
       modeLabel.textContent = PERIOD_LABEL[activePeriod];
